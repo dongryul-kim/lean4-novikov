@@ -1,0 +1,25 @@
+name = "Novikov"
+version = "0.1.0"
+keywords = ["math"]
+defaultTargets = ["Novikov"]
+
+[leanOptions]
+pp.unicode.fun = true
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+linter.style.longLine = false
+linter.unusedFintypeInType = false
+linter.unusedSectionVars = false
+maxSynthPendingDepth = 3
+
+[[lean_lib]]
+name = "Novikov"
+
+[[require]]
+scope = "PatrickMassot"
+name = "checkdecls"
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.30.0-rc2"

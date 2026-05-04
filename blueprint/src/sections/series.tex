@@ -1,0 +1,164 @@
+
+\section{Novikov series}
+
+The goal of this section is to define the multivariant Novikov series and prove
+basic facts about them.
+
+\subsection{Multi-variable Novikov series}
+
+\begin{definition}[Definition~2.4]
+  \label{def:novikov_series}
+  \lean{Novikov.NovikovSeries}
+  \leanok
+  Let $A$ be an abelian group, and let $\Gamma \subseteq \mathbb{R}$ be an
+  additive submonoid. We define the abelian group $A((t_1^\Gamma, \dotsc,
+  t_n^\Gamma))$ to be the set of power series
+  \[ \sum_{i \in I} a_i t_1^{d_{i,1}} \dotsm t_n^{d_{i,n}} \]
+  satisfying the condition that $a_i \in A$, $d_i \in \Gamma$, and for all $s_1,
+  \dotsc, s_n \in \mathbb{R}_{>0}$ the set $\{ i \in I : \sum_{s_j} d_{i,j} < C
+  \}$ is finite.
+\end{definition}
+
+\begin{lemma}[Lemma~2.8]
+  \label{lem:novikov_exact}
+  \lean{Novikov.map_exact}
+  \leanok
+  \uses{def:novikov_series}
+  The functor $A \mapsto A((t_1^\Gamma, \dotsc, t_n^\Gamma))$ is exact. That is,
+  if $0 \to A \xrightarrow{f} B \xrightarrow{g} C \to 0$ is an exact sequence of
+  abelian groups, then the induced sequence
+  \[ 0 \to A((\underline{t}^\Gamma)) \xrightarrow{f} B((\underline{t}^\Gamma))
+  \xrightarrow{g} C((\underline{t}^\Gamma)) \to 0 \]
+  is also exact.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Injectivity and surjectivity are checked coefficient-wise, using the fact that
+  the finiteness condition for Novikov series only depends on the support.
+\end{proof}
+
+\begin{definition}
+  \label{def:novikov_multiplication}
+  \lean{Novikov.novikovSeriesMul}
+  \leanok
+  \uses{def:novikov_series}
+  Let $A$ and $B$ be abelian groups, and let $\alpha \colon A \times B \to C$ be
+  a bilinear map. For $f \in A((t_1^\Gamma, \dotsc, t_n^\Gamma))$ and $g \in
+  B((t_1^\Gamma, \dotsc, t_n^\Gamma))$, we define product $f \ast_\alpha g$ by
+  bilinearly extending the product
+  \[ (a t_1^{d_1} \dotsm t_n^{d_n}) \ast_\alpha (b t_1^{e_1} \dotsm t_n^{e_n})
+  = \alpha(a, b) t_1^{d_1+e_1} \dotsm t_n^{d_n+e_n}. \]
+\end{definition}
+
+\begin{theorem}
+  \label{thm:novikov_ring}
+  \lean{Novikov.NovikovSeriesRing}
+  \leanok
+  \uses{def:novikov_series, def:novikov_multiplication}
+  If $A$ is a commutative ring, then the set of Novikov series $A((t_1^\Gamma,
+  \dotsc, t_n^\Gamma))$ forms a commutative ring under addition and the
+  natural product.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  This follows from a routine verification.
+\end{proof}
+
+\begin{theorem}
+  \label{thm:novikov_module}
+  \lean{Novikov.moduleNovikovSeries}
+  \leanok
+  \uses{thm:novikov_ring, def:novikov_multiplication}
+  If $A$ is a commutative ring and $M$ is an $A$-module, then $M((t_1^\Gamma,
+  \dotsc, t_n^\Gamma))$ is naturally a module over the Novikov ring
+  $A((t_1^\Gamma, \dotsc, t_n^\Gamma))$.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  This follows from a routine verification.
+\end{proof}
+
+\begin{definition}
+  \label{def:novikov_substitute}
+  \lean{Novikov.substitute}
+  \leanok
+  \uses{def:novikov_series}
+  Given a map $f \colon [n] \to [m]$ between finite sets of variables, we
+  define the substitution map
+  \[ f_\ast \colon A((t_1^\Gamma, \dotsc, t_m^\Gamma)) \to
+  A((s_1^\Gamma, \dotsc, s_m^\Gamma)) \]
+  given by substituting the variables. When it is clear from the context, we
+  shall denote this induced map by $f$ instead of $f_\ast$.
+\end{definition}
+
+\begin{theorem}
+  \label{thm:novikov_substitute_functorial}
+  \lean{Novikov.substitute_id, Novikov.substitute_comp, Novikov.substituteRingHom}
+  \leanok
+  \uses{def:novikov_substitute, thm:novikov_ring}
+  The substitution map is functorial in $\iota$. That is, $\text{id}_* =
+  \text{id}$ and $(g \circ f)_* = g_* \circ f_*$. Furthermore, if $A$ is a
+  commutative ring, then $f_*$ is a ring homomorphism.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Functoriality and the additive property are checked by direct calculation.
+  The preservation of multiplication follows from the properties of convolution.
+\end{proof}
+
+\subsection{Single-variable Novikov series}
+
+When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
+
+\begin{definition}
+  \label{def:novikov_filtration}
+  \lean{Novikov.filtration}
+  \leanok
+  \uses{def:novikov_series}
+  For $D \in \mathbb{R}$, we define the filtration subgroup $F_D A((t^\Gamma))$
+  as the set of series $f = \sum_{d \in \Gamma} a_d t^d$ such that $a_d = 0$ for
+  all $d < D$.
+\end{definition}
+
+\begin{theorem}[Definition~2.15]
+  \label{thm:novikov_topology}
+  \lean{Novikov.isTopologicalAddGroup, Novikov.isTopologicalRing}
+  \leanok
+  \uses{def:novikov_filtration, thm:novikov_ring}
+  The collection of filtration subgroups $\{F_D A((t^\Gamma))\}_{D \in \mathbb{R}}$
+  forms a filter basis for a topology on $A((t^\Gamma))$. Under this topology,
+  $A((t^\Gamma))$ is a complete topological abelian group. Furthermore, if $A$
+  is a commutative ring, then $A((t^\Gamma))$ is a topological ring.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  The filtration subgroups satisfy $F_{D_2} \subseteq F_{D_1}$ for $D_1 \le D_2$,
+  which ensures that the intersection of two filtration subgroups contains
+  another. Each $F_D$ is an additive subgroup, so they form a filter basis for a
+  topological additive group. For the ring structure, continuity of
+  multiplication follows from the inclusion $F_{D_1} \cdot F_{D_2} \subseteq
+  F_{D_1 + D_2}$.
+\end{proof}
+
+\begin{theorem}
+  \label{thm:novikov_field}
+  \lean{Novikov.novikovField}
+  \leanok
+  \uses{thm:novikov_topology}
+  If $A$ is a field, then the ring of single-variable Novikov series $A((t^\Gamma))$
+  is a field.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Every nonzero series $f$ has a well-defined minimum degree $d = \min\{d' \mid f(d') \neq 0\}$.
+  We define the inverse $f^{-1}$ by constructing the geometric series for $1 - f \cdot a^{-1} t^{-d}$,
+  where $a = f(d)$ is the leading coefficient. Since $f \cdot a^{-1} t^{-d}$ has minimum degree $0$ and
+  leading coefficient $1$, its complement is positive and topologically nilpotent, ensuring
+  summability of the geometric series.
+\end{proof}
