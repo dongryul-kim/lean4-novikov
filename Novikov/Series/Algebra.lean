@@ -1,5 +1,3 @@
-import Novikov.Series.Basic
-import Novikov.Series.Finite
 import Novikov.Series.Ring
 
 namespace Novikov
@@ -11,7 +9,7 @@ variable {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] {Γ : S}
 to the series with `a` at the zero exponent and `0` elsewhere. -/
 noncomputable def algebraMapNovikov :
     A →+* NovikovSeries Γ ι A where
-  toFun a := ⟨fun d => if d = (0 : ι → Γ) then a else 0, isNovikov_monomial a 0⟩
+  toFun a := ⟨fun d => if d = (0 : ι → Γ) then a else 0, is_novikov_series_monomial a 0⟩
   map_one' := by
     rfl
   map_mul' := by
@@ -56,7 +54,7 @@ noncomputable def algebraMapNovikov :
 /-- Novikov series form an `A`-algebra. -/
 noncomputable instance novikovAlgebra :
     Algebra A (NovikovSeries Γ ι A) where
-  smul r f := ⟨r • f.val, isNovikovSeries_smul r f.prop⟩
+  smul r f := ⟨r • f.val, is_novikov_series_smul r f.prop⟩
   smul_def' r f := by
     ext d
     have h_lhs : (r • f).val d = r * f.val d := rfl
@@ -67,7 +65,7 @@ noncomputable instance novikovAlgebra :
     · dsimp [algebraMapNovikov]
       simp
     · rintro ⟨b1, b2⟩ hb hne
-      rw [mem_finite_convolution_support] at hb
+      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hb
       rcases hb with ⟨hsum, hb1, hb2⟩
       dsimp [algebraMapNovikov] at hb1
       split_ifs at hb1 with h0
@@ -77,7 +75,7 @@ noncomputable instance novikovAlgebra :
         exact (hne rfl).elim
       · contradiction
     · intro h
-      rw [mem_finite_convolution_support] at h
+      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at h
       dsimp [algebraMapNovikov] at h
       simp only [zero_add, ↓reduceIte, true_and, not_and, not_not] at h
       by_cases hr : r = 0

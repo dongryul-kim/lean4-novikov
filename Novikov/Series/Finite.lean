@@ -1,329 +1,299 @@
 
-import Novikov.Series.Basic
-import Mathlib.Tactic.Ring
-import Mathlib.Tactic.Linarith
+import Mathlib.Algebra.Group.Defs
+import Mathlib.Algebra.Group.Pi.Basic
+import Mathlib.Data.Set.Finite.Basic
 import Mathlib.Data.Set.Finite.Lattice
+import Mathlib.Algebra.Group.Submonoid.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Data.Real.Basic
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.Ring
 
-/-! # Some finiteness lemmas used to define and prove basic properties
-  of the product structure -/
+/-! # Finiteness conditions on subsets of `ι → Γ`.
+
+This file is independent of `NovikovSeries`: it isolates the analytic
+finiteness condition that the support of a Novikov series is required to
+satisfy and proves stability properties (subsets, finite unions, and the
+convolution-style closure properties needed for the multiplication of
+Novikov series). -/
 
 namespace Novikov
 
-variable {ι A B C : Type*} [Fintype ι] [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
+variable {ι : Type*} [Fintype ι]
 variable {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] {Γ : S}
 
-section Finiteness
+/-- A subset of `ι → Γ` has *Novikov finiteness* if, for any positive weight vector
+`s : ι → ℝ` and any cutoff `C`, the elements of the set whose `s`-weighted real
+coordinate sum is less than `C` form a finite set. -/
+def hasNovikovFiniteness (T : Set (ι → Γ)) : Prop :=
+  ∀ (s : ι → ℝ) (_ : ∀ i, 0 < s i) (C : ℝ),
+    {d ∈ T | ∑ i, s i * (d i : ℝ) < C}.Finite
 
-/-- Restatement of the defining Novikov finiteness condition for readability. -/
-lemma finite_support_below (f : NovikovSeries Γ ι A) (s : ι → ℝ)
-    (hs : ∀ i, 0 < s i) (C : ℝ) :
-    {d : ι → Γ | f d ≠ 0 ∧ ∑ i, s i * (d i : ℝ) < C}.Finite :=
-  f.prop s hs C
+/-- The support of a function `f : (ι → Γ) → A` valued in a type with `Zero`. -/
+abbrev fnSupport {A : Type*} [Zero A] (f : (ι → Γ) → A) : Set (ι → Γ) := {d | f d ≠ 0}
 
-/-- For a fixed `d : ι → Γ`, the set of pairs `(d1, d2)` with `d1 + d2 = d`,
-`f(d1) ≠ 0`, and `g(d2) ≠ 0` is finite. -/
-lemma finite_convolution_support (f : NovikovSeries Γ ι A) (g : NovikovSeries Γ ι B) (d : ι → Γ) :
-    {p : (ι → Γ) × (ι → Γ) | p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ g p.2 ≠ 0}.Finite := by
+lemma mem_fnSupport {A : Type*} [Zero A] {f : (ι → Γ) → A} {d : ι → Γ} :
+    d ∈ fnSupport f ↔ f d ≠ 0 := Iff.rfl
+
+/-- Novikov finiteness is preserved by subsets. -/
+lemma hasNovikovFiniteness.subset {T T' : Set (ι → Γ)}
+    (hT : hasNovikovFiniteness T) (h : T' ⊆ T) : hasNovikovFiniteness T' := by
+  intro s hs C
+  exact Set.Finite.subset (hT s hs C) (fun d hd => ⟨h hd.1, hd.2⟩)
+
+/-- The empty set has Novikov finiteness. -/
+lemma hasNovikovFiniteness_empty : hasNovikovFiniteness (∅ : Set (ι → Γ)) :=
+  fun _ _ _ => Set.Finite.subset Set.finite_empty (fun _ hd => hd.1.elim)
+
+/-- A union of two Novikov-finite subsets is Novikov-finite. -/
+lemma hasNovikovFiniteness.union {T1 T2 : Set (ι → Γ)}
+    (h1 : hasNovikovFiniteness T1) (h2 : hasNovikovFiniteness T2) :
+    hasNovikovFiniteness (T1 ∪ T2) := by
+  intro s hs C
+  have hsub : {d ∈ T1 ∪ T2 | ∑ i, s i * (d i : ℝ) < C} ⊆
+      {d ∈ T1 | ∑ i, s i * (d i : ℝ) < C} ∪ {d ∈ T2 | ∑ i, s i * (d i : ℝ) < C} := by
+    rintro d ⟨hT, hlt⟩
+    rcases hT with hT1 | hT2
+    · exact Or.inl ⟨hT1, hlt⟩
+    · exact Or.inr ⟨hT2, hlt⟩
+  exact Set.Finite.subset (Set.Finite.union (h1 s hs C) (h2 s hs C)) hsub
+
+section Convolution
+
+/-- Convolution-style finiteness for pairs: if `T1` and `T2` are Novikov-finite,
+the set of pairs `(d1, d2) ∈ T1 × T2` whose weighted coordinatewise sum is less
+than `L` is finite. -/
+lemma finite_pair_lt {T1 T2 : Set (ι → Γ)}
+    (h1 : hasNovikovFiniteness T1) (h2 : hasNovikovFiniteness T2)
+    (s : ι → ℝ) (hs : ∀ i, 0 < s i) (L : ℝ) :
+    {p : (ι → Γ) × (ι → Γ) | p.1 ∈ T1 ∧ p.2 ∈ T2 ∧
+        ∑ i, s i * (p.1 i + p.2 i : ℝ) < L}.Finite := by
+  let B1 : Set (ι → Γ) := {d1 | d1 ∈ T1 ∧ ∑ i, s i * (d1 i : ℝ) < L + 1}
+  let B2 : Set (ι → Γ) := {d2 | d2 ∈ T2 ∧ ∑ i, s i * (d2 i : ℝ) < 0}
+  have hB1 : B1.Finite := h1 s hs (L + 1)
+  have hB2 : B2.Finite := h2 s hs 0
+  let U1 := ⋃ d1 ∈ B1, (fun d2 => (d1, d2)) ''
+    {d2 : ι → Γ | d2 ∈ T2 ∧ ∑ i, s i * (d2 i : ℝ) < L - ∑ i, s i * (d1 i : ℝ)}
+  let U2 := ⋃ d2 ∈ B2, (fun d1 => (d1, d2)) ''
+    {d1 : ι → Γ | d1 ∈ T1 ∧ ∑ i, s i * (d1 i : ℝ) < L - ∑ i, s i * (d2 i : ℝ)}
+  have hU1 : U1.Finite :=
+    Set.Finite.biUnion hB1 (fun d1 _ =>
+      (h2 s hs (L - ∑ i, s i * (d1 i : ℝ))).image _)
+  have hU2 : U2.Finite :=
+    Set.Finite.biUnion hB2 (fun d2 _ =>
+      (h1 s hs (L - ∑ i, s i * (d2 i : ℝ))).image _)
+  refine Set.Finite.subset (hU1.union hU2) (fun ⟨d1, d2⟩ ⟨hT1, hT2, hlt⟩ => ?_)
+  dsimp only [U1, U2, B1, B2]
+  simp only [Set.mem_union, Set.mem_iUnion, Set.mem_image, Set.mem_setOf_eq, exists_prop]
+  have h_val : ∀ i, (d1 i + d2 i : ℝ) = (d1 i : ℝ) + (d2 i : ℝ) :=
+    fun i => map_add (AddSubmonoidClass.subtype Γ) (d1 i) (d2 i)
+  have hlt' : ∑ i, s i * (d1 i : ℝ) + ∑ i, s i * (d2 i : ℝ) < L := by
+    have h_eq : ∑ i, s i * (d1 i + d2 i : ℝ)
+        = ∑ i, s i * (d1 i : ℝ) + ∑ i, s i * (d2 i : ℝ) := by
+      rw [← Finset.sum_add_distrib]
+      apply Finset.sum_congr rfl
+      intro i _
+      rw [h_val i, mul_add]
+    rwa [h_eq] at hlt
+  by_cases hcase : ∑ i, s i * (d1 i : ℝ) < L + 1
+  · left
+    refine ⟨d1, ⟨hT1, hcase⟩, d2, ⟨hT2, by linarith⟩, rfl⟩
+  · right
+    have hd2lt : ∑ i, s i * (d2 i : ℝ) < 0 := by linarith
+    refine ⟨d2, ⟨hT2, hd2lt⟩, d1, ⟨hT1, by linarith⟩, rfl⟩
+
+/-- For Novikov-finite `T1, T2` and a target `d`, the set of pairs `(d1, d2) ∈ T1 × T2`
+with `d1 + d2 = d` is finite. -/
+lemma finite_pair_sum_eq {T1 T2 : Set (ι → Γ)}
+    (h1 : hasNovikovFiniteness T1) (h2 : hasNovikovFiniteness T2) (d : ι → Γ) :
+    {p : (ι → Γ) × (ι → Γ) | p.1 + p.2 = d ∧ p.1 ∈ T1 ∧ p.2 ∈ T2}.Finite := by
   let s : ι → ℝ := fun _ => 1
-  have hs : ∀ i, 0 < s i := fun i => zero_lt_one
-  let L : ℝ := ∑ i, s i * (d i : ℝ)
-  let Sf := {d1 : ι → Γ | f d1 ≠ 0 ∧ ∑ i, s i * (d1 i : ℝ) < L + 1}
-  let Sg := {d2 : ι → Γ | g d2 ≠ 0 ∧ ∑ i, s i * (d2 i : ℝ) < 0}
-  have hf : Sf.Finite := finite_support_below f s hs (L + 1)
-  have hg : Sg.Finite := finite_support_below g s hs 0
-  let P := {p : (ι → Γ) × (ι → Γ) | p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ g p.2 ≠ 0}
-  let P1 := {p : (ι → Γ) × (ι → Γ) | p.1 ∈ Sf ∧ p.1 + p.2 = d ∧ g p.2 ≠ 0}
-  let P2 := {p : (ι → Γ) × (ι → Γ) | p.2 ∈ Sg ∧ p.1 + p.2 = d ∧ f p.1 ≠ 0}
-  have h_sub : P ⊆ P1 ∪ P2 := by
-    rintro ⟨d1, d2⟩ ⟨hsum, hf1, hg2⟩
-    by_cases h : d1 ∈ Sf
-    · left
-      exact ⟨h, hsum, hg2⟩
-    · right
-      simp only [ne_eq, Set.mem_setOf_eq, not_and, not_lt, Sf] at h
-      have hgd2 : d2 ∈ Sg := by
-        refine ⟨hg2, ?_⟩
-        have hL : L = ∑ i, s i * (d1 i : ℝ) + ∑ i, s i * (d2 i : ℝ) := by
-          rw [← Finset.sum_add_distrib]
-          apply Finset.sum_congr rfl
-          intro i _
-          have h_eq : (d i : ℝ) = (d1 i : ℝ) + (d2 i : ℝ) := by
-            have h := congr_fun hsum i
-            simp only [Pi.add_apply] at h
-            rw [← h]
-            rfl
-          rw [h_eq]
-          ring
-        have h_d1_ge : L + 1 ≤ ∑ i, s i * (d1 i : ℝ) := h hf1
-        nlinarith
-      exact ⟨hgd2, hsum, hf1⟩
-  have hP1 : P1.Finite := by
-    have h_inj : Set.InjOn Prod.fst P1 := by
-      rintro ⟨d1, d2⟩ ⟨hd1, hsum, _⟩ ⟨d1', d2'⟩ ⟨hd1', hsum', _⟩ h_eq
-      simp only at h_eq
-      have h_d2 : d2 = d2' := by
-        funext i
-        have h := congr_fun hsum i
-        have h' := congr_fun hsum' i
-        simp only [Pi.add_apply] at h h'
-        have h_eq_i : d1 i = d1' i := by
-          rw [h_eq]
-        have h_eq2_i : d2 i = d2' i := by
-          subst hsum h_eq
-          simp_all only [zero_lt_one, implies_true, ne_eq, one_mul, Pi.add_apply,
-            Set.mem_setOf_eq, not_false_eq_true, and_self, add_right_inj, s, Sg, Sf, L, P, P1, P2]
-        exact h_eq2_i
-      subst hsum h_eq h_d2
-      simp_all only [zero_lt_one, implies_true, ne_eq, one_mul, not_false_eq_true, Pi.add_apply,
-        Set.mem_setOf_eq, and_self, s, Sg, Sf, L, P, P1, P2]
-    have h_image : (Prod.fst '' P1).Finite := by
-      apply Set.Finite.subset hf
-      rintro d1 ⟨d2, ⟨hd1, _, _⟩, rfl⟩
-      exact hd1
-    exact Set.Finite.of_finite_image h_image h_inj
-  have hP2 : P2.Finite := by
-    have h_inj : Set.InjOn Prod.snd P2 := by
-      rintro ⟨d1, d2⟩ ⟨_, hsum, _⟩ ⟨d1', d2'⟩ ⟨_, hsum', _⟩ h_eq
-      simp only at h_eq
-      have h_d1 : d1 = d1' := by
-        funext i
-        have h := congr_fun hsum i
-        have h' := congr_fun hsum' i
-        simp only [Pi.add_apply] at h h'
-        have h_eq_i : d2 i = d2' i := by
-          rw [h_eq]
-        have h2 : d1 i + d2 i = d1' i + d2' i := by rw [h, h']
-        rw [h_eq_i] at h2
-        exact add_right_cancel h2
-      simp only [h_d1, h_eq]
-    have h_image : (Prod.snd '' P2).Finite := by
-      apply Set.Finite.subset hg
-      rintro d2 ⟨d1, ⟨hd1, _, _⟩, rfl⟩
-      exact hd1
-    exact Set.Finite.of_finite_image h_image h_inj
-  exact Set.Finite.subset (Set.Finite.union hP1 hP2) h_sub
+  have hs : ∀ i, 0 < s i := fun _ => zero_lt_one
+  let L := ∑ i, s i * (d i : ℝ)
+  refine Set.Finite.subset (finite_pair_lt h1 h2 s hs (L + 1)) (fun p hp => ?_)
+  simp only [Set.mem_setOf_eq] at hp ⊢
+  refine ⟨hp.2.1, hp.2.2, ?_⟩
+  have h_sum_i : ∀ i, (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) := by
+    intro i
+    have heq := congr_fun hp.1 i
+    simp only [Pi.add_apply] at heq
+    have h_real := congr_arg (fun x : Γ => (x : ℝ)) heq
+    change (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) at h_real
+    exact h_real
+  rw [Finset.sum_congr rfl (fun i _ => by rw [h_sum_i i])]
+  linarith
 
-/-- Variant of `finite_convolution_support` where the sum condition is `d0 + p.1 + p.2 = d`. -/
-lemma finite_convolution_support_three (f : NovikovSeries Γ ι A)
-    (g : NovikovSeries Γ ι B)
-    (d d0 : ι → Γ) :
-    {p : (ι → Γ) × (ι → Γ) | d0 + p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ g p.2 ≠ 0}.Finite := by
+/-- Variant of `finite_pair_sum_eq` with an offset: pairs `(d1, d2) ∈ T1 × T2`
+with `d0 + d1 + d2 = d`. -/
+lemma finite_pair_sum_eq_offset {T1 T2 : Set (ι → Γ)}
+    (h1 : hasNovikovFiniteness T1) (h2 : hasNovikovFiniteness T2) (d d0 : ι → Γ) :
+    {p : (ι → Γ) × (ι → Γ) | d0 + p.1 + p.2 = d ∧ p.1 ∈ T1 ∧ p.2 ∈ T2}.Finite := by
   let s : ι → ℝ := fun _ => 1
-  have hs : ∀ i, 0 < s i := fun i => zero_lt_one
+  have hs : ∀ i, 0 < s i := fun _ => zero_lt_one
   let L : ℝ := ∑ i, s i * (d i : ℝ) - ∑ i, s i * (d0 i : ℝ)
-  let Sf := {d1 : ι → Γ | f d1 ≠ 0 ∧ ∑ i, s i * (d1 i : ℝ) < L + 1}
-  let Sg := {d2 : ι → Γ | g d2 ≠ 0 ∧ ∑ i, s i * (d2 i : ℝ) < 0}
-  have hf : Sf.Finite := finite_support_below f s hs (L + 1)
-  have hg : Sg.Finite := finite_support_below g s hs 0
-  let P := {p : (ι → Γ) × (ι → Γ) | d0 + p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ g p.2 ≠ 0}
-  let P1 := {p : (ι → Γ) × (ι → Γ) | p.1 ∈ Sf ∧ d0 + p.1 + p.2 = d ∧ g p.2 ≠ 0}
-  let P2 := {p : (ι → Γ) × (ι → Γ) | p.2 ∈ Sg ∧ d0 + p.1 + p.2 = d ∧ f p.1 ≠ 0}
-  have h_sub : P ⊆ P1 ∪ P2 := by
-    rintro ⟨d1, d2⟩ ⟨hsum, hf1, hg2⟩
-    by_cases h : d1 ∈ Sf
-    · left
-      exact ⟨h, hsum, hg2⟩
-    · right
-      simp only [ne_eq, Set.mem_setOf_eq, not_and, not_lt, Sf] at h
-      have hgd2 : d2 ∈ Sg := by
-        refine ⟨hg2, ?_⟩
-        have hL : L = ∑ i, s i * (d1 i : ℝ) + ∑ i, s i * (d2 i : ℝ) := by
-          have h_eq : ∑ i, s i * (d i : ℝ) = ∑ i, s i * (d0 i : ℝ) + ∑ i, s i * (d1 i : ℝ) + ∑ i, s i * (d2 i : ℝ) := by
-            have h_eq_i : ∀ i, (d i : ℝ) = (d0 i : ℝ) + (d1 i : ℝ) + (d2 i : ℝ) := by
-              intro i
-              have h := congr_fun hsum i
-              simp only [Pi.add_apply] at h
-              rw [← h]
-              rfl
-            rw [Finset.sum_congr rfl (fun i _ => by rw [h_eq_i i])]
-            simp_rw [mul_add]
-            rw [Finset.sum_add_distrib, Finset.sum_add_distrib]
-          rw [show L = ∑ i, s i * (d i : ℝ) - ∑ i, s i * (d0 i : ℝ) by rfl, h_eq]
-          ring
-        have h_d1_ge : L + 1 ≤ ∑ i, s i * (d1 i : ℝ) := h hf1
-        nlinarith
-      exact ⟨hgd2, hsum, hf1⟩
-  have hP1 : P1.Finite := by
-    have h_inj : Set.InjOn Prod.fst P1 := by
-      rintro ⟨d1, d2⟩ ⟨hd1, hsum, _⟩ ⟨d1', d2'⟩ ⟨hd1', hsum', _⟩ h_eq
-      simp only at h_eq
-      have h_d2 : d2 = d2' := by
-        funext i
-        have h := congr_fun hsum i
-        have h' := congr_fun hsum' i
-        simp only [Pi.add_apply] at h h'
-        have h_eq_i : d1 i = d1' i := by
-          rw [h_eq]
-        have h2 : d0 i + d1 i + d2 i = d0 i + d1' i + d2' i := by rw [h, h']
-        rw [h_eq_i] at h2
-        grind only
-      simp only [h_d2, h_eq]
-    have h_image : (Prod.fst '' P1).Finite := by
-      apply Set.Finite.subset hf
-      rintro d1 ⟨d2, ⟨hd1, _, _⟩, rfl⟩
-      exact hd1
-    exact Set.Finite.of_finite_image h_image h_inj
-  have hP2 : P2.Finite := by
-    have h_inj : Set.InjOn Prod.snd P2 := by
-      rintro ⟨d1, d2⟩ ⟨_, hsum, _⟩ ⟨d1', d2'⟩ ⟨_, hsum', _⟩ h_eq
-      simp only at h_eq
-      have h_d1 : d1 = d1' := by
-        funext i
-        have h := congr_fun hsum i
-        have h' := congr_fun hsum' i
-        simp only [Pi.add_apply] at h h'
-        have h_eq_i : d2 i = d2' i := by
-          rw [h_eq]
-        have h2 : d0 i + d1 i + d2 i = d0 i + d1' i + d2' i := by rw [h, h']
-        rw [h_eq_i] at h2
-        grind only
-      simp only [h_d1, h_eq]
-    have h_image : (Prod.snd '' P2).Finite := by
-      apply Set.Finite.subset hg
-      rintro d2 ⟨d1, ⟨hd1, _, _⟩, rfl⟩
-      exact hd1
-    exact Set.Finite.of_finite_image h_image h_inj
-  exact Set.Finite.subset (Set.Finite.union hP1 hP2) h_sub
+  refine Set.Finite.subset (finite_pair_lt h1 h2 s hs (L + 1)) (fun p hp => ?_)
+  simp only [Set.mem_setOf_eq] at hp ⊢
+  refine ⟨hp.2.1, hp.2.2, ?_⟩
+  have h_sum_i : ∀ i, (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) - (d0 i : ℝ) := by
+    intro i
+    have heq := congr_fun hp.1 i
+    simp only [Pi.add_apply] at heq
+    have h_real := congr_arg (fun x : Γ => (x : ℝ)) heq
+    change (d0 i : ℝ) + (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) at h_real
+    linarith
+  rw [Finset.sum_congr rfl (fun i _ => by rw [h_sum_i i])]
+  have h_sub_distrib : ∑ i, s i * ((d i : ℝ) - (d0 i : ℝ))
+      = ∑ i, (s i * (d i : ℝ) - s i * (d0 i : ℝ)) := by
+    apply Finset.sum_congr rfl
+    intro i _
+    ring
+  rw [h_sub_distrib, Finset.sum_sub_distrib]
+  linarith
 
-/-- For a fixed `d : ι → Γ`, the set of triples `(d1, d2, d3)` with `d1 + d2 + d3 = d`,
-`f(d1) ≠ 0`, `g(d2) ≠ 0`, and `h(d3) ≠ 0` is finite. -/
-lemma finite_triple_support (f : NovikovSeries Γ ι A)
-  (g : NovikovSeries Γ ι B) (h : NovikovSeries Γ ι C)
-  (d : ι → Γ) :
+/-- For Novikov-finite `T1, T2, T3` and a target `d`, the set of triples
+`(d1, d2, d3) ∈ T1 × T2 × T3` with `d1 + d2 + d3 = d` is finite. -/
+lemma finite_triple_sum_eq {T1 T2 T3 : Set (ι → Γ)}
+    (h1 : hasNovikovFiniteness T1) (h2 : hasNovikovFiniteness T2)
+    (h3 : hasNovikovFiniteness T3) (d : ι → Γ) :
     {t : (ι → Γ) × (ι → Γ) × (ι → Γ) |
-      t.1 + t.2.1 + t.2.2 = d ∧ f t.1 ≠ 0 ∧ g t.2.1 ≠ 0 ∧ h t.2.2 ≠ 0}.Finite := by
+      t.1 + t.2.1 + t.2.2 = d ∧ t.1 ∈ T1 ∧ t.2.1 ∈ T2 ∧ t.2.2 ∈ T3}.Finite := by
   let s : ι → ℝ := fun _ => 1
-  have hs : ∀ i, 0 < s i := fun i => zero_lt_one
+  have hs : ∀ i, 0 < s i := fun _ => zero_lt_one
   let L : ℝ := ∑ i, s i * (d i : ℝ)
-  let Sf := {d1 : ι → Γ | f d1 ≠ 0 ∧ ∑ i, s i * (d1 i : ℝ) < L + 1}
-  let Sg := {d2 : ι → Γ | g d2 ≠ 0 ∧ ∑ i, s i * (d2 i : ℝ) < 0}
-  let Sh := {d3 : ι → Γ | h d3 ≠ 0 ∧ ∑ i, s i * (d3 i : ℝ) < 0}
-  have hf : Sf.Finite := finite_support_below f s hs (L + 1)
-  have hg : Sg.Finite := finite_support_below g s hs 0
-  have hh : Sh.Finite := finite_support_below h s hs 0
-  let T := {t : (ι → Γ) × (ι → Γ) × (ι → Γ) |
-    t.1 + t.2.1 + t.2.2 = d ∧ f t.1 ≠ 0 ∧ g t.2.1 ≠ 0 ∧ h t.2.2 ≠ 0}
-  -- Case 1: d1 has weighted sum < L + 1
-  let T1 := {t ∈ T | t.1 ∈ Sf}
-  -- Case 2: d1 is large, so d2 + d3 has negative weighted sum; then either d2 or d3 is negative
-  let T2 := {t ∈ T | t.2.1 ∈ Sg}
-  let T3 := {t ∈ T | t.2.2 ∈ Sh}
-  have h_sub : T ⊆ T1 ∪ T2 ∪ T3 := by
-    rintro ⟨d1, d2, d3⟩ ⟨hsum, hf1, hg2, hh3⟩
-    by_cases h : d1 ∈ Sf
-    · left; left
-      exact ⟨⟨hsum, hf1, hg2, hh3⟩, h⟩
-    · -- d1 not in Sf, so ∑(d1) ≥ L + 1, thus ∑(d2) + ∑(d3) = L - ∑(d1) < 0
-      simp only [Set.mem_setOf_eq, not_and, not_lt, Sf] at h
-      have hL : L = ∑ i, s i * (d1 i : ℝ) + ∑ i, s i * (d2 i : ℝ) + ∑ i, s i * (d3 i : ℝ) := by
-        rw [← Finset.sum_add_distrib, ← Finset.sum_add_distrib]
-        apply Finset.sum_congr rfl
-        intro i _
-        have h_eq : (d i : ℝ) = (d1 i : ℝ) + (d2 i : ℝ) + (d3 i : ℝ) := by
-          have h := congr_fun hsum i
-          simp only [Pi.add_apply] at h
-          rw [← h]
-          rfl
-        rw [h_eq]
-        ring
-      have h_d1_ge : L + 1 ≤ ∑ i, s i * (d1 i : ℝ) := h hf1
-      have h_d2_d3_neg : ∑ i, s i * (d2 i : ℝ) + ∑ i, s i * (d3 i : ℝ) < 0 := by nlinarith
-      by_cases h2 : d2 ∈ Sg
-      · left; right
-        exact ⟨⟨hsum, hf1, hg2, hh3⟩, h2⟩
-      · -- d2 not in Sg, so ∑(d2) ≥ 0, thus ∑(d3) < 0
-        simp only [Set.mem_setOf_eq, not_and, not_lt, Sg] at h2
-        have h_d2_ge : 0 ≤ ∑ i, s i * (d2 i : ℝ) := h2 hg2
-        have h_d3_neg : ∑ i, s i * (d3 i : ℝ) < 0 := by linarith
-        have hd3 : d3 ∈ Sh := ⟨hh3, h_d3_neg⟩
-        right
-        exact ⟨⟨hsum, hf1, hg2, hh3⟩, hd3⟩
-  -- T1 is finite
-  have hT1 : T1.Finite := by
-    have h_inj : Set.InjOn (fun t : (ι → Γ) × (ι → Γ) × (ι → Γ) => (t.2.1, t.2.2)) T1 := by
-      rintro ⟨d1, d2, d3⟩ ⟨ht, _⟩ ⟨d1', d2', d3'⟩ ⟨ht', _⟩ h_eq
-      simp only [Prod.mk.injEq] at h_eq
+  let B1 : Set (ι → Γ) := {d1 | d1 ∈ T1 ∧ ∑ i, s i * (d1 i : ℝ) < L + 1}
+  let B2 : Set (ι → Γ) := {d2 | d2 ∈ T2 ∧ ∑ i, s i * (d2 i : ℝ) < 0}
+  let B3 : Set (ι → Γ) := {d3 | d3 ∈ T3 ∧ ∑ i, s i * (d3 i : ℝ) < 0}
+  have hB1 : B1.Finite := h1 s hs (L + 1)
+  have hB2 : B2.Finite := h2 s hs 0
+  have hB3 : B3.Finite := h3 s hs 0
+  let S : Set ((ι → Γ) × (ι → Γ) × (ι → Γ)) :=
+    {t | t.1 + t.2.1 + t.2.2 = d ∧ t.1 ∈ T1 ∧ t.2.1 ∈ T2 ∧ t.2.2 ∈ T3}
+  let S1 := {t ∈ S | t.1 ∈ B1}
+  let S2 := {t ∈ S | t.2.1 ∈ B2}
+  let S3 := {t ∈ S | t.2.2 ∈ B3}
+  have h_sub : S ⊆ S1 ∪ S2 ∪ S3 := by
+    rintro ⟨d1, d2, d3⟩ ⟨hsum, hT1, hT2, hT3⟩
+    by_contra! hbad
+    have ht : ((d1, d2, d3) : (ι → ↥Γ) × (ι → ↥Γ) × (ι → ↥Γ)) ∈ S :=
+      ⟨hsum, hT1, hT2, hT3⟩
+    simp only [Set.mem_setOf_eq, Set.sep_and, Set.mem_union, Set.mem_inter_iff, ht,
+      hT1, and_self, true_and, hT2, hT3, not_or, not_lt,
+      S1, B1, S2, B2, S3, B3] at hbad
+    have h_sum_i : ∀ i, (d i : ℝ) = (d1 i : ℝ) + (d2 i : ℝ) + (d3 i : ℝ) := by
+      intro i
+      have hz := congr_fun hsum i
+      simp only [Pi.add_apply] at hz
+      exact (congr_arg (fun x : Γ => (x : ℝ)) hz).symm
+    have hL : L = ∑ i, s i * (d1 i : ℝ) + ∑ i, s i * (d2 i : ℝ)
+        + ∑ i, s i * (d3 i : ℝ) := by
+      simp only [L, ← Finset.sum_add_distrib]
+      apply Finset.sum_congr rfl
+      intro i _
+      rw [h_sum_i i]; ring
+    linarith
+  have hS1 : S1.Finite := by
+    have h_inj : Set.InjOn (fun t : (ι → Γ) × (ι → Γ) × (ι → Γ) => (t.2.1, t.2.2)) S1 := by
+      rintro ⟨d1, d2, d3⟩ ⟨ht, _⟩ ⟨d1', d2', d3'⟩ ⟨ht', _⟩ heq
+      simp only [Prod.mk.injEq] at heq
+      rcases heq with ⟨rfl, rfl⟩
       have h_d1 : d1 = d1' := by
         funext i
-        have h := congr_fun ht.1 i
-        have h' := congr_fun ht'.1 i
-        simp only [Pi.add_apply] at h h'
-        rw [h_eq.1, h_eq.2] at h
-        grind only
-      simp_all only
-    have h_image : ((fun t => (t.2.1, t.2.2)) '' T1).Finite := by
-      have h_sub' : (fun t => (t.2.1, t.2.2)) '' T1 ⊆ ⋃ d1 ∈ Sf,
-          {p : (ι → Γ) × (ι → Γ) | d1 + p.1 + p.2 = d ∧ g p.1 ≠ 0 ∧ h p.2 ≠ 0} := by
-        rintro ⟨d2, d3⟩ ⟨⟨d1, d2', d3'⟩, ⟨ht, hd1⟩, h_eq⟩
+        have hz1 := congr_fun ht.1 i
+        have hz2 := congr_fun ht'.1 i
+        simp only [Pi.add_apply] at hz1 hz2
+        have h1_real := congr_arg (fun x : Γ => (x : ℝ)) hz1
+        have h2_real := congr_arg (fun x : Γ => (x : ℝ)) hz2
+        change (d1 i : ℝ) + (d2 i : ℝ) + (d3 i : ℝ) = (d i : ℝ) at h1_real
+        change (d1' i : ℝ) + (d2 i : ℝ) + (d3 i : ℝ) = (d i : ℝ) at h2_real
+        have hd1 : (d1 i : ℝ) = (d1' i : ℝ) := by linarith
+        exact Subtype.ext hd1
+      rw [h_d1]
+    have h_image : ((fun t => (t.2.1, t.2.2)) '' S1).Finite := by
+      have h_sub' : (fun t => (t.2.1, t.2.2)) '' S1 ⊆ ⋃ d1 ∈ B1,
+          {p : (ι → Γ) × (ι → Γ) | d1 + p.1 + p.2 = d ∧ p.1 ∈ T2 ∧ p.2 ∈ T3} := by
+        rintro ⟨d2, d3⟩ ⟨⟨d1, d2', d3'⟩, ⟨ht, hd1⟩, heq⟩
         simp only [Set.mem_iUnion, exists_prop]
         refine ⟨d1, hd1, ?_⟩
-        simp_all only [zero_lt_one, implies_true, ne_eq, one_mul, Set.mem_setOf_eq, Prod.mk.eta, Prod.mk.injEq,
-          not_false_eq_true, true_and, and_self, s, Sf, L, Sg, Sh, T, T1, T2, T3]
+        simp only [Prod.mk.injEq] at heq
+        rcases heq with ⟨rfl, rfl⟩
+        exact ⟨ht.1, ht.2.2.1, ht.2.2.2⟩
       apply Set.Finite.subset _ h_sub'
-      exact Set.Finite.biUnion hf (fun d1 _ => finite_convolution_support_three g h d d1)
+      exact Set.Finite.biUnion hB1 (fun d1 _ => finite_pair_sum_eq_offset h2 h3 d d1)
     exact Set.Finite.of_finite_image h_image h_inj
-  -- T2 is finite
-  have hT2 : T2.Finite := by
-    have h_inj : Set.InjOn (fun t : (ι → Γ) × (ι → Γ) × (ι → Γ) => (t.1, t.2.2)) T2 := by
-      rintro ⟨d1, d2, d3⟩ ⟨ht, _⟩ ⟨d1', d2', d3'⟩ ⟨ht', _⟩ h_eq
-      simp only at h_eq
-      have h_d1 : d2 = d2' := by
+  have hS2 : S2.Finite := by
+    have h_inj : Set.InjOn (fun t : (ι → Γ) × (ι → Γ) × (ι → Γ) => (t.1, t.2.2)) S2 := by
+      rintro ⟨d1, d2, d3⟩ ⟨ht, _⟩ ⟨d1', d2', d3'⟩ ⟨ht', _⟩ heq
+      simp only [Prod.mk.injEq] at heq
+      rcases heq with ⟨rfl, rfl⟩
+      have h_d2 : d2 = d2' := by
         funext i
-        have h := congr_fun ht.1 i
-        have h' := congr_fun ht'.1 i
-        simp only [Pi.add_apply] at h h'
-        grind only
-      simp_all only [Prod.mk.injEq, s, Sf, L, Sg, Sh, T, T1, T2, T3]
-    have h_image : ((fun t => (t.1, t.2.2)) '' T2).Finite := by
-      have h_sub' : (fun t => (t.1, t.2.2)) '' T2 ⊆ ⋃ d2 ∈ Sg,
-          {p : (ι → Γ) × (ι → Γ) | d2 + p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ h p.2 ≠ 0} := by
-        rintro ⟨d1, d3⟩ ⟨⟨d1', d2, d3'⟩, ⟨ht, hd2⟩, h_eq⟩
+        have hz1 := congr_fun ht.1 i
+        have hz2 := congr_fun ht'.1 i
+        simp only [Pi.add_apply] at hz1 hz2
+        have h1_real := congr_arg (fun x : Γ => (x : ℝ)) hz1
+        have h2_real := congr_arg (fun x : Γ => (x : ℝ)) hz2
+        change (d1 i : ℝ) + (d2 i : ℝ) + (d3 i : ℝ) = (d i : ℝ) at h1_real
+        change (d1 i : ℝ) + (d2' i : ℝ) + (d3 i : ℝ) = (d i : ℝ) at h2_real
+        have hd2 : (d2 i : ℝ) = (d2' i : ℝ) := by linarith
+        exact Subtype.ext hd2
+      rw [h_d2]
+    have h_image : ((fun t => (t.1, t.2.2)) '' S2).Finite := by
+      have h_sub' : (fun t => (t.1, t.2.2)) '' S2 ⊆ ⋃ d2 ∈ B2,
+          {p : (ι → Γ) × (ι → Γ) | d2 + p.1 + p.2 = d ∧ p.1 ∈ T1 ∧ p.2 ∈ T3} := by
+        rintro ⟨d1, d3⟩ ⟨⟨d1', d2, d3'⟩, ⟨ht, hd2⟩, heq⟩
         simp only [Set.mem_iUnion, exists_prop]
         refine ⟨d2, hd2, ?_⟩
-        simp_all only [zero_lt_one, implies_true, ne_eq, one_mul, Set.mem_setOf_eq, Prod.mk.injEq, not_false_eq_true,
-          true_and, and_self, s, Sf, L, Sg, Sh, T, T1, T2, T3]
-        grind only
-      apply Set.Finite.subset _ h_sub'
-      exact Set.Finite.biUnion hg (fun d2 _ => finite_convolution_support_three f h d d2)
-    exact Set.Finite.of_finite_image h_image h_inj
-  -- T3 is finite
-  have hT3 : T3.Finite := by
-    have h_inj : Set.InjOn (fun t : (ι → Γ) × (ι → Γ) × (ι → Γ) => (t.1, t.2.1)) T3 := by
-      rintro ⟨d1, d2, d3⟩ ⟨ht, _⟩ ⟨d1', d2', d3'⟩ ⟨ht', _⟩ h_eq
-      simp only at h_eq
-      have h_d1 : d3 = d3' := by
+        simp only [Prod.mk.injEq] at heq
+        rcases heq with ⟨rfl, rfl⟩
+        refine ⟨?_, ht.2.1, ht.2.2.2⟩
         funext i
-        have h := congr_fun ht.1 i
-        have h' := congr_fun ht'.1 i
-        simp only [Pi.add_apply] at h h'
-        grind only
-      simp_all only [Prod.mk.injEq]
-    have h_image : ((fun t => (t.1, t.2.1)) '' T3).Finite := by
-      have h_sub' : (fun t => (t.1, t.2.1)) '' T3 ⊆ ⋃ d3 ∈ Sh,
-          {p : (ι → Γ) × (ι → Γ) | d3 + p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ g p.2 ≠ 0} := by
-        rintro ⟨d1, d2⟩ ⟨⟨d1', d2', d3⟩, ⟨ht, hd3⟩, h_eq⟩
+        have hz := congr_fun ht.1 i
+        simp only [Pi.add_apply] at hz
+        have h_real := congr_arg (fun x : Γ => (x : ℝ)) hz
+        change (d1' i : ℝ) + (d2 i : ℝ) + (d3' i : ℝ) = (d i : ℝ) at h_real
+        have heq2 : (d2 i : ℝ) + (d1' i : ℝ) + (d3' i : ℝ) = (d i : ℝ) := by linarith
+        exact Subtype.ext heq2
+      apply Set.Finite.subset _ h_sub'
+      exact Set.Finite.biUnion hB2 (fun d2 _ => finite_pair_sum_eq_offset h1 h3 d d2)
+    exact Set.Finite.of_finite_image h_image h_inj
+  have hS3 : S3.Finite := by
+    have h_inj : Set.InjOn (fun t : (ι → Γ) × (ι → Γ) × (ι → Γ) => (t.1, t.2.1)) S3 := by
+      rintro ⟨d1, d2, d3⟩ ⟨ht, _⟩ ⟨d1', d2', d3'⟩ ⟨ht', _⟩ heq
+      simp only [Prod.mk.injEq] at heq
+      rcases heq with ⟨rfl, rfl⟩
+      have h_d3 : d3 = d3' := by
+        funext i
+        have hz1 := congr_fun ht.1 i
+        have hz2 := congr_fun ht'.1 i
+        simp only [Pi.add_apply] at hz1 hz2
+        have h1_real := congr_arg (fun x : Γ => (x : ℝ)) hz1
+        have h2_real := congr_arg (fun x : Γ => (x : ℝ)) hz2
+        change (d1 i : ℝ) + (d2 i : ℝ) + (d3 i : ℝ) = (d i : ℝ) at h1_real
+        change (d1 i : ℝ) + (d2 i : ℝ) + (d3' i : ℝ) = (d i : ℝ) at h2_real
+        have hd3 : (d3 i : ℝ) = (d3' i : ℝ) := by linarith
+        exact Subtype.ext hd3
+      rw [h_d3]
+    have h_image : ((fun t => (t.1, t.2.1)) '' S3).Finite := by
+      have h_sub' : (fun t => (t.1, t.2.1)) '' S3 ⊆ ⋃ d3 ∈ B3,
+          {p : (ι → Γ) × (ι → Γ) | d3 + p.1 + p.2 = d ∧ p.1 ∈ T1 ∧ p.2 ∈ T2} := by
+        rintro ⟨d1, d2⟩ ⟨⟨d1', d2', d3⟩, ⟨ht, hd3⟩, heq⟩
         simp only [Set.mem_iUnion, exists_prop]
         refine ⟨d3, hd3, ?_⟩
-        simp_all only [zero_lt_one, implies_true, ne_eq, one_mul, Set.mem_setOf_eq, Prod.mk.injEq, not_false_eq_true,
-          true_and, and_self, s, Sf, L, Sg, Sh, T, T1, T2, T3]
-        grind only
+        simp only [Prod.mk.injEq] at heq
+        rcases heq with ⟨rfl, rfl⟩
+        refine ⟨?_, ht.2.1, ht.2.2.1⟩
+        funext i
+        have hz := congr_fun ht.1 i
+        simp only [Pi.add_apply] at hz
+        have h_real := congr_arg (fun x : Γ => (x : ℝ)) hz
+        change (d1' i : ℝ) + (d2' i : ℝ) + (d3 i : ℝ) = (d i : ℝ) at h_real
+        have heq2 : (d3 i : ℝ) + (d1' i : ℝ) + (d2' i : ℝ) = (d i : ℝ) := by linarith
+        exact Subtype.ext heq2
       apply Set.Finite.subset _ h_sub'
-      exact Set.Finite.biUnion hh (fun d3 _ => finite_convolution_support_three f g d d3)
+      exact Set.Finite.biUnion hB3 (fun d3 _ => finite_pair_sum_eq_offset h1 h2 d d3)
     exact Set.Finite.of_finite_image h_image h_inj
-  exact Set.Finite.subset (Set.Finite.union (Set.Finite.union hT1 hT2) hT3) h_sub
+  exact Set.Finite.subset ((hS1.union hS2).union hS3) h_sub
 
-/-- Membership in the convolution support finset, unfolded to the explicit condition. -/
-lemma mem_finite_convolution_support {f : NovikovSeries Γ ι A} {g : NovikovSeries Γ ι B} {d : ι → Γ} {p} :
-    p ∈ (finite_convolution_support f g d).toFinset ↔
-    p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ g p.2 ≠ 0 := by
-  simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq]
-
-/-- Membership in the triple support finset, unfolded to the explicit condition. -/
-lemma mem_finite_triple_support {f : NovikovSeries Γ ι A} {g : NovikovSeries Γ ι B} {h : NovikovSeries Γ ι C} {d : ι → Γ} {t} :
-    t ∈ (finite_triple_support f g h d).toFinset ↔
-    t.1 + t.2.1 + t.2.2 = d ∧ f t.1 ≠ 0 ∧ g t.2.1 ≠ 0 ∧ h t.2.2 ≠ 0 := by
-  simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq]
-
-end Finiteness
+end Convolution
 
 end Novikov

@@ -14,8 +14,7 @@ import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Data.Real.Basic
 
 
-open Novikov
-open Pointwise
+open Pointwise Filter Topology
 
 namespace Novikov
 
@@ -48,7 +47,7 @@ lemma filtration_mul [CommRing A] {D₁ D₂ : ℝ} :
   simp only [novikovMul_val, novikovMulFun]
   apply Finset.sum_eq_zero
   rintro ⟨d1, d2⟩ hp
-  rw [mem_finite_convolution_support] at hp
+  simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hp
   rcases hp with ⟨hsum, hg_nz, hh_nz⟩
   have h_lt : (d1 () : ℝ) < D₁ ∨ (d2 () : ℝ) < D₂ := by
     have h_eq' : (d1 () : ℝ) + (d2 () : ℝ) = (d () : ℝ) := by
@@ -141,6 +140,12 @@ def filtrationBasis {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] (Γ : 
     simp only [Set.mem_preimage, add_comm x f, add_neg_cancel_right]
     exact hf
 
+lemma filtration_mul_mono {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] {Γ : S} {A : Type*} [CommRing A]
+    {D₁ D₂ D : ℝ} (h : D₁ + D₂ ≥ D) {x y : OneVarNovikovSeries Γ A}
+    (hx : x ∈ filtration Γ A D₁) (hy : y ∈ filtration Γ A D₂) :
+    x * y ∈ filtration Γ A D :=
+  filtration_mono (A := A) (Γ := Γ) h (filtration_mul ⟨x, hx, y, hy, rfl⟩)
+
 /-- The filter basis of filtrations as a ring filter basis. -/
 @[reducible]
 noncomputable def ringFiltrationBasis {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] (Γ : S) (A : Type*) [CommRing A] : RingFilterBasis (OneVarNovikovSeries Γ A) where
@@ -150,25 +155,19 @@ noncomputable def ringFiltrationBasis {S : Type*} [SetLike S ℝ] [AddSubmonoidC
     rintro _ ⟨D, rfl⟩
     refine ⟨(filtration Γ A (D/2 + 1) : Set _), ⟨D/2 + 1, rfl⟩, ?_⟩
     rintro _ ⟨g, hg, h, hh, rfl⟩
-    have h_mul := filtration_mul (Γ := Γ) (A := A) (D₁ := D/2 + 1) (D₂ := D/2 + 1)
-    have h_mem : g * h ∈ filtration Γ A (D/2 + 1 + (D/2 + 1)) := h_mul ⟨g, hg, h, hh, rfl⟩
-    apply filtration_mono (A := A) (Γ := Γ) (by linarith) h_mem
+    exact filtration_mul_mono (by linarith) hg hh
   mul_left' := by
     rintro x _ ⟨D, rfl⟩
     rcases exists_filtration x with ⟨Dx, hx⟩
     refine ⟨(filtration Γ A (D - Dx + 1) : Set _), ⟨D - Dx + 1, rfl⟩, ?_⟩
     intro y hy
-    have h_mul := filtration_mul (Γ := Γ) (A := A) (D₁ := Dx) (D₂ := D - Dx + 1)
-    have h_mem : x * y ∈ filtration Γ A (Dx + (D - Dx + 1)) := h_mul ⟨x, hx, y, hy, rfl⟩
-    exact filtration_mono (A := A) (Γ := Γ) (by linarith) h_mem
+    exact filtration_mul_mono (by linarith) hx hy
   mul_right' := by
     rintro x _ ⟨D, rfl⟩
     rcases exists_filtration x with ⟨Dx, hx⟩
     refine ⟨(filtration Γ A (D - Dx + 1) : Set _), ⟨D - Dx + 1, rfl⟩, ?_⟩
     intro y hy
-    have h_mul := filtration_mul (Γ := Γ) (A := A) (D₁ := D - Dx + 1) (D₂ := Dx)
-    have h_mem : y * x ∈ filtration Γ A (D - Dx + 1 + Dx) := h_mul ⟨y, hy, x, hx, rfl⟩
-    exact filtration_mono (A := A) (Γ := Γ) (by linarith) h_mem
+    exact filtration_mul_mono (by linarith) hy hx
 
 instance [AddCommGroup A] : TopologicalSpace (OneVarNovikovSeries Γ A) :=
   (filtrationBasis Γ A).topology
@@ -176,16 +175,14 @@ instance [AddCommGroup A] : TopologicalSpace (OneVarNovikovSeries Γ A) :=
 section AddCommGroup
 variable [AddCommGroup A]
 
-lemma isTopologicalAddGroup : IsTopologicalAddGroup (OneVarNovikovSeries Γ A) :=
+lemma is_topological_add_group : IsTopologicalAddGroup (OneVarNovikovSeries Γ A) :=
   (filtrationBasis Γ A).isTopologicalAddGroup
 
 instance : UniformSpace (OneVarNovikovSeries Γ A) :=
-  IsTopologicalAddGroup.rightUniformSpace (OneVarNovikovSeries Γ A)
+  is_topological_add_group.rightUniformSpace (OneVarNovikovSeries Γ A)
 
 instance : IsUniformAddGroup (OneVarNovikovSeries Γ A) :=
   isUniformAddGroup_of_addCommGroup
-
-open Filter Topology
 
 /-- One-variable Novikov series are complete. -/
 instance : CompleteSpace (OneVarNovikovSeries Γ A) where
@@ -252,6 +249,7 @@ instance : CompleteSpace (OneVarNovikovSeries Γ A) where
           have : (d () : ℝ) < C / s () := (lt_div_iff₀ h_pos).mpr (by rwa [mul_comm] at h_sum_lt)
           linarith
         rw [h_coeff_stable d D M h_D hM.1 hM.2 g hg]
+      change {d | f_coeff d ≠ 0 ∧ ∑ i, s i * (d i : ℝ) < C}.Finite
       rw [h_eq]
       exact g.prop s hs C
     let f : OneVarNovikovSeries Γ A := ⟨f_coeff, h_nov⟩
@@ -301,7 +299,7 @@ end AddCommGroup
 section CommRing
 variable [CommRing A]
 
-lemma isTopologicalRing : IsTopologicalRing (OneVarNovikovSeries Γ A) :=
+lemma is_topological_ring : IsTopologicalRing (OneVarNovikovSeries Γ A) :=
   (ringFiltrationBasis Γ A).isTopologicalRing
 
 lemma filtration_smul (a : A) {D : ℝ} {f : OneVarNovikovSeries Γ A}
@@ -317,7 +315,7 @@ def filtrationSubmodule (D : ℝ) : Submodule A (OneVarNovikovSeries Γ A) where
   zero_mem' := (filtration Γ A D).zero_mem
   smul_mem' a _ hf := filtration_smul a hf
 
-lemma isLinearTopology : IsLinearTopology A (OneVarNovikovSeries Γ A) := by
+lemma is_linear_topology : IsLinearTopology A (OneVarNovikovSeries Γ A) := by
   let s : ℝ → Submodule A (OneVarNovikovSeries Γ A) := fun D => filtrationSubmodule D
   refine IsLinearTopology.mk_of_hasBasis (R := A) (s := s) (p := fun _ => True) ?_
   have h := (filtrationBasis Γ A).nhds_zero_hasBasis

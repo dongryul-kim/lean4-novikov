@@ -1,0 +1,79 @@
+
+\section{Novikov isocrytals}
+
+In this section we define the notion of a Novikov isocrystal and prove some
+basic facts about it. Throughout the discussion, we fix a real number $\lambda >
+1$.
+
+\subsection{Novikov isocrystals}
+
+\begin{definition}
+  \label{def:frobenius}
+  \leanok
+  \uses{def:novikov_series}
+  For an abelian group $A$, we define the Frobenius endomorphism $F \colon
+  A((t^{\mathbb{R}})) \to A((t^{\mathbb{R}}))$ by $A$-linearly extending $t^d
+  \mapsto t^{\lambda d}$.
+\end{definition}
+
+\begin{theorem}
+  \label{thm:frobenius_properties}
+  \lean{Novikov.frobeniusRingHom, Novikov.frobenius_continuous}
+  \leanok
+  \uses{def:frobenius, def:novikov_ring, thm:novikov_topology}
+  When $A$ is a ring, the Frobenius is a continuous ring homomorphism.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Because both sides of the convolution variables are equally scaled, it
+  respects multiplication. It also sends the standard neighborhood bases to
+  neighborhood bases.
+\end{proof}
+
+\begin{definition}[Definition~3.1]
+  \label{def:novikov_isocrystal}
+  \lean{Novikov.NovikovIsocrystal}
+  \leanok
+  \uses{def:frobenius, thm:novikov_ring}
+  Let $A$ be a commutative ring. A \emph{Novikov isocrystal} over $A$ consists of
+  \begin{itemize}
+    \item a finite projective $A((t^{\mathbb{R}}))$-module $M$, and
+    \item a $F$-semilinear isomorphism $F_M \colon M \to M$.
+  \end{itemize}
+\end{definition}
+
+\begin{lemma}
+  \label{lem:novikov_isocrystal_category}
+  \leanok
+  \uses{def:novikov_isocrystal, def:novikov_isocrystal_hom}
+  Novikov isocrystals over $A$ form a preadditive category with internal Hom.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Given two isocrystals $M$ and $N$, the module
+  $\operatorname{Hom}_{A((t^{\mathbb{R}}))}(M, N)$ is finite projective and
+  inherits a Frobenius action from those on $M$ and $N$.
+\end{proof}
+
+\begin{theorem}[Proposition~3.3]
+  \label{thm:vect_to_isoc_full_faith}
+  \lean{Novikov.NovikovIsocrystal.vectToNovIsoc_fully_faithful}
+  \leanok
+  \uses{def:novikov_isocrystal}
+  The functor $\mathsf{Vect}(A) \to \mathsf{NovIsoc}(A)$ sends a finite
+  projective $A$-module $M$ to its constant isocrystal $M((t^{\mathbb{R}}))
+  = M \otimes_A A((t^{\mathbb{R}}))$ is fully faithful.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  A morphism $g$ of constant isocrystals corresponds to an
+  $A((t^{\mathbb{R}}))$-linear map $M \otimes_A A((t^{\mathbb{R}})) \to
+  N \otimes_A A((t^{\mathbb{R}}))$ commuting with $\mathrm{id} \otimes F$. Via
+  the internal Hom, this yields an element of $A((t^{\mathbb{R}})) \otimes_A
+  \operatorname{Hom}_A(M, N)$ fixed by $F$. Such elements are exactly of the
+  form $1 \otimes f$ for $f \in \operatorname{Hom}_A(M, N)$.
+\end{proof}
+

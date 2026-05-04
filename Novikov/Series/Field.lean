@@ -14,9 +14,11 @@ import Mathlib.Topology.Algebra.InfiniteSum.Defs
 import Mathlib.Topology.Algebra.InfiniteSum.Group
 import Mathlib.Topology.Algebra.InfiniteSum.Ring
 
-open Novikov
-open Finset
-open Topology
+import Mathlib.Algebra.Group.Pointwise.Set.Basic
+import Mathlib.Algebra.Group.Pointwise.Set.ListOfFn
+import Mathlib.Algebra.BigOperators.Pi
+
+open Finset Topology Pointwise
 
 namespace Novikov
 
@@ -120,29 +122,24 @@ lemma geometricSeries_pow_supp_le (g : OneVarNovikovSeries Γ A) (hg0 : g ≠ 0)
     ∀ (n : ℕ) d, (g ^ n : NovikovSeries Γ Unit A) d ≠ 0 → n * ε ≤ (d () : ℝ) := by
   intro n
   induction n with
-  | zero => 
+  | zero =>
     intro d hd
-    rw [pow_zero] at hd
-    by_cases h : d = 0
-    · subst h; simp
-    · have : (1 : OneVarNovikovSeries Γ A) d = if d = 0 then 1 else 0 := rfl
-      rw [this] at hd
-      rw [if_neg h] at hd
-      contradiction
+    have : d = 0 := by
+      rw [pow_zero] at hd
+      have h1 : (1 : OneVarNovikovSeries Γ A) d = if d = 0 then 1 else 0 := rfl
+      rw [h1] at hd
+      by_contra h; rw [if_neg h] at hd; contradiction
+    subst this; simp
   | succ n ih =>
     intro d hd; rw [pow_succ] at hd
-    simp only [Novikov.novikovMul_val, Novikov.novikovMulFun] at hd
-    rcases Finset.exists_ne_zero_of_sum_ne_zero hd with ⟨p, hp, _⟩
-    obtain ⟨hsum, hgn_nz, hg_nz⟩ := (mem_finite_convolution_support).1 hp
-    have h1 := minDegree_le g hg0 p.2 hg_nz
-    have h2 := ih p.1 hgn_nz
-    have h_i := congr_fun hsum ()
-    simp only [Pi.add_apply] at h_i
-    rw [hε] at h1
-    have h_i_real : (d () : ℝ) = (p.1 () : ℝ) + (p.2 () : ℝ) := by
-      rw [← h_i]; rfl
-    rw [h_i_real, Nat.cast_add, Nat.cast_one, add_mul, one_mul]
-    linarith
+    have h_supp : d ∈ ((g ^ n) * g).support := hd
+    have h_mem := support_mul_subset (g ^ n) g (AddMonoidHom.mul) h_supp
+    rw [Set.mem_add] at h_mem
+    obtain ⟨d1, hd1, d2, hd2, rfl⟩ := h_mem
+    rw [Pi.add_apply, Nat.cast_succ, add_mul, one_mul]
+    apply add_le_add
+    · exact ih d1 hd1
+    · rw [← hε]; exact minDegree_le g hg0 d2 hd2
 
 lemma positiveTopNilp (g : OneVarNovikovSeries Γ A) (hg : IsPositive g) : IsTopologicallyNilpotent g := by
   refine (Novikov.filtrationBasis Γ A).nhds_zero_hasBasis.tendsto_right_iff.2 ?_
@@ -201,7 +198,7 @@ lemma geometric_summable (g : OneVarNovikovSeries Γ A) (hg : IsPositive g) :
 lemma geometricSeries_mul_inv (g : OneVarNovikovSeries Γ A) (hg : IsPositive g) :
     (1 - g) * geometricSeries g hg = 1 := by
   haveI : IsTopologicalRing (OneVarNovikovSeries Γ A) :=
-    Novikov.isTopologicalRing
+    Novikov.is_topological_ring
   change (1 - g) * (∑' n : ℕ, g ^ n) = 1
   exact (geometric_summable g hg).one_sub_mul_tsum_pow
 

@@ -34,8 +34,14 @@ basic facts about them.
 
 \begin{proof}
   \leanok
-  Injectivity and surjectivity are checked coefficient-wise, using the fact that
-  the finiteness condition for Novikov series only depends on the support.
+  The exactness of the sequence of Novikov series is verified coefficient-wise.
+  Since the addition and mapping of series are defined by applying the map to each coefficient
+  independently, the injectivity and surjectivity of the induced maps follow from the
+  corresponding properties of $f$ and $g$ on the underlying groups.
+  Specifically, for surjectivity, any series in $C((\underline{t}^\Gamma))$ can be lifted to
+  $B((\underline{t}^\Gamma))$ by lifting each coefficient using the surjectivity of $g$.
+  The kernel condition $\text{im}(f) = \text{ker}(g)$ also holds because it holds for each
+  coefficient independently.
 \end{proof}
 
 \begin{definition}
@@ -63,7 +69,13 @@ basic facts about them.
 
 \begin{proof}
   \leanok
-  This follows from a routine verification.
+  The addition is defined coefficient-wise, and the zero element is the series with all zero coefficients.
+  The multiplication is defined by convolution: $(f \ast g)_d = \sum_{d_1 + d_2 = d} f_{d_1} g_{d_2}$.
+  The finiteness condition on the support of the product follows from the fact that the sum of two
+  well-ordered sets (or sets satisfying the Novikov finiteness condition) also satisfies the condition.
+  The ring axioms (associativity, distributivity, and existence of unity $1 \cdot t^0$) follow from
+  the corresponding properties of the underlying ring $A$ and the properties of formal power series
+  summation.
 \end{proof}
 
 \begin{theorem}
@@ -78,7 +90,31 @@ basic facts about them.
 
 \begin{proof}
   \leanok
-  This follows from a routine verification.
+  The $A((\underline{t}^\Gamma))$-module structure on $M((\underline{t}^\Gamma))$ is defined via the
+  convolution product using the scalar multiplication $\alpha \colon A \times M \to M$.
+  The module axioms, such as $(f \ast g) \cdot m = f \cdot (g \cdot m)$ and distributivity,
+  are verified by comparing coefficients, which involves reordering sums based on the associativity
+  and distributivity of the underlying module $M$ over $A$.
+\end{proof}
+
+\begin{theorem}
+  \label{thm:novikov_base_change}
+  \lean{Novikov.novikovModule_base_change_equiv}
+  \leanok
+  \uses{thm:novikov_module, lem:novikov_exact}
+  Let $M$ be a finitely presented $A$-module. The natural map
+  \[ M \otimes_A A((t_1^\Gamma, \dotsc, t_n^\Gamma)) \to M((t_1^\Gamma, \dotsc, t_n^\Gamma)) \]
+  is an isomorphism of $A((t_1^\Gamma, \dotsc, t_n^\Gamma))$-modules.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Since $M$ is finitely presented, it has a presentation $F \to G \to M \to 0$ with $F, G$ finite free.
+  Applying the functor $M \mapsto M((\underline{t}^\Gamma))$ gives a right exact sequence
+  $F((\underline{t}^\Gamma)) \to G((\underline{t}^\Gamma)) \to M((\underline{t}^\Gamma)) \to 0$ by Lemma~\ref{lem:novikov_exact}.
+  Tensor product also preserves right exactness, giving $F \otimes A((\underline{t}^\Gamma)) \to G \otimes A((\underline{t}^\Gamma)) \to M \otimes A((\underline{t}^\Gamma)) \to 0$.
+  The natural map gives a morphism between these two sequences. For finite free modules, the map is an isomorphism.
+  By the five lemma (specifically the four lemma variant for right exactness), the map for $M$ is also an isomorphism.
 \end{proof}
 
 \begin{definition}
@@ -126,7 +162,7 @@ When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
 
 \begin{theorem}[Definition~2.15]
   \label{thm:novikov_topology}
-  \lean{Novikov.isTopologicalAddGroup, Novikov.isTopologicalRing}
+  \lean{Novikov.is_topological_add_group, Novikov.is_topological_ring}
   \leanok
   \uses{def:novikov_filtration, thm:novikov_ring}
   The collection of filtration subgroups $\{F_D A((t^\Gamma))\}_{D \in \mathbb{R}}$
@@ -161,4 +197,115 @@ When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
   where $a = f(d)$ is the leading coefficient. Since $f \cdot a^{-1} t^{-d}$ has minimum degree $0$ and
   leading coefficient $1$, its complement is positive and topologically nilpotent, ensuring
   summability of the geometric series.
+\end{proof}
+
+\subsection{Canonical module topology}
+
+\begin{definition}
+  \label{def:canonical_topology}
+  \lean{Novikov.Miscellany.canonicalTopology}
+  \leanok
+  Let $A$ be a topological commutative ring, and let $M$ be an $A$-module.
+  The \emph{canonical topology} on $M$ is the initial topology with respect to
+  all $A$-linear maps $M \to A$. That is, it is the coarsest topology on $M$
+  for which every $A$-linear map $f \colon M \to A$ is continuous.
+\end{definition}
+
+\begin{theorem}
+  \label{thm:canonical_topology_properties}
+  \lean{Novikov.Miscellany.canonicalTopology.continuousAdd,
+    Novikov.Miscellany.canonicalTopology.continuousSMul,
+    Novikov.Miscellany.canonicalTopology_self_eq,
+    Novikov.Miscellany.canonicalTopology.continuous_linearMap,
+    Novikov.Miscellany.canonicalTopology_prod_eq}
+  \leanok
+  \uses{def:canonical_topology}
+  Let $A$ be a topological commutative ring, and let $M$, $N$ be $A$-modules.
+  \begin{enumerate}
+    \item The canonical topology makes $M$ into a topological $A$-module.
+    \item On $A$ itself, the canonical topology coincides with the original
+      topology.
+    \item Every $A$-linear map $M \to N$ is continuous with respect to the
+      canonical topologies.
+    \item The canonical topology on $M \times N$ coincides with the product
+      topology of the canonical topologies on $M$ and $N$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  (1) For each $f \colon M \to A$ we need to show that $A \times M \to M
+  \xrightarrow{f} A$ is continuous. This follows from that this is a composition
+  $A \times M \xrightarrow{\mathrm{id} \times f} A \times A \to A$, which is a
+  composition of two continuous functions.
+
+  (2) The identity map $\mathrm{id}_A \colon A \to A$ is $A$-linear, so the
+  canonical topology on $A$ is finer than the original topology. Conversely,
+  every $A$-linear map $f \colon A \to A$ is given by $f(x) = f(1)x$, which is
+  continuous in the original topology because $A$ is a topological ring. Hence
+  the original topology is finer than each induced topology, so the two
+  topologies coincide.
+
+  (3) For any $A$-linear $f \colon N \to A$, the composition $f \circ \varphi
+  \colon M \to A$ is $A$-linear and therefore continuous in the canonical
+  topology on $M$. Since the canonical topology on $N$ is initial for all such
+  $f$, $\varphi$ is continuous.
+
+  (4) Any $A$-linear map $f \colon M \times N \to A$ decomposes as $f(x,y) =
+  f_1(x) + f_2(y)$ where $f_1 = f \circ \iota_M$ and $f_2 = f \circ \iota_N$
+  are $A$-linear. Both $f_1$ and $f_2$ are continuous in the product of
+  canonical topologies, so the product topology is finer than the canonical
+  topology. Conversely, the projections $M \times N \to M$ and $M \times N \to
+  N$ are $A$-linear and thus continuous in the canonical topology, so the
+  canonical topology is finer than the product topology.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:split_base_change_descent}
+  \lean{Novikov.Miscellany.finite_projective_of_split_baseChange}
+  \leanok
+  Let $B$ be an $A$-algebra with an $A$-linear retraction $B \to A$.
+  If $B \otimes_A M$ is a finite projective $B$-module, then $M$ is a
+  finite projective $A$-module.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Write $\sigma \colon B \to A$ for the $A$-linear retraction. For finiteness,
+  we choose a finite set of $B$-module generators of $B \otimes_A M$, and their
+  image under $\sigma \otimes \mathrm{id}_M$ will generate $M$ as a $A$-module.
+  For projectivity, given a $A$-linear surjection $\varepsilon \colon P
+  \twoheadrightarrow Q$ and $M \to Q$, we wish to lift it to $M \to P$. We lift
+  its $B$-base change along $\varepsilon_B$ using $B$-projectivity and push it
+  down using $\sigma$. The result gives a lift witnessing the $A$-projectivity
+  of $M$.
+\end{proof}
+
+\begin{theorem}[Lemma~2.16]
+  \label{thm:projective_novikov_series}
+  \lean{Novikov.projective_of_realNovikovSeries}
+  \leanok
+  \uses{lem:split_base_change_descent, thm:novikov_base_change, thm:canonical_topology_properties}
+  Let $M$ be an $A$-module. If $M ((t^{\mathbb{R}}))$ is a finite projective
+  $A ((t^{\mathbb{R}}))$-module and its canonical topology coincides with the
+  natural filtration topology, then $M$ is a finite projective $A$-module.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  First, $M ((t^{\mathbb{R}}))$ is finite projective so the natural surjection
+  $R^n \twoheadrightarrow M ((t^{\mathbb{R}}))$ splits. The continuity
+  hypothesis implies each coordinate of the splitting lands in the zero
+  filtration under a common shift. Using the monomial at height $N$, one
+  extracts a finite $A$-spanning set for $M$, proving finite generation.
+
+  For finite presentation, apply the same argument to the kernel of the
+  surjection $A^m \twoheadrightarrow M$, noting that the kernel's Novikov
+  series identifies with a direct summand of $R^m$ and thus inherits finite
+  projectivity and the canonical topology condition.
+
+  Finally, the base change isomorphism
+  $M ((t^{\mathbb{R}})) \cong A ((t^{\mathbb{R}})) \otimes_A M$ together with
+  the $A$-linear splitting $A ((t^{\mathbb{R}})) \to A$ given by evaluation
+  at $0$ reduces to Lemma~\ref{lem:split_base_change_descent}.
 \end{proof}
