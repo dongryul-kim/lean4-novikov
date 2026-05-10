@@ -1,7 +1,6 @@
 import Novikov.Miscellany.Split
 import Novikov.Series.Module
 import Novikov.Series.OneVar
-import Novikov.Isocrystal.Frobenius
 import Mathlib.RingTheory.Finiteness.Defs
 import Mathlib.RingTheory.Finiteness.Projective
 import Mathlib.RingTheory.Finiteness.Cardinality
@@ -79,28 +78,26 @@ lemma module_finite_of_realNovikovSeries
   have hσi_cont : ∀ i, Continuous (σi i) := fun i => h_canonical (σi i)
   -- Step 3: Therefore `σ` itself is continuous.
   have hσ_cont : Continuous σ := continuous_pi (fun i => hσi_cont i)
-  -- Step 4: For each `i`, find a filtration depth that maps into `filtration ⊤ A 0`.
-  have h_nhd_zero : ∀ i, ∃ Ni : ℝ, ∀ x ∈ filtration (⊤ : AddSubgroup ℝ) M Ni,
-      σi i x ∈ filtration (⊤ : AddSubgroup ℝ) A 0 := by
-    intro i
-    have hbasis_A := (filtrationBasis (⊤ : AddSubgroup ℝ) A).nhds_zero_hasBasis
-    have hbasis_M := (filtrationBasis (⊤ : AddSubgroup ℝ) M).nhds_zero_hasBasis
-    have h0 : σi i 0 = 0 := (σi i).map_zero
-    have h_at : ContinuousAt (σi i) 0 := (hσi_cont i).continuousAt
-    have h_nhd : (filtration (⊤ : AddSubgroup ℝ) A 0 : Set _) ∈ nhds (0 : R) :=
-      hbasis_A.mem_of_mem ⟨0, rfl⟩
-    have h_pre : (σi i) ⁻¹' (filtration (⊤ : AddSubgroup ℝ) A 0 : Set _) ∈ nhds (0 : RealNovikovSeries M) := by
-      have := h_at.preimage_mem_nhds (by rw [h0]; exact h_nhd)
-      exact this
-    obtain ⟨V, ⟨D, rfl⟩, hVsub⟩ := hbasis_M.mem_iff.mp h_pre
-    exact ⟨D, fun x hx => hVsub hx⟩
-  choose Ns hNs using h_nhd_zero
-  -- Step 5: Take a uniform filtration depth `N` working for all components.
+  -- Step 4-5: Find a uniform filtration depth `N` working for all components.
   obtain ⟨N, hN⟩ : ∃ N : ℝ, ∀ i x, x ∈ filtration (⊤ : AddSubgroup ℝ) M N →
       σi i x ∈ filtration (⊤ : AddSubgroup ℝ) A 0 := by
+    have h_nhd_zero : ∀ i, ∃ Ni : ℝ, ∀ x ∈ filtration (⊤ : AddSubgroup ℝ) M Ni,
+        σi i x ∈ filtration (⊤ : AddSubgroup ℝ) A 0 := by
+      intro i
+      have hbasis_A := (filtrationBasis (⊤ : AddSubgroup ℝ) A).nhds_zero_hasBasis
+      have hbasis_M := (filtrationBasis (⊤ : AddSubgroup ℝ) M).nhds_zero_hasBasis
+      have h0 : σi i 0 = 0 := (σi i).map_zero
+      have h_at : ContinuousAt (σi i) 0 := (hσi_cont i).continuousAt
+      have h_nhd : (filtration (⊤ : AddSubgroup ℝ) A 0 : Set _) ∈ nhds (0 : R) :=
+        hbasis_A.mem_of_mem ⟨0, rfl⟩
+      have h_pre : (σi i) ⁻¹' (filtration (⊤ : AddSubgroup ℝ) A 0 : Set _) ∈ nhds (0 : RealNovikovSeries M) := by
+        have := h_at.preimage_mem_nhds (by rw [h0]; exact h_nhd)
+        exact this
+      obtain ⟨V, ⟨D, rfl⟩, hVsub⟩ := hbasis_M.mem_iff.mp h_pre
+      exact ⟨D, fun x hx => hVsub hx⟩
+    choose Ns hNs using h_nhd_zero
     by_cases hn : n = 0
-    · refine ⟨0, ?_⟩
-      intro i; subst hn; exact i.elim0
+    · subst hn; refine ⟨0, fun i => i.elim0⟩
     · have hne : (Finset.univ.image Ns).Nonempty :=
         ⟨Ns ⟨0, Nat.pos_of_ne_zero hn⟩, by simp⟩
       refine ⟨(Finset.univ.image Ns).max' hne, fun i x hx => ?_⟩
@@ -337,20 +334,18 @@ lemma module_finitePresentation_of_realNovikovSeries
     let g_ext : (Fin m → R) →ₗ[R] R := g.comp s'
     -- Lemma A: any R-linear map (Fin m → R) →ₗ[R] R is continuous (R is a topological ring)
     have h_g_ext_cont : Continuous g_ext := by
-      let b := Pi.basisFun R (Fin m)
-      let a : Fin m → R := fun i => g_ext (b i)
-      have h_formula (v : Fin m → R) : g_ext v = ∑ i, a i * v i := by
-        have hv : ∑ i, v i • b i = v := (Pi.basisFun R (Fin m)).sum_repr v
+      have h_formula (v : Fin m → R) : g_ext v = ∑ i, (g_ext (Pi.basisFun R (Fin m) i)) * v i := by
+        have hv : ∑ i, v i • Pi.basisFun R (Fin m) i = v := (Pi.basisFun R (Fin m)).sum_repr v
         calc
-          g_ext v = g_ext (∑ i, v i • b i) := by { conv_lhs => rw [← hv] }
-          _ = ∑ i, g_ext (v i • b i) := map_sum _ _ _
-          _ = ∑ i, v i • g_ext (b i) := by simp only [map_smul]
-          _ = ∑ i, a i * v i := by
+          g_ext v = g_ext (∑ i, v i • Pi.basisFun R (Fin m) i) := by conv_lhs => rw [← hv]
+          _ = ∑ i, g_ext (v i • Pi.basisFun R (Fin m) i) := map_sum _ _ _
+          _ = ∑ i, v i • g_ext (Pi.basisFun R (Fin m) i) := by simp only [map_smul]
+          _ = ∑ i, (g_ext (Pi.basisFun R (Fin m) i)) * v i := by
             refine Finset.sum_congr rfl (fun i _ => ?_)
-            exact mul_comm (v i) (a i)
-      have h_g_ext_eq : (g_ext : (Fin m → R) → R) = (fun (v : Fin m → R) => ∑ i, a i * v i) := by
+            exact mul_comm (v i) _
+      have h_eq : (g_ext : (Fin m → R) → R) = (fun (v : Fin m → R) => ∑ i, (g_ext (Pi.basisFun R (Fin m) i)) * v i) := by
         funext v; exact h_formula v
-      rw [h_g_ext_eq]
+      rw [h_eq]
       refine continuous_finset_sum (M := R) Finset.univ (fun i _ => ?_)
       exact (continuous_const.mul (continuous_apply i))
     -- Lemma B.1: lmap is continuous (preserves filtration)

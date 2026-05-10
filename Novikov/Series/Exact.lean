@@ -53,6 +53,26 @@ theorem map_comp (f : A →+ B) (g : B →+ C) :
   ext s d
   rfl
 
+/-- If every value of a Novikov series `s` lies in the range of `f : A →+ B`,
+then there is a function `g` such that `f ∘ g = s.val` and `g` vanishes where `s` does.
+Used to lift preimages in `map_surjective` and `map_exact_backward`. -/
+private lemma exists_preimage_of_range {f : A →+ B} (s : NovikovSeries Γ ι B)
+    (h_range : ∀ d, s.val d ∈ f.range) :
+    ∃ (g : (ι → Γ) → A), (∀ d, f (g d) = s.val d) ∧ (∀ d, g d ≠ 0 → s.val d ≠ 0) := by
+  classical
+  let g := fun d => if s.val d = 0 then 0 else Classical.choose (h_range d)
+  refine ⟨g, ?_, ?_⟩
+  · intro d
+    dsimp [g]
+    split_ifs with h
+    · rw [h, f.map_zero]
+    · exact Classical.choose_spec (h_range d)
+  · intro d hg
+    dsimp [g] at hg
+    split_ifs at hg with h
+    · exact (hg rfl).elim
+    · exact h
+
 /-- The map on Novikov series preserves injectivity. -/
 theorem map_injective (f : A →+ B) (hf : Function.Injective f) :
     Function.Injective (map (Γ := Γ) (ι := ι) f) := by
@@ -65,23 +85,12 @@ theorem map_injective (f : A →+ B) (hf : Function.Injective f) :
 theorem map_surjective (f : A →+ B) (hf : Function.Surjective f) :
     Function.Surjective (map (Γ := Γ) (ι := ι) f) := by
   intro s
-  classical
-  let g_val := fun d => if s.val d = 0 then 0 else Classical.choose (hf (s.val d))
-  have hg : isNovikovSeries g_val := by
-    intro t ht C
-    refine Set.Finite.subset (s.prop t ht C) ?_
-    rintro d ⟨hd, hlt⟩
-    refine ⟨?_, hlt⟩
-    intro h_s_zero
-    apply hd
-    simp [g_val, h_s_zero]
+  have h_range : ∀ d, s.val d ∈ f.range := fun d => hf (s.val d)
+  rcases exists_preimage_of_range s h_range with ⟨g_val, hg_eq, hg_supp⟩
+  have hg : isNovikovSeries g_val :=
+    is_novikov_series_of_subset s.prop hg_supp
   use ⟨g_val, hg⟩
-  ext d
-  change f (g_val d) = s.val d
-  simp only [g_val]
-  split_ifs with h
-  · rw [h, f.map_zero]
-  · exact Classical.choose_spec (hf (s.val d))
+  ext d; exact hg_eq d
 
 lemma map_exact_forward (f : A →+ B) (g : B →+ C) (h : f.range = g.ker) :
     (map (Γ := Γ) (ι := ι) f).range ≤ (map (Γ := Γ) (ι := ι) g).ker := by
@@ -99,8 +108,7 @@ lemma map_exact_forward (f : A →+ B) (g : B →+ C) (h : f.range = g.ker) :
 lemma map_exact_backward (f : A →+ B) (g : B →+ C) (h : f.range = g.ker) :
     (map (Γ := Γ) (ι := ι) g).ker ≤ (map (Γ := Γ) (ι := ι) f).range := by
   intro s hs
-  classical
-  have : ∀ d, s.val d ∈ f.range := by
+  have h_range : ∀ d, s.val d ∈ f.range := by
     intro d
     rw [h]
     change g (s.val d) = 0
@@ -108,22 +116,11 @@ lemma map_exact_backward (f : A →+ B) (g : B →+ C) (h : f.range = g.ker) :
       rw [(AddMonoidHom.mem_ker).mp hs]
       rfl
     exact h_val
-  let t_val := fun d => if s.val d = 0 then 0 else Classical.choose (this d)
-  have ht : isNovikovSeries t_val := by
-    intro t_ ht_ C
-    refine Set.Finite.subset (s.prop t_ ht_ C) ?_
-    rintro d ⟨hd, hlt⟩
-    refine ⟨?_, hlt⟩
-    intro h_s_zero
-    apply hd
-    simp [t_val, h_s_zero]
+  rcases exists_preimage_of_range s h_range with ⟨t_val, ht_eq, ht_supp⟩
+  have ht : isNovikovSeries t_val :=
+    is_novikov_series_of_subset s.prop ht_supp
   use ⟨t_val, ht⟩
-  ext d
-  change f (t_val d) = s.val d
-  simp only [t_val]
-  split_ifs with h_
-  · rw [h_, f.map_zero]
-  · exact Classical.choose_spec (this d)
+  ext d; exact ht_eq d
 
 /-- The functor `NovikovSeries` preserves exactness. -/
 theorem map_exact (f : A →+ B) (g : B →+ C) (h : f.range = g.ker) :

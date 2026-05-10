@@ -1,22 +1,15 @@
 import Novikov.Series.OneVar
 import Novikov.Series.Finite
-import Mathlib.Algebra.Order.Floor.Semifield
 import Mathlib.Tactic.Linarith
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Real.Archimedean
-import Mathlib.Algebra.BigOperators.Intervals
 import Mathlib.Algebra.Module.Basic
-import Mathlib.Algebra.Module.Defs
-import Mathlib.Algebra.Field.IsField
 import Mathlib.Topology.Algebra.TopologicallyNilpotent
-import Mathlib.Topology.Algebra.InfiniteSum.Defs
 import Mathlib.Topology.Algebra.InfiniteSum.Group
 import Mathlib.Topology.Algebra.InfiniteSum.Ring
 
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
-import Mathlib.Algebra.Group.Pointwise.Set.ListOfFn
-import Mathlib.Algebra.BigOperators.Pi
 
 open Finset Topology Pointwise
 
@@ -104,6 +97,14 @@ noncomputable def leadingCoeff (f : OneVarNovikovSeries Γ A) : A :=
 lemma leadingCoeff_ne_zero (f : OneVarNovikovSeries Γ A) (hf : f ≠ 0) :
     leadingCoeff f ≠ 0 :=
   minDegree_mem f hf
+
+/-- If `d` has degree strictly less than the minDegree, then `f d = 0`. -/
+lemma minDegree_lt_apply (f : OneVarNovikovSeries Γ A) (hf : f ≠ 0) (d : Unit → Γ)
+    (hd : (d () : ℝ) < (minDegree f () : ℝ)) : f d = 0 := by
+  by_contra! h
+  have h_supp : d ∈ support f := h
+  have h_le := minDegree_le f hf d h_supp
+  linarith
 
 /-- A series is "positive" if its support is contained in (0, ∞). -/
 def IsPositive (f : OneVarNovikovSeries Γ A) : Prop :=

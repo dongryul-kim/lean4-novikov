@@ -1,4 +1,4 @@
-import Novikov.Series.Algebra
+import Novikov.Series.Ring
 import Novikov.Series.Exact
 import Mathlib.Algebra.Module.BigOperators
 import Mathlib.LinearAlgebra.TensorProduct.Basic
@@ -212,15 +212,9 @@ lemma novikovBaseChangeMap_eq_equivPi :
   change (novikovMonomial (Pi.basisFun A ι' j) 0).val d k =
     ((Pi.basisFun A ι' j k • novikovOne : NovikovSeries Γ ι A)).val d
   simp only [novikovMonomial, Pi.basisFun_apply, Pi.single_apply, ite_smul, one_smul, zero_smul]
-  split_ifs <;>
-  rename_i h h_1
-  · subst h h_1
-    simp_all only [Pi.single_eq_same, novikovOne_val, ↓reduceIte]
-  · subst h
-    simp_all only [ne_eq, not_false_eq_true, Pi.single_eq_of_ne, ZeroMemClass.coe_zero, Pi.zero_apply]
-  · subst h_1
-    simp_all only [Pi.zero_apply, novikovOne_val, ↓reduceIte]
-  · simp_all only [Pi.zero_apply, ZeroMemClass.coe_zero]
+  by_cases hd : d = 0
+  · subst hd; simp; split_ifs <;> simp [Pi.single_apply, *]
+  · split_ifs <;> simp [hd, novikovOne_val]
 
 
 set_option linter.unusedDecidableInType false in

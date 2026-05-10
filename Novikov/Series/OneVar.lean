@@ -12,6 +12,8 @@ import Mathlib.Algebra.Order.Group.Defs
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Data.Real.Basic
+import Mathlib.Algebra.BigOperators.Intervals
+import Mathlib.Algebra.Group.Subgroup.Finite
 
 
 open Pointwise Filter Topology
@@ -24,6 +26,10 @@ variable {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] {Γ : S}
 /-- Novikov series in one variable -/
 abbrev OneVarNovikovSeries {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] (Γ : S) (A : Type*) [AddCommGroup A] :=
   NovikovSeries Γ Unit A
+
+/-- The special case `Γ = ⊤ : AddSubgroup ℝ`, i.e. real-exponent Novikov series. -/
+abbrev RealNovikovSeries (A : Type*) [AddCommGroup A] : Type _ :=
+  OneVarNovikovSeries (⊤ : AddSubgroup ℝ) A
 
 /-- Set of series with support bounded below by D -/
 def filtration {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] (Γ : S) (A : Type*) [AddCommGroup A] (D : ℝ) : AddSubgroup (OneVarNovikovSeries Γ A) where
@@ -41,6 +47,10 @@ lemma filtration_mono [AddCommGroup A] {D₁ D₂ : ℝ} (h : D₁ ≤ D₂) :
   intro f hf d hd
   exact hf d (lt_of_lt_of_le hd h)
 
+lemma filtration_eq_of_sub_mem [AddCommGroup A] {f g : OneVarNovikovSeries Γ A} {D : ℝ}
+    (h : f - g ∈ filtration Γ A D) (d : Unit → Γ) (hd : (d () : ℝ) < D) : f d = g d := by
+  simpa [Pi.sub_apply, sub_eq_zero] using h d hd
+
 lemma filtration_mul [CommRing A] {D₁ D₂ : ℝ} :
     (filtration Γ A D₁ : Set (OneVarNovikovSeries Γ A)) * (filtration Γ A D₂ : Set _) ⊆ (filtration Γ A (D₁ + D₂) : Set _) := by
   rintro f ⟨g, hg, h, hh, rfl⟩ d hd
@@ -51,10 +61,7 @@ lemma filtration_mul [CommRing A] {D₁ D₂ : ℝ} :
   rcases hp with ⟨hsum, hg_nz, hh_nz⟩
   have h_lt : (d1 () : ℝ) < D₁ ∨ (d2 () : ℝ) < D₂ := by
     have h_eq' : (d1 () : ℝ) + (d2 () : ℝ) = (d () : ℝ) := by
-      have h := congr_fun hsum ()
-      simp only [Pi.add_apply] at h
-      rw [← h]
-      rfl
+      simpa [Pi.add_apply] using congrArg (fun f : Unit → Γ => (f () : ℝ)) hsum
     by_contra h_not
     push Not at h_not
     have : (d1 () : ℝ) + (d2 () : ℝ) ≥ D₁ + D₂ := add_le_add h_not.1 h_not.2
@@ -146,6 +153,67 @@ lemma filtration_mul_mono {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] 
     x * y ∈ filtration Γ A D :=
   filtration_mono (A := A) (Γ := Γ) h (filtration_mul ⟨x, hx, y, hy, rfl⟩)
 
+/-- At degree 0, the product of two series in the 0-filtration equals the product
+of their constant terms: `(f * g) 0 = f 0 * g 0`. -/
+lemma filtration_zero_mul_val [CommRing A] {f g : OneVarNovikovSeries Γ A}
+    (hf : f ∈ filtration Γ A 0) (hg : g ∈ filtration Γ A 0) : (f * g) 0 = f 0 * g 0 := by
+  rw [novikovMul_val, novikovMulFun]
+  let S := (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport g.val) f.prop g.prop (0 : Unit → Γ)).toFinset
+  have h_nonneg {x : Unit → Γ} (hx : x ∈ fnSupport f.val) : 0 ≤ (x () : ℝ) :=
+    not_lt.mp (fun hneg => hx (hf x hneg))
+  have h_nonneg_g {x : Unit → Γ} (hx : x ∈ fnSupport g.val) : 0 ≤ (x () : ℝ) :=
+    not_lt.mp (fun hneg => hx (hg x hneg))
+  have h_mem (p : (Unit → Γ) × (Unit → Γ)) (hp : p ∈ S) : p = (0, 0) := by
+    have hp_mem := by simpa [S] using hp
+    rcases hp_mem with ⟨hsum, h1, h2⟩
+    have hsum_zero : (p.1 () : ℝ) + (p.2 () : ℝ) = 0 := by
+      have := congr_fun hsum ()
+      simpa using congrArg (fun (x : ↥Γ) => (x : ℝ)) this
+    have hd1_zero : (p.1 () : ℝ) = 0 := by
+      nlinarith [h_nonneg h1, h_nonneg_g h2, hsum_zero]
+    have hd2_zero : (p.2 () : ℝ) = 0 := by nlinarith
+    have h1_eq : p.1 = (0 : Unit → Γ) := by
+      ext x
+      have hx : x = () := PUnit.ext x ()
+      subst hx
+      simpa using hd1_zero
+    have h2_eq : p.2 = (0 : Unit → Γ) := by
+      ext x
+      have hx : x = () := PUnit.ext x ()
+      subst hx
+      simpa using hd2_zero
+    exact Prod.ext h1_eq h2_eq
+  by_cases hf0 : f 0 = 0
+  · have h_empty : S = ∅ := by
+      apply Finset.not_nonempty_iff_eq_empty.mp
+      rintro ⟨p, hp⟩
+      have hp0 : p = (0, 0) := h_mem p hp
+      subst hp0
+      have hp_mem_raw : (0 : Unit → Γ) + (0 : Unit → Γ) = (0 : Unit → Γ) ∧ (0 : Unit → Γ) ∈ fnSupport f.val ∧ (0 : Unit → Γ) ∈ fnSupport g.val := by
+        simpa [S] using hp
+      exact hp_mem_raw.2.1 hf0
+    dsimp [S] at *
+    simp [h_empty, Finset.sum_empty, hf0, zero_mul]
+  · by_cases hg0 : g 0 = 0
+    · have h_empty : S = ∅ := by
+        apply Finset.not_nonempty_iff_eq_empty.mp
+        rintro ⟨p, hp⟩
+        have hp0 : p = (0, 0) := h_mem p hp
+        subst hp0
+        have hp_mem_raw : (0 : Unit → Γ) + (0 : Unit → Γ) = (0 : Unit → Γ) ∧ (0 : Unit → Γ) ∈ fnSupport f.val ∧ (0 : Unit → Γ) ∈ fnSupport g.val := by
+          simpa [S] using hp
+        exact hp_mem_raw.2.2 hg0
+      dsimp [S] at *
+      simp [h_empty, Finset.sum_empty, hg0, mul_zero]
+    · have hS_singleton : S = {(0, 0)} := by
+        refine Finset.eq_singleton_iff_unique_mem.mpr ⟨?_, fun p hp => h_mem p hp⟩
+        have hsum : (0 : Unit → Γ) + 0 = (0 : Unit → Γ) := add_zero _
+        have h_f0 : (0 : Unit → Γ) ∈ fnSupport f.val := fun h => hf0 h
+        have h_g0 : (0 : Unit → Γ) ∈ fnSupport g.val := fun h => hg0 h
+        simpa [S] using And.intro hsum (And.intro h_f0 h_g0)
+      dsimp [S] at *
+      rw [hS_singleton, Finset.sum_singleton]
+
 /-- The filter basis of filtrations as a ring filter basis. -/
 @[reducible]
 noncomputable def ringFiltrationBasis {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] (Γ : S) (A : Type*) [CommRing A] : RingFilterBasis (OneVarNovikovSeries Γ A) where
@@ -211,24 +279,12 @@ instance : CompleteSpace (OneVarNovikovSeries Γ A) where
       let M_inter := M ∩ M'
       have h_inter : M_inter ∈ B := B.inter_mem hM_B hM'.1
       rcases hB.1.nonempty_of_mem h_inter with ⟨h, h_M, h_M'⟩
-      have h1 : h d = g d := by
-        have : h - g ∈ filtration Γ A D := hM_sub g hg h h_M
-        rw [filtration] at this
-        simp only [AddSubgroup.mem_mk, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk,
-          Set.mem_setOf_eq, AddSubgroupClass.coe_sub, Pi.sub_apply] at this
-        specialize this d
-        simp only [hd, sub_eq_zero, forall_const] at this
-        exact this
-      have h2 : h d = g' d := by
-        have : h - g' ∈ filtration Γ A D' := hM'.2 g' hg' h h_M'
-        rw [filtration] at this
-        simp only [AddSubgroup.mem_mk, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk,
-          Set.mem_setOf_eq, AddSubgroupClass.coe_sub, Pi.sub_apply] at this
-        specialize this d
-        have h_lt' : (d () : ℝ) < D' := by dsimp [D']; linarith
-        simp only [h_lt', sub_eq_zero] at this
-        exact this True.intro
-      exact h2.symm.trans h1
+      have h1 : h d = g d := filtration_eq_of_sub_mem (hM_sub g hg h h_M) d hd
+      have h2 : h d = g' d :=
+        filtration_eq_of_sub_mem (hM'.2 g' hg' h h_M') d (by
+          dsimp [D']
+          linarith)
+      simpa [f_coeff, g', D'] using h2.symm.trans h1
     have h_nov : isNovikovSeries f_coeff := by
       intro s hs C
       let D := C / s () + 1
@@ -289,10 +345,42 @@ instance : T2Space (OneVarNovikovSeries Γ A) := by
     rw [uniformity_eq_comap_nhds_zero]
     exact Filter.mem_comap.mpr ⟨_, h_uniform, fun p hp => hp⟩
   have h_in := hxy _ h_ent
-  have hsub : (y - x).val d = 0 := h_in d (by linarith)
-  have hsub' : y.val d - x.val d = 0 := hsub
-  simp [sub_eq_zero] at hsub'
-  simp_all only [AddSubgroupClass.coe_sub]
+  simpa [eq_comm] using filtration_eq_of_sub_mem h_in d (by linarith)
+
+/-- If the consecutive differences of a sequence are eventually in arbitrarily
+small filtrations, then the sequence is Cauchy. -/
+lemma cauchySeq_of_succ_diff_filtration (b_seq : ℕ → OneVarNovikovSeries Γ A)
+    (h_succ : ∀ D : ℝ, ∃ N : ℕ, ∀ n ≥ N,
+      b_seq (n + 1) - b_seq n ∈ filtration Γ A D) : CauchySeq b_seq := by
+  let FB := filtrationBasis Γ A
+  apply (FB.cauchy_iff (F := map b_seq atTop)).mpr
+  constructor
+  · exact atTop_neBot.map b_seq
+  · intro U hU
+    rcases hU with ⟨D, rfl⟩
+    rcases h_succ D with ⟨N, hN⟩
+    have hmem : {x | ∃ n ≥ N, b_seq n = x} ∈ map b_seq Filter.atTop := by
+      rw [Filter.mem_map]
+      apply Filter.mem_of_superset (Filter.mem_atTop N)
+      intro k hk; exact ⟨k, hk, rfl⟩
+    refine ⟨{x | ∃ n ≥ N, b_seq n = x}, hmem, ?_⟩
+    rintro x ⟨m, hm, rfl⟩ y ⟨n, hn, rfl⟩
+    by_cases hmn : m ≤ n
+    · rw [← Finset.sum_Ico_sub (f := b_seq) hmn]
+      refine AddSubgroup.sum_mem (filtration Γ A D) (t := Finset.Ico m n) fun i hi => ?_
+      rcases Finset.mem_Ico.mp hi with ⟨hi_m, _⟩
+      have hi_ge_N : N ≤ i := le_trans hm hi_m
+      exact hN i hi_ge_N
+    · have hnm : n ≤ m := by omega
+      have hsum := AddSubgroup.sum_mem (filtration Γ A D) (t := Finset.Ico n m) fun i hi => by
+        rcases Finset.mem_Ico.mp hi with ⟨hi_n, _⟩
+        have hi_ge_N : N ≤ i := le_trans hn hi_n
+        exact hN i hi_ge_N
+      have h_eq : b_seq n - b_seq m =
+          -((Finset.sum (Finset.Ico n m : Finset ℕ) fun i => b_seq (i + 1) - b_seq i)) := by
+        rw [Finset.sum_Ico_sub (f := b_seq) hnm, neg_sub]
+      rw [h_eq]
+      exact (filtration Γ A D).neg_mem hsum
 
 end AddCommGroup
 

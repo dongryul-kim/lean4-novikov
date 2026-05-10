@@ -35,7 +35,7 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
   \label{def:novikov_isocrystal}
   \lean{Novikov.NovikovIsocrystal}
   \leanok
-  \uses{def:frobenius, thm:novikov_ring}
+  \uses{def:frobenius, thm:novikov_ring, thm:frobenius_properties}
   Let $A$ be a commutative ring. A \emph{Novikov isocrystal} over $A$ consists of
   \begin{itemize}
     \item a finite projective $A((t^{\mathbb{R}}))$-module $M$, and
@@ -75,5 +75,42 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
   the internal Hom, this yields an element of $A((t^{\mathbb{R}})) \otimes_A
   \operatorname{Hom}_A(M, N)$ fixed by $F$. Such elements are exactly of the
   form $1 \otimes f$ for $f \in \operatorname{Hom}_A(M, N)$.
+\end{proof}
+
+\subsection{Some lemmas}
+
+\begin{theorem}[Proposition~3.5]
+  \label{thm:frobenius_eigenvector}
+  \lean{Novikov.exists_frobenius_eigenvector}
+  \leanok
+  \uses{def:novikov_isocrystal, def:frobenius, thm:novikov_field, thm:novikov_topology,
+    def:novikov_filtration, def:novikov_series}
+  Let $K$ be an algebraically closed field and $M$ a nonzero Novikov
+  isocrystal over $K$. Then there exists a nonzero $m \in M$ and
+  $c \in K^\times$ such that $F_M(m) = c \cdot m$.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Pick a nonzero $m_0 \in M$ and choose the minimal $n \ge 1$ such that
+  $F_M^0 m_0, \dots, F_M^{n-1} m_0$ are linearly independent while
+  $F_M^n m_0 = \sum_{i} a_i \cdot F_M^i m_0$ for some series $a_i$.
+  Scale $m_0$ by a monomial $t^r$ so that the new coefficients $a'_i$
+  lie in $K[\![t]\!]$ and at least one has nonzero constant term
+  $\bar{a}_i$.  By algebraic closedness, find $c \in K^\times$ with
+  $c^n = \sum_i \bar{a}_i c^i$.  Define the contraction
+  $
+    g(x) = \sum_{i=0}^{n-1} c^{-(n-i)} F^{n-i}(x) F^{n-1-i}(a'_i).
+  $
+  If $x - y$ lies in the $D$-filtration, then $g(x) - g(y)$ lies in the
+  $(\lambda \cdot D)$-filtration, and $g(1)$ is in the $0$-filtration
+  with $(g(1))_0 = 1$.  Iterating $g$ from $1$ produces a Cauchy sequence
+  converging to a fixed point $b$ with $b_0 = 1$.  From $b$ define
+  $b_0 = c^{-1}F(b)a'_0$ and
+  $b_{k+1} = c^{-1}(F(b_k) + F(b)a'_{k+1})$; then $b_{n-1} = b$ and
+  $
+    m' = \sum_{i=0}^{n-1} b_i \cdot F_M^i m_0
+  $
+  is a nonzero eigenvector satisfying $F_M(m') = c \cdot m'$.
 \end{proof}
 

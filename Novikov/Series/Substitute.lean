@@ -43,10 +43,8 @@ lemma finite_substitution_support (f : ι → ι') (s : NovikovSeries Γ ι A) (
     rw [← sum_fiberwise univ f (fun i => (g i : ℝ))]
     apply sum_congr rfl
     intro j _
-    have h_push := congr_fun hg.1 j
-    simp only [pushExponents] at h_push
-    rw [← h_push]
-    simp only [AddSubmonoidClass.coe_finset_sum]
+    simpa [pushExponents, AddSubmonoidClass.coe_finset_sum] using
+      congrArg (fun f : ι' → Γ => (f j : ℝ)) hg.1
   simp only [w, one_mul]
   rw [h_sum]
   linarith
@@ -294,9 +292,8 @@ lemma finite_substitute_mul_support (f : ι → ι') (s1 s2 : NovikovSeries Γ �
     rw [← sum_fiberwise univ f (fun i => ((g1 + g2) i : ℝ))]
     apply sum_congr rfl
     intro j _
-    have h_push_fun := congr_fun h_push j
-    simp only [pushExponents] at h_push_fun
-    rw [← h_push_fun, AddSubmonoidClass.coe_finset_sum]
+    simpa [pushExponents, AddSubmonoidClass.coe_finset_sum] using
+      congrArg (fun f : ι' → Γ => (f j : ℝ)) h_push
   have h_split : ∑ i, w i * (g1 i : ℝ) + ∑ i, w i * (g2 i : ℝ) = T := by
     simp only [w, one_mul]
     rw [← Finset.sum_add_distrib]

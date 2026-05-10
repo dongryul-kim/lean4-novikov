@@ -1,6 +1,5 @@
 import Novikov.Series.Exact
 import Novikov.Series.Ring
-import Novikov.Series.Algebra
 import Novikov.Series.Module
 import Novikov.Series.OneVar
 import Novikov.Series.Substitute
@@ -9,4 +8,5 @@ import Novikov.Series.Projective
 import Novikov.Isocrystal.Frobenius
 import Novikov.Isocrystal.Basic
 import Novikov.Isocrystal.Constant
+import Novikov.Isocrystal.Field
 import Novikov.Miscellany.Topology

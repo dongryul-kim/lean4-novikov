@@ -1,15 +1,12 @@
 import Novikov.Series.OneVar
 import Novikov.Series.Ring
 import Novikov.Series.Exact
-import Novikov.Series.Algebra
 
 open Novikov
 open Topology
 
 namespace Novikov
 variable {Λ : ℝ} [hΛ : Fact (Λ > 0)]
-
-abbrev RealNovikovSeries (A : Type*) [AddCommGroup A] : Type _ := OneVarNovikovSeries (⊤ : AddSubgroup ℝ) A
 
 /- Fix a real number `Λ > 1`. We want to define a ring homomorphism
    `OneVarNovikovSeries ℝ A → OneVarNovikovSeries ℝ A` sending each monomial to
@@ -27,7 +24,7 @@ lemma isNovikovSeries_frobenius (f : RealNovikovSeries A) :
     isNovikovSeries (frobeniusFun Λ f) := by
   intro s hs C
   set s' : Unit → ℝ := fun _ => s () * Λ with hs'
-  have hΛpos : 0 < Λ := by have := hΛ.out; linarith
+  have hΛpos : 0 < Λ := hΛ.out
   have h_pos : ∀ i, 0 < s' i := fun _ => mul_pos (hs ()) hΛpos
   have hf := f.prop s' h_pos C
   let g : (Unit → ↥(⊤ : AddSubgroup ℝ)) → (Unit → ↥(⊤ : AddSubgroup ℝ)) :=
@@ -68,7 +65,7 @@ lemma frobenius_monomial (a : A) (d : Unit → ↥(⊤ : AddSubgroup ℝ)) :
     frobenius Λ (novikovMonomial a d) = novikovMonomial a (fun _ => ⟨(d () : ℝ) * Λ, AddSubgroup.mem_top _⟩) := by
   ext d'
   simp only [frobenius_apply_val, novikovMonomial, Subtype.coe_mk]
-  have hΛpos : Λ ≠ 0 := by have := hΛ.out; linarith
+  have hΛpos : Λ ≠ 0 := hΛ.out.ne'
   have h_iff : (fun _ => ⟨↑(d' ()) / Λ, AddSubgroup.mem_top _⟩) = d ↔ d' = fun _ => ⟨↑(d ()) * Λ, AddSubgroup.mem_top _⟩ := by
     constructor
     · intro h
@@ -83,6 +80,49 @@ lemma frobenius_monomial (a : A) (d : Unit → ↥(⊤ : AddSubgroup ℝ)) :
       field_simp [hΛpos]
   simp only [h_iff]
 
+/-- The Frobenius endomorphism preserves the degree-0 coefficient. -/
+lemma frobenius_apply_zero (f : RealNovikovSeries A) :
+    (frobenius Λ f) 0 = f 0 := by
+  change (frobenius Λ f).val (fun _ => (0 : ↥(⊤ : AddSubgroup ℝ))) = f.val (fun _ => (0 : ↥(⊤ : AddSubgroup ℝ)))
+  dsimp [frobenius, frobeniusFun]
+  have h : (fun (_ : Unit) => ⟨(0 : ℝ) / Λ, AddSubgroup.mem_top _⟩) = (fun (_ : Unit) => (0 : ↥(⊤ : AddSubgroup ℝ))) := by
+    ext x; fin_cases x; simp
+  rw [h]
+
+/-- Iterating the Frobenius endomorphism preserves the degree-0 coefficient. -/
+lemma frobenius_iterate_apply_zero (f : RealNovikovSeries A) (k : ℕ) :
+    (frobenius Λ)^[k] f 0 = f 0 := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    rw [Function.iterate_succ_apply', frobenius_apply_zero, ih]
+
+/-- The Frobenius endomorphism scales the filtration by `Λ`: if `f` vanishes on
+all degrees `< D`, then `frobenius Λ f` vanishes on all degrees `< Λ * D`. -/
+lemma frobenius_filtration (f : RealNovikovSeries A) (D : ℝ)
+    (hf : f ∈ filtration (⊤ : AddSubgroup ℝ) A D) :
+    frobenius Λ f ∈ filtration (⊤ : AddSubgroup ℝ) A (Λ * D) := by
+  intro d hd
+  rw [frobenius_apply_val]
+  apply hf
+  have hΛpos : 0 < Λ := hΛ.out
+  have : (d () : ℝ) / Λ < D := by
+    calc
+      (d () : ℝ) / Λ < (Λ * D) / Λ := div_lt_div_of_pos_right hd hΛpos
+      _ = D := by field_simp [hΛpos.ne']
+  exact this
+
+/-- Iterating the Frobenius `k` times scales the filtration by `Λ^k`. -/
+lemma frobenius_iterate_filtration (f : RealNovikovSeries A) (D : ℝ)
+    (hf : f ∈ filtration (⊤ : AddSubgroup ℝ) A D) (k : ℕ) :
+    (frobenius Λ)^[k] f ∈ filtration (⊤ : AddSubgroup ℝ) A (Λ ^ k * D) := by
+  induction k with
+  | zero => simpa using hf
+  | succ k ih =>
+    rw [Function.iterate_succ']
+    have hF := frobenius_filtration (Λ := Λ) ((frobenius Λ)^[k] f) (Λ ^ k * D) ih
+    simpa [mul_comm, mul_left_comm, mul_assoc, pow_succ] using hF
+
 /- Next we show that the Frobenius homomorphism is continuous. -/
 
 lemma frobenius_continuous : Continuous (frobenius Λ : RealNovikovSeries A → RealNovikovSeries A) := by
@@ -90,17 +130,14 @@ lemma frobenius_continuous : Continuous (frobenius Λ : RealNovikovSeries A → 
   apply continuous_of_continuousAt_zero
   let FB := filtrationBasis (⊤ : AddSubgroup ℝ) A
   rw [ContinuousAt, map_zero, FB.nhds_zero_hasBasis.tendsto_iff FB.nhds_zero_hasBasis]
-  intro V ⟨Dval, hV⟩
+  intro V ⟨D, hV⟩
   subst hV
-  use filtration (⊤ : AddSubgroup ℝ) A (Dval / Λ)
-  constructor
-  · use Dval / Λ
-  · intro f hf d hd
-    simp only [frobenius_apply_val]
-    apply hf
-    simp only []
-    have hΛpos : Λ > 0 := by have := hΛ.out; linarith
-    exact div_lt_div_of_pos_right hd hΛpos
+  refine ⟨filtration (⊤ : AddSubgroup ℝ) A (D / Λ), ⟨D / Λ, rfl⟩, ?_⟩
+  intro f hf
+  have h := frobenius_filtration (Λ := Λ) f (D / Λ) hf
+  have hΛpos : Λ ≠ 0 := hΛ.out.ne'
+  have h_eq : Λ * (D / Λ) = D := by field_simp [hΛpos]
+  rwa [h_eq] at h
 
 /- We also show that given a group homomorphism `A →+ B` the induced map on
    Novikov series respects the Frobenius actions on both sides. -/
@@ -157,7 +194,7 @@ lemma frobenius_fixed_points [hΛ1 : Fact (Λ > 1)] (f : RealNovikovSeries A) :
         constructor
         · rw [h_eq]
           exact h_nz
-        · have hΛpos : 0 < Λ := by have := hΛ.out; linarith
+        · have hΛpos : 0 < Λ := hΛ.out
           have hΛn : 1 ≤ Λ^n := by
             apply one_le_pow₀
             have := hΛ1.out; linarith
@@ -176,7 +213,7 @@ lemma frobenius_fixed_points [hΛ1 : Fact (Λ > 1)] (f : RealNovikovSeries A) :
           apply hd
           ext x
           simp [h_d_zero]
-        have hΛpos : 0 < Λ := by have := hΛ.out; linarith
+        have hΛpos : 0 < Λ := hΛ.out
         have hΛn1 : Λ^n1 ≠ 0 := pow_ne_zero n1 hΛpos.ne'
         have hΛn2 : Λ^n2 ≠ 0 := pow_ne_zero n2 hΛpos.ne'
         field_simp [hΛn1, hΛn2, h_d0] at h1
@@ -220,7 +257,7 @@ lemma frobenius_mul_bil {A B C : Type*} [AddCommGroup A] [AddCommGroup B] [AddCo
       have h_sum_i := congr_fun h_sum i
       have h_sum_v : (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) / Λ := Subtype.ext_iff.1 h_sum_i
       change (((p.1 i : ℝ) * Λ) + ((p.2 i : ℝ) * Λ)) = (d i : ℝ)
-      have hΛ_ne_zero : Λ ≠ 0 := by have := hΛ.out; linarith
+      have hΛ_ne_zero : Λ ≠ 0 := hΛ.out.ne'
       calc (p.1 i : ℝ) * Λ + (p.2 i : ℝ) * Λ
         _ = ((p.1 i : ℝ) + (p.2 i : ℝ)) * Λ := by ring
         _ = ((d i : ℝ) / Λ) * Λ := by rw [h_sum_v]
@@ -229,7 +266,7 @@ lemma frobenius_mul_bil {A B C : Type*} [AddCommGroup A] [AddCommGroup B] [AddCo
       have h_eq : (fun x : Unit => ⟨((p.1 x : ℝ) * Λ) / Λ, AddSubgroup.mem_top _⟩) = p.1 := by
         ext i
         change ((p.1 i : ℝ) * Λ) / Λ = (p.1 i : ℝ)
-        have hΛ_ne_zero : Λ ≠ 0 := by have := hΛ.out; linarith
+        have hΛ_ne_zero : Λ ≠ 0 := hΛ.out.ne'
         exact mul_div_cancel_right₀ _ hΛ_ne_zero
       rw [h_eq]
       exact hf
@@ -237,7 +274,7 @@ lemma frobenius_mul_bil {A B C : Type*} [AddCommGroup A] [AddCommGroup B] [AddCo
       have h_eq : (fun x : Unit => ⟨((p.2 x : ℝ) * Λ) / Λ, AddSubgroup.mem_top _⟩) = p.2 := by
         ext i
         change ((p.2 i : ℝ) * Λ) / Λ = (p.2 i : ℝ)
-        have hΛ_ne_zero : Λ ≠ 0 := by have := hΛ.out; linarith
+        have hΛ_ne_zero : Λ ≠ 0 := hΛ.out.ne'
         exact mul_div_cancel_right₀ _ hΛ_ne_zero
       rw [h_eq]
       exact hg
@@ -248,12 +285,12 @@ lemma frobenius_mul_bil {A B C : Type*} [AddCommGroup A] [AddCommGroup B] [AddCo
     · have h_eq1 : (p1.1 i : ℝ) * Λ = (p2.1 i : ℝ) * Λ := by
         have h := congr_fun h_eq.1 i
         exact Subtype.ext_iff.1 h
-      have hΛ_ne_zero : Λ ≠ 0 := by have := hΛ.out; linarith
+      have hΛ_ne_zero : Λ ≠ 0 := hΛ.out.ne'
       exact mul_right_cancel₀ hΛ_ne_zero h_eq1
     · have h_eq2 : (p1.2 i : ℝ) * Λ = (p2.2 i : ℝ) * Λ := by
         have h := congr_fun h_eq.2 i
         exact Subtype.ext_iff.1 h
-      have hΛ_ne_zero : Λ ≠ 0 := by have := hΛ.out; linarith
+      have hΛ_ne_zero : Λ ≠ 0 := hΛ.out.ne'
       exact mul_right_cancel₀ hΛ_ne_zero h_eq2
   · -- surjective
     intro q hq
@@ -275,11 +312,11 @@ lemma frobenius_mul_bil {A B C : Type*} [AddCommGroup A] [AddCommGroup B] [AddCo
     · apply Prod.ext
       · ext i
         change ((q.1 i : ℝ) / Λ) * Λ = (q.1 i : ℝ)
-        have hΛ_ne_zero : Λ ≠ 0 := by have := hΛ.out; linarith
+        have hΛ_ne_zero : Λ ≠ 0 := hΛ.out.ne'
         exact div_mul_cancel₀ _ hΛ_ne_zero
       · ext i
         change ((q.2 i : ℝ) / Λ) * Λ = (q.2 i : ℝ)
-        have hΛ_ne_zero : Λ ≠ 0 := by have := hΛ.out; linarith
+        have hΛ_ne_zero : Λ ≠ 0 := hΛ.out.ne'
         exact div_mul_cancel₀ _ hΛ_ne_zero
   · -- term equality
     intro p hp
@@ -288,12 +325,12 @@ lemma frobenius_mul_bil {A B C : Type*} [AddCommGroup A] [AddCommGroup B] [AddCo
     have h_eq1 : (fun x : Unit => ⟨((p.1 x : ℝ) * Λ) / Λ, AddSubgroup.mem_top _⟩) = p.1 := by
       ext i
       change ((p.1 i : ℝ) * Λ) / Λ = (p.1 i : ℝ)
-      have hΛ_ne_zero : Λ ≠ 0 := by have := hΛ.out; linarith
+      have hΛ_ne_zero : Λ ≠ 0 := hΛ.out.ne'
       exact mul_div_cancel_right₀ _ hΛ_ne_zero
     have h_eq2 : (fun x : Unit => ⟨((p.2 x : ℝ) * Λ) / Λ, AddSubgroup.mem_top _⟩) = p.2 := by
       ext i
       change ((p.2 i : ℝ) * Λ) / Λ = (p.2 i : ℝ)
-      have hΛ_ne_zero : Λ ≠ 0 := by have := hΛ.out; linarith
+      have hΛ_ne_zero : Λ ≠ 0 := hΛ.out.ne'
       exact mul_div_cancel_right₀ _ hΛ_ne_zero
     rw [h_eq1, h_eq2]
 
@@ -322,6 +359,35 @@ lemma frobenius_algebraMap (a : A) :
   change frobenius Λ (novikovMonomial a 0) = novikovMonomial a 0
   rw [frobenius_monomial]
   congr; ext; simp
+
+/-- The Frobenius ring homomorphism preserves the degree-0 coefficient. -/
+lemma frobeniusRingHom_apply_zero (f : RealNovikovSeries A) :
+    (frobeniusRingHom (Λ := Λ) (A := A)) f 0 = f 0 :=
+  frobenius_apply_zero f
+
+/-- Iterating the Frobenius ring homomorphism preserves the degree-0 coefficient. -/
+lemma frobeniusRingHom_iterate_apply_zero (f : RealNovikovSeries A) (k : ℕ) :
+    (frobeniusRingHom (Λ := Λ) (A := A))^[k] f 0 = f 0 :=
+  frobenius_iterate_apply_zero f k
+
+/-- Iterating the Frobenius ring homomorphism `k` times scales the filtration by `Λ^k`. -/
+lemma frobeniusRingHom_iterate_filtration (f : RealNovikovSeries A) (D : ℝ)
+    (hf : f ∈ filtration (⊤ : AddSubgroup ℝ) A D) (k : ℕ) :
+    (frobeniusRingHom (Λ := Λ) (A := A))^[k] f ∈ filtration (⊤ : AddSubgroup ℝ) A (Λ ^ k * D) := by
+  simpa using frobenius_iterate_filtration f D hf k
+
+/-- The Frobenius iterated `k` times scales the exponent of a monomial `t^d`
+to `t^{Λ^k * d}`. -/
+lemma frobenius_iterate_monomial_one (d : ℝ) (k : ℕ) :
+    (Novikov.frobenius Λ)^[k] (novikovMonomial (1 : A) (fun _ : Unit => ⟨d, AddSubgroup.mem_top _⟩)) =
+    novikovMonomial (1 : A) (fun _ : Unit => ⟨Λ ^ k * d, AddSubgroup.mem_top _⟩) := by
+  induction k generalizing d with
+  | zero => simp
+  | succ k ih =>
+    rw [Function.iterate_succ_apply]
+    rw [frobenius_monomial (A := A)]
+    rw [ih (d * Λ)]
+    congr; ext x; simp [pow_succ, mul_comm, mul_left_comm, mul_assoc]
 
 /-- The Frobenius endomorphism on `OneVarNovikovSeries ℝ A` as an algebra homomorphism. -/
 noncomputable def frobeniusAlgHom : RealNovikovSeries A →ₐ[A] RealNovikovSeries A where

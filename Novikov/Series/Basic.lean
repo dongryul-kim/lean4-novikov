@@ -36,13 +36,10 @@ lemma is_novikov_series_zero : isNovikovSeries (0 : (ι → Γ) → A) :=
 lemma is_novikov_series_add {f g : (ι → Γ) → A} (hf : isNovikovSeries f) (hg : isNovikovSeries g) :
     isNovikovSeries (f + g) := by
   refine (hf.union hg).subset (fun d hd => ?_)
-  by_contra h_union
-  rw [Set.mem_union, not_or] at h_union
-  have h1 : f d = 0 := not_not.mp h_union.1
-  have h2 : g d = 0 := not_not.mp h_union.2
-  change f d + g d ≠ 0 at hd
-  rw [h1, h2, add_zero] at hd
-  exact hd rfl
+  simp only [Set.mem_union, Set.mem_setOf_eq, ne_eq] at hd ⊢
+  by_cases hf0 : f d = 0
+  · right; intro h; apply hd; rw [Pi.add_apply, hf0, h]; simp
+  · left; exact hf0
 
 lemma is_novikov_series_neg {f : (ι → Γ) → A} (hf : isNovikovSeries f) :
     isNovikovSeries (-f) := by

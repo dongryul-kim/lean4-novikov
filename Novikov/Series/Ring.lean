@@ -2,10 +2,6 @@ import Novikov.Series.Multiplication
 import Mathlib.Algebra.Algebra.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
 import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Tactic.Ring
-import Mathlib.Tactic.Linarith
-import Mathlib.Data.Set.Finite.Lattice
-import Mathlib.Data.Finite.Prod
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 
 open Pointwise
@@ -139,6 +135,63 @@ lemma support_pow_subset {A : Type*} [CommRing A] (f : NovikovSeries Γ ι A) (n
     exact Set.add_subset_add ih (Set.Subset.refl _)
 
 end RingStructure
+
+/-- The canonical ring homomorphism `A → NovikovSeriesMultivar Γ ι A` sending `a`
+to the series with `a` at the zero exponent and `0` elsewhere. -/
+noncomputable def algebraMapNovikov :
+    A →+* NovikovSeries Γ ι A where
+  toFun a := ⟨fun d => if d = (0 : ι → Γ) then a else 0, is_novikov_series_monomial a 0⟩
+  map_one' := by
+    rfl
+  map_mul' := by
+    intros x y
+    change novikovMonomial (x * y) (0 : ι → Γ) = novikovSeriesMul (novikovMonomial x (0 : ι → Γ)) (novikovMonomial y (0 : ι → Γ)) AddMonoidHom.mul
+    rw [novikovSeriesMul_monomial]
+    simp
+  map_zero' := by
+    ext d
+    dsimp
+    split_ifs <;> rfl
+  map_add' := by
+    intros x y
+    ext d
+    dsimp
+    split_ifs <;> simp
+
+/-- Novikov series form an `A`-algebra. -/
+noncomputable instance novikovAlgebra :
+    Algebra A (NovikovSeries Γ ι A) where
+  smul r f := ⟨r • f.val, is_novikov_series_smul r f.prop⟩
+  smul_def' r f := by
+    ext d
+    have h_lhs : (r • f).val d = r * f.val d := rfl
+    rw [h_lhs]
+    rw [novikovMul_val]
+    unfold novikovMulFun
+    rw [Finset.sum_eq_single ((0 : ι → Γ), d)]
+    · dsimp [algebraMapNovikov]
+      simp
+    · rintro ⟨b1, b2⟩ hb hne
+      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hb
+      rcases hb with ⟨hsum, hb1, hb2⟩
+      dsimp [algebraMapNovikov] at hb1
+      split_ifs at hb1 with h0
+      · subst h0
+        simp only [zero_add] at hsum
+        subst hsum
+        exact (hne rfl).elim
+      · contradiction
+    · intro h
+      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at h
+      dsimp [algebraMapNovikov] at h
+      simp only [zero_add, ↓reduceIte, true_and, not_and, not_not] at h
+      by_cases hr : r = 0
+      · subst hr; simp
+      · by_cases hfd : f.val d = 0
+        · rw [hfd]; simp
+        · exfalso; simp_all only [not_false_eq_true, mul_zero, imp_false, not_true_eq_false]
+  commutes' r f := novikovMul_mul_comm _ _
+  algebraMap := algebraMapNovikov
 
 end Novikov
 

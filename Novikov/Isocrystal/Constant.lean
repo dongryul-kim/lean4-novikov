@@ -1,9 +1,6 @@
 import Novikov.Isocrystal.Basic
-import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.RingTheory.TensorProduct.Basic
 import Mathlib.RingTheory.TensorProduct.Finite
-import Mathlib.LinearAlgebra.Contraction
-import Mathlib.CategoryTheory.Functor.FullyFaithful
 
 /-!
 # Constant Novikov isocrystals and the `ConstIsocrystal` functor

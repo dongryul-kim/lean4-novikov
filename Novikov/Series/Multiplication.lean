@@ -51,13 +51,8 @@ lemma isNovikovSeries_mul {B C : Type*} [AddCommGroup B] [AddCommGroup C]
     exact Finset.sum_eq_zero hne
   simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hp
   refine ⟨p, ?_, hp.1⟩
-  have h_sum_i : ∀ i, (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) := by
-    intro i
-    have h := congr_fun hp.1 i
-    simp only [Pi.add_apply] at h
-    have h_real := congr_arg (fun x : Γ => (x : ℝ)) h
-    change (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) at h_real
-    exact h_real
+  have h_sum_i (i : ι) : (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) :=
+    coe_add_apply hp.1 i
   have h_sum_eq : ∑ i, s i * ((p.1 i : ℝ) + (p.2 i : ℝ)) = ∑ i, s i * (d i : ℝ) := by
     apply Finset.sum_congr rfl
     intro i _
@@ -102,190 +97,165 @@ lemma support_mul_subset (f : NovikovSeries Γ ι A) (g : NovikovSeries Γ ι B)
   apply hd
   exact ⟨p.1, hp.2.1, p.2, hp.2.2, hp.1⟩
 
+private lemma novikovSeriesMul_right_distrib_core
+    (f g : NovikovSeries Γ ι A) (h : NovikovSeries Γ ι B) (α : A →+ B →+ C) (d : ι → Γ) :
+    (∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport (f + g).val) (T2 := fnSupport h.val) (f + g).prop h.prop d).toFinset,
+      α (f p.1 + g p.1) (h p.2)) =
+    (∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport h.val) f.prop h.prop d).toFinset,
+      α (f p.1) (h p.2)) +
+    (∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport g.val) (T2 := fnSupport h.val) g.prop h.prop d).toFinset,
+      α (g p.1) (h p.2)) := by
+  let Sfg := (finite_pair_sum_eq (T1 := fnSupport (f + g).val) (T2 := fnSupport h.val) (f + g).prop h.prop d).toFinset
+  let Sf := (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport h.val) f.prop h.prop d).toFinset
+  let Sg := (finite_pair_sum_eq (T1 := fnSupport g.val) (T2 := fnSupport h.val) g.prop h.prop d).toFinset
+  let T := Sf ∪ Sg
+  have mem_Sf (p) : p ∈ Sf ↔ p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ h p.2 ≠ 0 := by simp [Sf]
+  have mem_Sg (p) : p ∈ Sg ↔ p.1 + p.2 = d ∧ g p.1 ≠ 0 ∧ h p.2 ≠ 0 := by simp [Sg]
+  have hS : ∑ p ∈ Sfg, α (f p.1 + g p.1) (h p.2) = ∑ p ∈ T, α (f p.1 + g p.1) (h p.2) := by
+    apply Finset.sum_subset
+    · intro p hp
+      simp only [Sfg, Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hp
+      rcases hp with ⟨hsum, hfg_nz, hh_nz⟩
+      apply Finset.mem_union.mpr
+      have hdisj : f p.1 ≠ 0 ∨ g p.1 ≠ 0 := by
+        by_contra! h
+        have hzero : (f + g).val p.1 = 0 := by
+          simpa [AddSubgroup.coe_add, Pi.add_apply] using show f p.1 + g p.1 = 0 from by simp [h.1, h.2]
+        exact hfg_nz hzero
+      rcases hdisj with (hf | hg)
+      · left; simp [Sf, hsum, hf, hh_nz]
+      · right; simp [Sg, hsum, hg, hh_nz]
+    · intro p hp hnot
+      have hzero : f p.1 + g p.1 = 0 := by
+        rw [Finset.mem_union] at hp
+        rcases hp with (hsf | hsg)
+        · have hsum := (mem_Sf p).mp hsf |>.1
+          have hh_nz := (mem_Sf p).mp hsf |>.2.2
+          have : ¬ (f p.1 + g p.1 ≠ 0) := by
+            intro hfg_nz; apply hnot; simp [Sfg, hsum, hfg_nz, hh_nz]
+          simpa using this
+        · have hsum := (mem_Sg p).mp hsg |>.1
+          have hh_nz := (mem_Sg p).mp hsg |>.2.2
+          have : ¬ (f p.1 + g p.1 ≠ 0) := by
+            intro hfg_nz; apply hnot; simp [Sfg, hsum, hfg_nz, hh_nz]
+          simpa using this
+      simp [hzero]
+  have hSf : ∑ p ∈ Sf, α (f p.1) (h p.2) = ∑ p ∈ T, α (f p.1) (h p.2) := by
+    refine Finset.sum_subset (Finset.subset_union_left (s₁ := Sf) (s₂ := Sg)) ?_
+    intro p hp hnot
+    have hzero : f p.1 = 0 := by
+      rw [Finset.mem_union] at hp
+      rcases hp with (hsf | hsg)
+      · exact (hnot hsf).elim
+      · have hsum := (mem_Sg p).mp hsg |>.1
+        have hh_nz := (mem_Sg p).mp hsg |>.2.2
+        have : ¬ (f p.1 ≠ 0) := by
+          intro hf_nz; apply hnot; simp [Sf, hsum, hf_nz, hh_nz]
+        simpa using this
+    simp [hzero]
+  have hSg : ∑ p ∈ Sg, α (g p.1) (h p.2) = ∑ p ∈ T, α (g p.1) (h p.2) := by
+    refine Finset.sum_subset (Finset.subset_union_right (s₁ := Sf) (s₂ := Sg)) ?_
+    intro p hp hnot
+    have hzero : g p.1 = 0 := by
+      rw [Finset.mem_union] at hp
+      rcases hp with (hsf | hsg)
+      · have hsum := (mem_Sf p).mp hsf |>.1
+        have hh_nz := (mem_Sf p).mp hsf |>.2.2
+        have : ¬ (g p.1 ≠ 0) := by
+          intro hg_nz; apply hnot; simp [Sg, hsum, hg_nz, hh_nz]
+        simpa using this
+      · exact (hnot hsg).elim
+    simp [hzero]
+  rw [hS, hSf, hSg, ← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl fun p _ => ?_
+  simp [map_add]
+
 lemma novikovSeriesMul_right_distrib
     (f g : NovikovSeries Γ ι A) (h : NovikovSeries Γ ι B) (α : A →+ B →+ C) :
     novikovSeriesMul (f + g) h α = novikovSeriesMul f h α + novikovSeriesMul g h α := by
   ext d
   simp only [novikovSeriesMul, novikovSeriesMulFun, AddSubgroup.coe_add, Pi.add_apply]
-  have hS : ∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport (f + g).val) (T2 := fnSupport h.val) (f + g).prop h.prop d).toFinset,
-              α (f p.1 + g p.1) (h p.2) =
-            ∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport h.val) f.prop h.prop d).toFinset ∪ (finite_pair_sum_eq (T1 := fnSupport g.val) (T2 := fnSupport h.val) g.prop h.prop d).toFinset,
-              α (f p.1 + g p.1) (h p.2) := by
+  simpa [map_add, Finset.sum_add_distrib] using novikovSeriesMul_right_distrib_core f g h α d
+
+private lemma novikovSeriesMul_left_distrib_core
+    (f : NovikovSeries Γ ι A) (g h : NovikovSeries Γ ι B) (α : A →+ B →+ C) (d : ι → Γ) :
+    (∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport (g + h).val) f.prop (g + h).prop d).toFinset,
+      α (f p.1) (g p.2 + h p.2)) =
+    (∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport g.val) f.prop g.prop d).toFinset,
+      α (f p.1) (g p.2)) +
+    (∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport h.val) f.prop h.prop d).toFinset,
+      α (f p.1) (h p.2)) := by
+  let Sgh := (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport (g + h).val) f.prop (g + h).prop d).toFinset
+  let Sg := (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport g.val) f.prop g.prop d).toFinset
+  let Sh := (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport h.val) f.prop h.prop d).toFinset
+  let T := Sg ∪ Sh
+  have mem_Sg (p) : p ∈ Sg ↔ p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ g p.2 ≠ 0 := by simp [Sg]
+  have mem_Sh (p) : p ∈ Sh ↔ p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ h p.2 ≠ 0 := by simp [Sh]
+  have hS : ∑ p ∈ Sgh, α (f p.1) (g p.2 + h p.2) = ∑ p ∈ T, α (f p.1) (g p.2 + h p.2) := by
     apply Finset.sum_subset
     · intro p hp
-      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hp
+      simp only [Sgh, Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hp
+      rcases hp with ⟨hsum, hf_nz, hgh_nz⟩
       apply Finset.mem_union.mpr
-      have hdisj : f p.1 ≠ 0 ∨ g p.1 ≠ 0 := by
-        by_contra h
-        simp only [ne_eq, not_or, not_not] at h
-        have : f p.1 + g p.1 = 0 := by simp only [h.1, h.2, add_zero]
-        simp_all only [AddSubgroup.coe_add, Pi.add_apply, add_zero, not_true_eq_false, false_and, and_false]
-      rcases hdisj with h | h
-      · left; simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq]; exact ⟨hp.1, h, hp.2.2⟩
-      · right; simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq]; exact ⟨hp.1, h, hp.2.2⟩
+      have hdisj : g p.2 ≠ 0 ∨ h p.2 ≠ 0 := by
+        by_contra! hboth
+        have hzero : (g + h).val p.2 = 0 := by
+          simpa [AddSubgroup.coe_add, Pi.add_apply] using show g p.2 + h p.2 = 0 from by simp [hboth.1, hboth.2]
+        exact hgh_nz hzero
+      rcases hdisj with (hg | hh)
+      · left; simp [Sg, hsum, hf_nz, hg]
+      · right; simp [Sh, hsum, hf_nz, hh]
     · intro p hp hnot
-      have h_term : α (f p.1 + g p.1) (h p.2) = 0 := by
-        by_contra hne
+      have hzero : g p.2 + h p.2 = 0 := by
         rw [Finset.mem_union] at hp
-        rcases hp with hsf | hsg
-        · simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hsf
-          have h0 : f p.1 + g p.1 = 0 := by
-            by_contra hne'
-            simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hnot
-            exact hnot ⟨hsf.1, hne', hsf.2.2⟩
-          simp_all only [AddSubgroup.coe_add, Pi.add_apply, ne_eq, Set.Finite.mem_toFinset, Set.mem_setOf_eq,
-            not_true_eq_false, not_false_eq_true, and_true, and_false, map_zero, AddMonoidHom.zero_apply]
-        · simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hsg
-          have h0 : f p.1 + g p.1 = 0 := by
-            by_contra hne'
-            simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hnot
-            exact hnot ⟨hsg.1, hne', hsg.2.2⟩
-          simp_all only [AddSubgroup.coe_add, Pi.add_apply, ne_eq, Set.Finite.mem_toFinset, Set.mem_setOf_eq,
-            not_true_eq_false, not_false_eq_true, and_true, and_false, map_zero, AddMonoidHom.zero_apply]
-      simp only [h_term]
-  have hSf : ∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport h.val) f.prop h.prop d).toFinset, α (f p.1) (h p.2) =
-             ∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport h.val) f.prop h.prop d).toFinset ∪ (finite_pair_sum_eq (T1 := fnSupport g.val) (T2 := fnSupport h.val) g.prop h.prop d).toFinset,
-               α (f p.1) (h p.2) := by
-    apply Finset.sum_subset
-    · intro p hp; apply Finset.mem_union.mpr; left; exact hp
-    · intro p hp hnot
-      have h_term : α (f p.1) (h p.2) = 0 := by
-        by_contra hne
-        rw [Finset.mem_union] at hp
-        rcases hp with hsf | hsg
-        · contradiction
-        · simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hsg
-          have h0 : f p.1 = 0 := by
-            by_contra hne'
-            simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hnot
-            exact hnot ⟨hsg.1, hne', hsg.2.2⟩
-          simp_all only [AddSubgroup.coe_add, Pi.add_apply, ne_eq, map_add, AddMonoidHom.add_apply,
-            Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_true_eq_false, not_false_eq_true, and_true, and_false,
-            map_zero, AddMonoidHom.zero_apply]
-      simp only [h_term]
-  have hSg : ∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport g.val) (T2 := fnSupport h.val) g.prop h.prop d).toFinset, α (g p.1) (h p.2) =
-             ∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport h.val) f.prop h.prop d).toFinset ∪ (finite_pair_sum_eq (T1 := fnSupport g.val) (T2 := fnSupport h.val) g.prop h.prop d).toFinset,
-               α (g p.1) (h p.2) := by
-    apply Finset.sum_subset
-    · intro p hp; apply Finset.mem_union.mpr; right; exact hp
-    · intro p hp hnot
-      have h_term : α (g p.1) (h p.2) = 0 := by
-        by_contra hne
-        rw [Finset.mem_union] at hp
-        rcases hp with hsf | hsg
-        · simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hsf
-          have h0 : g p.1 = 0 := by
-            by_contra hne'
-            simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hnot
-            exact hnot ⟨hsf.1, hne', hsf.2.2⟩
-          simp_all only [AddSubgroup.coe_add, Pi.add_apply, ne_eq, map_add, AddMonoidHom.add_apply,
-            Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_true_eq_false, not_false_eq_true, and_true, and_false,
-            map_zero, AddMonoidHom.zero_apply]
-        · contradiction
-      simp only [h_term]
-  rw [hS, hSf, hSg, ← Finset.sum_add_distrib]
-  apply Finset.sum_congr rfl
-  intro p _
-  simp_all only [AddSubgroup.coe_add, Pi.add_apply, ne_eq, map_add, AddMonoidHom.add_apply, Finset.mem_union,
-    Set.Finite.mem_toFinset, Set.mem_setOf_eq]
+        rcases hp with (hsg | hsh)
+        · have hsum := (mem_Sg p).mp hsg |>.1
+          have hf_nz := (mem_Sg p).mp hsg |>.2.1
+          have : ¬ (g p.2 + h p.2 ≠ 0) := by
+            intro hgh_nz; apply hnot; simp [Sgh, hsum, hf_nz, hgh_nz]
+          simpa using this
+        · have hsum := (mem_Sh p).mp hsh |>.1
+          have hf_nz := (mem_Sh p).mp hsh |>.2.1
+          have : ¬ (g p.2 + h p.2 ≠ 0) := by
+            intro hgh_nz; apply hnot; simp [Sgh, hsum, hf_nz, hgh_nz]
+          simpa using this
+      simp [hzero]
+  have hSg : ∑ p ∈ Sg, α (f p.1) (g p.2) = ∑ p ∈ T, α (f p.1) (g p.2) := by
+    refine Finset.sum_subset (Finset.subset_union_left (s₁ := Sg) (s₂ := Sh)) ?_
+    intro p hp hnot
+    have hzero : g p.2 = 0 := by
+      rw [Finset.mem_union] at hp
+      rcases hp with (hsg | hsh)
+      · exact (hnot hsg).elim
+      · have hsum := (mem_Sh p).mp hsh |>.1
+        have hf_nz := (mem_Sh p).mp hsh |>.2.1
+        have : ¬ (g p.2 ≠ 0) := by
+          intro hg_nz; apply hnot; simp [Sg, hsum, hf_nz, hg_nz]
+        simpa using this
+    simp [hzero]
+  have hSh : ∑ p ∈ Sh, α (f p.1) (h p.2) = ∑ p ∈ T, α (f p.1) (h p.2) := by
+    refine Finset.sum_subset (Finset.subset_union_right (s₁ := Sg) (s₂ := Sh)) ?_
+    intro p hp hnot
+    have hzero : h p.2 = 0 := by
+      rw [Finset.mem_union] at hp
+      rcases hp with (hsg | hsh)
+      · have hsum := (mem_Sg p).mp hsg |>.1
+        have hf_nz := (mem_Sg p).mp hsg |>.2.1
+        have : ¬ (h p.2 ≠ 0) := by
+          intro hh_nz; apply hnot; simp [Sh, hsum, hf_nz, hh_nz]
+        simpa using this
+      · exact (hnot hsh).elim
+    simp [hzero]
+  rw [hS, hSg, hSh, ← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl fun p _ => ?_
+  simp [map_add]
 
 lemma novikovSeriesMul_left_distrib
     (f : NovikovSeries Γ ι A) (g h : NovikovSeries Γ ι B) (α : A →+ B →+ C) :
     novikovSeriesMul f (g + h) α = novikovSeriesMul f g α + novikovSeriesMul f h α := by
   ext d
   simp only [novikovSeriesMul, novikovSeriesMulFun, AddSubgroup.coe_add, Pi.add_apply]
-  let Sg := (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport g.val) f.prop g.prop d).toFinset
-  let Sh := (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport h.val) f.prop h.prop d).toFinset
-  let T := Sg ∪ Sh
-  have hS : ∑ p ∈ (finite_pair_sum_eq (T1 := fnSupport f.val) (T2 := fnSupport (g + h).val) f.prop (g + h).prop d).toFinset,
-              α (f p.1) (g p.2 + h p.2) =
-            ∑ p ∈ T, α (f p.1) (g p.2 + h p.2) := by
-    apply Finset.sum_subset
-    · intro p hp
-      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hp
-      apply Finset.mem_union.mpr
-      have hdisj : g p.2 ≠ 0 ∨ h p.2 ≠ 0 := by
-        by_contra h
-        simp only [ne_eq, not_or, not_not] at h
-        simp_all only [AddSubgroup.coe_add, Pi.add_apply, add_zero, not_true_eq_false, and_false]
-      rcases hdisj with h | h
-      · left
-        simp only [Sg, Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq]
-        exact ⟨hp.1, hp.2.1, h⟩
-      · right
-        simp only [Sh, Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq]
-        exact ⟨hp.1, hp.2.1, h⟩
-    · intro p hp hnot
-      have h_term : α (f p.1) (g p.2 + h p.2) = 0 := by
-        by_contra hne
-        have hp' : p ∈ Sg ∨ p ∈ Sh := Finset.mem_union.mp hp
-        rcases hp' with hsg | hsh
-        · have hsg' : p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ g p.2 ≠ 0 := by
-            simp only [Sg, Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hsg
-            exact hsg
-          have h0 : g p.2 + h p.2 = 0 := by
-            by_contra hne'
-            simp_all only [ne_eq, Finset.mem_union, Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_false_eq_true,
-              and_self, true_and, true_or, AddSubgroup.coe_add, Pi.add_apply, not_true_eq_false, T, Sg, Sh]
-          simp_all only [ne_eq, Finset.mem_union, Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_false_eq_true,
-            true_and, true_or, AddSubgroup.coe_add, Pi.add_apply, not_true_eq_false, and_false, map_zero, T,
-            Sg, Sh]
-        · have hsh' : p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ h p.2 ≠ 0 := by
-            simp only [Sh, Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hsh
-            exact hsh
-          have h0 : g p.2 + h p.2 = 0 := by
-            by_contra hne'
-            simp_all only [ne_eq, Finset.mem_union, Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_false_eq_true,
-              true_and, and_self, or_true, AddSubgroup.coe_add, Pi.add_apply, not_true_eq_false, T, Sg, Sh]
-          simp_all only [ne_eq, Finset.mem_union, Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_false_eq_true,
-            true_and, or_true, AddSubgroup.coe_add, Pi.add_apply, not_true_eq_false, and_false, T, Sg, Sh]
-          simp_all only [map_zero, not_true_eq_false]
-      simp only [h_term]
-  have hSg : ∑ p ∈ Sg, α (f p.1) (g p.2) =
-             ∑ p ∈ T, α (f p.1) (g p.2) := by
-    apply Finset.sum_subset
-    · intro p hp; apply Finset.mem_union.mpr; left; exact hp
-    · intro p hp hnot
-      have h_term : α (f p.1) (g p.2) = 0 := by
-        by_contra hne
-        have hp' : p ∈ Sg ∨ p ∈ Sh := Finset.mem_union.mp hp
-        rcases hp' with hsg | hsh
-        · contradiction
-        · have hsh' : p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ h p.2 ≠ 0 := by
-            simp only [Sh, Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hsh
-            exact hsh
-          have h0 : g p.2 = 0 := by
-            by_contra hne'
-            simp_all only [ne_eq, AddSubgroup.coe_add, Pi.add_apply, Finset.mem_union, Set.Finite.mem_toFinset,
-              Set.mem_setOf_eq, not_false_eq_true, and_self, not_true_eq_false, T, Sg, Sh]
-          simp_all only [ne_eq, AddSubgroup.coe_add, Pi.add_apply, map_add, Finset.mem_union, Set.Finite.mem_toFinset,
-            Set.mem_setOf_eq, not_false_eq_true, not_true_eq_false, and_false, map_zero, T, Sg, Sh]
-      simp only [h_term]
-  have hSh : ∑ p ∈ Sh, α (f p.1) (h p.2) =
-             ∑ p ∈ T, α (f p.1) (h p.2) := by
-    apply Finset.sum_subset
-    · intro p hp; apply Finset.mem_union.mpr; right; exact hp
-    · intro p hp hnot
-      have h_term : α (f p.1) (h p.2) = 0 := by
-        by_contra hne
-        have hp' : p ∈ Sg ∨ p ∈ Sh := Finset.mem_union.mp hp
-        rcases hp' with hsg | hsh
-        · have hsg' : p.1 + p.2 = d ∧ f p.1 ≠ 0 ∧ g p.2 ≠ 0 := by
-            simp only [Sg, Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq] at hsg
-            exact hsg
-          have h0 : h p.2 = 0 := by
-            by_contra hne'
-            simp_all only [ne_eq, AddSubgroup.coe_add, Pi.add_apply, Finset.mem_union, Set.Finite.mem_toFinset,
-              Set.mem_setOf_eq, not_false_eq_true, and_self, not_true_eq_false, T, Sg, Sh]
-          simp_all only [ne_eq, AddSubgroup.coe_add, Pi.add_apply, map_add, Finset.mem_union, Set.Finite.mem_toFinset,
-            Set.mem_setOf_eq, not_false_eq_true, not_true_eq_false, and_false, or_false, map_zero, T, Sg, Sh]
-        · contradiction
-      simp only [h_term]
-  rw [hS, hSg, hSh, ← Finset.sum_add_distrib]
-  apply Finset.sum_congr rfl
-  intro p _
-  simp_all only [ne_eq, AddSubgroup.coe_add, Pi.add_apply, map_add, Finset.mem_union, Set.Finite.mem_toFinset,
-    Set.mem_setOf_eq, T, Sg, Sh]
+  simpa [map_add, Finset.sum_add_distrib] using novikovSeriesMul_left_distrib_core f g h α d
 
 lemma novikovSeriesMul_comm {A B C : Type*} [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
     (f : NovikovSeries Γ ι A) (g : NovikovSeries Γ ι B) (α : A →+ B →+ C) (α' : B →+ A →+ C)
@@ -703,6 +673,45 @@ lemma novikovSeriesMul_right_monomial
     · have : P = {(e, d)} := by simp_all only [Finset.subset_singleton_iff, false_or, P]
       rw [this, Finset.sum_singleton, novikovMonomial]
       simp only [↓reduceIte]
+
+lemma novikovSeriesMul_monomial (a : A) (b : B) (α : A →+ B →+ C) (d₁ d₂ : ι → Γ) :
+    novikovSeriesMul (novikovMonomial a d₁) (novikovMonomial b d₂) α = novikovMonomial (α a b) (d₁ + d₂) := by
+  ext d
+  simp only [novikovSeriesMul, novikovSeriesMulFun]
+  set P := (finite_pair_sum_eq (T1 := fnSupport (novikovMonomial a d₁).val) (T2 := fnSupport (novikovMonomial b d₂).val) (novikovMonomial a d₁).prop (novikovMonomial b d₂).prop d).toFinset
+  by_cases ha : a = 0
+  · simp [ha, novikovMonomial, P]
+  · by_cases hb : b = 0
+    · simp [hb, novikovMonomial, P]
+    · have hp : P ⊆ {(d₁, d₂)} := by
+        intro p hpP
+        simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, P] at hpP
+        rcases hpP with ⟨hsum, hl, hr⟩
+        rw [novikovMonomial] at hl hr
+        have hp1 : p.1 = d₁ := by simp_all [ne_eq]
+        have hp2 : p.2 = d₂ := by subst hp1; simp_all
+        subst hp1 hp2; simp
+      by_cases hpem : P = ∅
+      · rw [hpem, Finset.sum_empty]
+        have nel : (d₁, d₂) ∉ P := by simp_all
+        simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, P] at nel
+        have hne : d₁ + d₂ ≠ d := by
+          intro heq
+          apply nel
+          refine ⟨heq, ?_, ?_⟩
+          · simp [novikovMonomial, ha]
+          · simp [novikovMonomial, hb]
+        simp [novikovMonomial, hne.symm]
+      · have hP_eq : P = {(d₁, d₂)} := by
+          have := Finset.subset_singleton_iff.mp hp
+          exact this.resolve_left hpem
+        have hmem : (d₁, d₂) ∈ P := by
+          rw [hP_eq]; simp
+        have hsum : d₁ + d₂ = d := by
+          simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, P] at hmem
+          exact hmem.1
+        rw [hP_eq, Finset.sum_singleton]
+        simp [novikovMonomial, hsum]
 
 end Novikov
 

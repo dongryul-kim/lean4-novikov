@@ -1,5 +1,5 @@
 import Novikov.Isocrystal.Frobenius
-import Novikov.Series.Algebra
+import Novikov.Series.Ring
 import Mathlib.LinearAlgebra.TensorProduct.Basic
 import Mathlib.LinearAlgebra.Dual.Lemmas
 import Mathlib.CategoryTheory.Preadditive.Basic

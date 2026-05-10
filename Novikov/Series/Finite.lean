@@ -29,6 +29,17 @@ def hasNovikovFiniteness (T : Set (ι → Γ)) : Prop :=
   ∀ (s : ι → ℝ) (_ : ∀ i, 0 < s i) (C : ℝ),
     {d ∈ T | ∑ i, s i * (d i : ℝ) < C}.Finite
 
+/-- Extract the degree-coordinate equality `(d1 i : ℝ) + (d2 i : ℝ) = (d i : ℝ)` from
+a Pi addition equality `d1 + d2 = d`. -/
+lemma coe_add_apply {d1 d2 d : ι → Γ} (h : d1 + d2 = d) (i : ι) : (d1 i : ℝ) + (d2 i : ℝ) = (d i : ℝ) := by
+  simpa [Pi.add_apply] using congrArg (fun f : ι → Γ => (f i : ℝ)) h
+
+/-- Variant with an offset: `(d0 i : ℝ) + (d1 i : ℝ) + (d2 i : ℝ) = (d i : ℝ)` from
+`d0 + d1 + d2 = d`. -/
+lemma coe_add_apply_offset {d0 d1 d2 d : ι → Γ} (h : d0 + d1 + d2 = d) (i : ι) :
+    (d0 i : ℝ) + (d1 i : ℝ) + (d2 i : ℝ) = (d i : ℝ) := by
+  simpa [Pi.add_apply, add_assoc] using congrArg (fun f : ι → Γ => (f i : ℝ)) h
+
 /-- The support of a function `f : (ι → Γ) → A` valued in a type with `Zero`. -/
 abbrev fnSupport {A : Type*} [Zero A] (f : (ι → Γ) → A) : Set (ι → Γ) := {d | f d ≠ 0}
 
@@ -85,8 +96,7 @@ lemma finite_pair_lt {T1 T2 : Set (ι → Γ)}
   refine Set.Finite.subset (hU1.union hU2) (fun ⟨d1, d2⟩ ⟨hT1, hT2, hlt⟩ => ?_)
   dsimp only [U1, U2, B1, B2]
   simp only [Set.mem_union, Set.mem_iUnion, Set.mem_image, Set.mem_setOf_eq, exists_prop]
-  have h_val : ∀ i, (d1 i + d2 i : ℝ) = (d1 i : ℝ) + (d2 i : ℝ) :=
-    fun i => map_add (AddSubmonoidClass.subtype Γ) (d1 i) (d2 i)
+  have h_val (i : ι) : (d1 i + d2 i : ℝ) = (d1 i : ℝ) + (d2 i : ℝ) := by simp
   have hlt' : ∑ i, s i * (d1 i : ℝ) + ∑ i, s i * (d2 i : ℝ) < L := by
     have h_eq : ∑ i, s i * (d1 i + d2 i : ℝ)
         = ∑ i, s i * (d1 i : ℝ) + ∑ i, s i * (d2 i : ℝ) := by
@@ -113,13 +123,8 @@ lemma finite_pair_sum_eq {T1 T2 : Set (ι → Γ)}
   refine Set.Finite.subset (finite_pair_lt h1 h2 s hs (L + 1)) (fun p hp => ?_)
   simp only [Set.mem_setOf_eq] at hp ⊢
   refine ⟨hp.2.1, hp.2.2, ?_⟩
-  have h_sum_i : ∀ i, (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) := by
-    intro i
-    have heq := congr_fun hp.1 i
-    simp only [Pi.add_apply] at heq
-    have h_real := congr_arg (fun x : Γ => (x : ℝ)) heq
-    change (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) at h_real
-    exact h_real
+  have h_sum_i (i : ι) : (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) :=
+    coe_add_apply hp.1 i
   rw [Finset.sum_congr rfl (fun i _ => by rw [h_sum_i i])]
   linarith
 
@@ -134,12 +139,9 @@ lemma finite_pair_sum_eq_offset {T1 T2 : Set (ι → Γ)}
   refine Set.Finite.subset (finite_pair_lt h1 h2 s hs (L + 1)) (fun p hp => ?_)
   simp only [Set.mem_setOf_eq] at hp ⊢
   refine ⟨hp.2.1, hp.2.2, ?_⟩
-  have h_sum_i : ∀ i, (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) - (d0 i : ℝ) := by
-    intro i
-    have heq := congr_fun hp.1 i
-    simp only [Pi.add_apply] at heq
-    have h_real := congr_arg (fun x : Γ => (x : ℝ)) heq
-    change (d0 i : ℝ) + (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) at h_real
+  have h_sum_i (i : ι) : (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) - (d0 i : ℝ) := by
+    have h_eq : (d0 i : ℝ) + (p.1 i : ℝ) + (p.2 i : ℝ) = (d i : ℝ) :=
+      coe_add_apply_offset hp.1 i
     linarith
   rw [Finset.sum_congr rfl (fun i _ => by rw [h_sum_i i])]
   have h_sub_distrib : ∑ i, s i * ((d i : ℝ) - (d0 i : ℝ))
@@ -179,11 +181,8 @@ lemma finite_triple_sum_eq {T1 T2 T3 : Set (ι → Γ)}
     simp only [Set.mem_setOf_eq, Set.sep_and, Set.mem_union, Set.mem_inter_iff, ht,
       hT1, and_self, true_and, hT2, hT3, not_or, not_lt,
       S1, B1, S2, B2, S3, B3] at hbad
-    have h_sum_i : ∀ i, (d i : ℝ) = (d1 i : ℝ) + (d2 i : ℝ) + (d3 i : ℝ) := by
-      intro i
-      have hz := congr_fun hsum i
-      simp only [Pi.add_apply] at hz
-      exact (congr_arg (fun x : Γ => (x : ℝ)) hz).symm
+    have h_sum_i (i : ι) : (d i : ℝ) = (d1 i : ℝ) + (d2 i : ℝ) + (d3 i : ℝ) :=
+      (coe_add_apply_offset hsum i).symm
     have hL : L = ∑ i, s i * (d1 i : ℝ) + ∑ i, s i * (d2 i : ℝ)
         + ∑ i, s i * (d3 i : ℝ) := by
       simp only [L, ← Finset.sum_add_distrib]
@@ -197,16 +196,10 @@ lemma finite_triple_sum_eq {T1 T2 T3 : Set (ι → Γ)}
       simp only [Prod.mk.injEq] at heq
       rcases heq with ⟨rfl, rfl⟩
       have h_d1 : d1 = d1' := by
-        funext i
-        have hz1 := congr_fun ht.1 i
-        have hz2 := congr_fun ht'.1 i
-        simp only [Pi.add_apply] at hz1 hz2
-        have h1_real := congr_arg (fun x : Γ => (x : ℝ)) hz1
-        have h2_real := congr_arg (fun x : Γ => (x : ℝ)) hz2
-        change (d1 i : ℝ) + (d2 i : ℝ) + (d3 i : ℝ) = (d i : ℝ) at h1_real
-        change (d1' i : ℝ) + (d2 i : ℝ) + (d3 i : ℝ) = (d i : ℝ) at h2_real
-        have hd1 : (d1 i : ℝ) = (d1' i : ℝ) := by linarith
-        exact Subtype.ext hd1
+        have h1 : d1 + d2 + d3 = d := by simpa using ht.1
+        have h2 : d1' + d2 + d3 = d := by simpa using ht'.1
+        have h_eq : (d1 + d2) + d3 = (d1' + d2) + d3 := by simpa [add_assoc] using h1.trans h2.symm
+        exact add_right_cancel (add_right_cancel h_eq)
       rw [h_d1]
     have h_image : ((fun t => (t.2.1, t.2.2)) '' S1).Finite := by
       have h_sub' : (fun t => (t.2.1, t.2.2)) '' S1 ⊆ ⋃ d1 ∈ B1,
@@ -226,16 +219,11 @@ lemma finite_triple_sum_eq {T1 T2 T3 : Set (ι → Γ)}
       simp only [Prod.mk.injEq] at heq
       rcases heq with ⟨rfl, rfl⟩
       have h_d2 : d2 = d2' := by
-        funext i
-        have hz1 := congr_fun ht.1 i
-        have hz2 := congr_fun ht'.1 i
-        simp only [Pi.add_apply] at hz1 hz2
-        have h1_real := congr_arg (fun x : Γ => (x : ℝ)) hz1
-        have h2_real := congr_arg (fun x : Γ => (x : ℝ)) hz2
-        change (d1 i : ℝ) + (d2 i : ℝ) + (d3 i : ℝ) = (d i : ℝ) at h1_real
-        change (d1 i : ℝ) + (d2' i : ℝ) + (d3 i : ℝ) = (d i : ℝ) at h2_real
-        have hd2 : (d2 i : ℝ) = (d2' i : ℝ) := by linarith
-        exact Subtype.ext hd2
+        have h1 : d1 + d2 + d3 = d := by simpa using ht.1
+        have h2 : d1 + d2' + d3 = d := by simpa using ht'.1
+        have h_eq : d2 + (d1 + d3) = d2' + (d1 + d3) := by
+          simpa [add_comm, add_left_comm, add_assoc] using h1.trans h2.symm
+        exact add_right_cancel h_eq
       rw [h_d2]
     have h_image : ((fun t => (t.1, t.2.2)) '' S2).Finite := by
       have h_sub' : (fun t => (t.1, t.2.2)) '' S2 ⊆ ⋃ d2 ∈ B2,
@@ -245,14 +233,7 @@ lemma finite_triple_sum_eq {T1 T2 T3 : Set (ι → Γ)}
         refine ⟨d2, hd2, ?_⟩
         simp only [Prod.mk.injEq] at heq
         rcases heq with ⟨rfl, rfl⟩
-        refine ⟨?_, ht.2.1, ht.2.2.2⟩
-        funext i
-        have hz := congr_fun ht.1 i
-        simp only [Pi.add_apply] at hz
-        have h_real := congr_arg (fun x : Γ => (x : ℝ)) hz
-        change (d1' i : ℝ) + (d2 i : ℝ) + (d3' i : ℝ) = (d i : ℝ) at h_real
-        have heq2 : (d2 i : ℝ) + (d1' i : ℝ) + (d3' i : ℝ) = (d i : ℝ) := by linarith
-        exact Subtype.ext heq2
+        refine ⟨by simpa [add_comm, add_left_comm, add_assoc] using ht.1, ht.2.1, ht.2.2.2⟩
       apply Set.Finite.subset _ h_sub'
       exact Set.Finite.biUnion hB2 (fun d2 _ => finite_pair_sum_eq_offset h1 h3 d d2)
     exact Set.Finite.of_finite_image h_image h_inj
@@ -262,16 +243,11 @@ lemma finite_triple_sum_eq {T1 T2 T3 : Set (ι → Γ)}
       simp only [Prod.mk.injEq] at heq
       rcases heq with ⟨rfl, rfl⟩
       have h_d3 : d3 = d3' := by
-        funext i
-        have hz1 := congr_fun ht.1 i
-        have hz2 := congr_fun ht'.1 i
-        simp only [Pi.add_apply] at hz1 hz2
-        have h1_real := congr_arg (fun x : Γ => (x : ℝ)) hz1
-        have h2_real := congr_arg (fun x : Γ => (x : ℝ)) hz2
-        change (d1 i : ℝ) + (d2 i : ℝ) + (d3 i : ℝ) = (d i : ℝ) at h1_real
-        change (d1 i : ℝ) + (d2 i : ℝ) + (d3' i : ℝ) = (d i : ℝ) at h2_real
-        have hd3 : (d3 i : ℝ) = (d3' i : ℝ) := by linarith
-        exact Subtype.ext hd3
+        have h1 : d1 + d2 + d3 = d := by simpa using ht.1
+        have h2 : d1 + d2 + d3' = d := by simpa using ht'.1
+        have h_eq : d3 + (d1 + d2) = d3' + (d1 + d2) := by
+          simpa [add_comm, add_left_comm, add_assoc] using h1.trans h2.symm
+        exact add_right_cancel h_eq
       rw [h_d3]
     have h_image : ((fun t => (t.1, t.2.1)) '' S3).Finite := by
       have h_sub' : (fun t => (t.1, t.2.1)) '' S3 ⊆ ⋃ d3 ∈ B3,
@@ -281,14 +257,7 @@ lemma finite_triple_sum_eq {T1 T2 T3 : Set (ι → Γ)}
         refine ⟨d3, hd3, ?_⟩
         simp only [Prod.mk.injEq] at heq
         rcases heq with ⟨rfl, rfl⟩
-        refine ⟨?_, ht.2.1, ht.2.2.1⟩
-        funext i
-        have hz := congr_fun ht.1 i
-        simp only [Pi.add_apply] at hz
-        have h_real := congr_arg (fun x : Γ => (x : ℝ)) hz
-        change (d1' i : ℝ) + (d2' i : ℝ) + (d3 i : ℝ) = (d i : ℝ) at h_real
-        have heq2 : (d3 i : ℝ) + (d1' i : ℝ) + (d2' i : ℝ) = (d i : ℝ) := by linarith
-        exact Subtype.ext heq2
+        refine ⟨by simpa [add_comm, add_left_comm, add_assoc] using ht.1, ht.2.1, ht.2.2.1⟩
       apply Set.Finite.subset _ h_sub'
       exact Set.Finite.biUnion hB3 (fun d3 _ => finite_pair_sum_eq_offset h1 h2 d d3)
     exact Set.Finite.of_finite_image h_image h_inj
