@@ -1,4 +1,5 @@
 import Novikov.Series.Multiplication
+import Novikov.Series.Exact
 import Mathlib.Algebra.Algebra.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
 import Mathlib.Algebra.BigOperators.Ring.Finset
@@ -135,6 +136,37 @@ lemma support_pow_subset {A : Type*} [CommRing A] (f : NovikovSeries Γ ι A) (n
     exact Set.add_subset_add ih (Set.Subset.refl _)
 
 end RingStructure
+
+/-- The ring homomorphism `NovikovSeries Γ ι A → NovikovSeries Γ ι B`
+induced by a ring homomorphism `f : A →+* B` on coefficients. -/
+noncomputable def mapRingHom {B : Type*} [CommRing B] (f : A →+* B) :
+    NovikovSeries Γ ι A →+* NovikovSeries Γ ι B :=
+  let φ_add : NovikovSeries Γ ι A →+ NovikovSeries Γ ι B :=
+    map f.toAddMonoidHom
+  { φ_add with
+    map_one' := by
+      ext d
+      dsimp [φ_add]
+      have h1 : ((1 : NovikovSeries Γ ι A) : (ι → Γ) → A) d = (if d = (0 : ι → Γ) then (1 : A) else (0 : A)) := rfl
+      have h2 : ((1 : NovikovSeries Γ ι B) : (ι → Γ) → B) d = (if d = (0 : ι → Γ) then (1 : B) else (0 : B)) := rfl
+      rw [h1, h2]
+      split_ifs <;> simp
+    map_mul' := by
+      intro s t; ext d
+      have h := novikovSeriesMul_map (A := A) (B := A) (C := A)
+        (A' := B) (B' := B) (C' := B)
+        (φa := f.toAddMonoidHom) (φb := f.toAddMonoidHom) (φc := f.toAddMonoidHom)
+        (α := AddMonoidHom.mul) (α' := AddMonoidHom.mul)
+        (hcompat := fun a b => by simp [map_mul]) s t
+        (map f.toAddMonoidHom s)
+        (map f.toAddMonoidHom t)
+        (hf := fun _ => rfl) (hs := fun _ => rfl) d
+      simpa [φ_add, map_apply] using h
+  }
+
+@[simp]
+lemma mapRingHom_apply {B : Type*} [CommRing B] (f : A →+* B) (s : NovikovSeries Γ ι A) (d : ι → Γ) :
+    (mapRingHom f s) d = f (s d) := map_apply _ _ _
 
 /-- The canonical ring homomorphism `A → NovikovSeriesMultivar Γ ι A` sending `a`
 to the series with `a` at the zero exponent and `0` elsewhere. -/

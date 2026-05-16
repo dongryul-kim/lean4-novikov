@@ -10,3 +10,4 @@ import Novikov.Isocrystal.Basic
 import Novikov.Isocrystal.Constant
 import Novikov.Isocrystal.Field
 import Novikov.Miscellany.Topology
+import Novikov.Isocrystal.Injective

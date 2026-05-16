@@ -113,6 +113,11 @@ instance {R : Type*} [Semiring R] [Module R A] : Module R (NovikovSeries Γ ι A
   add_smul r s f := Subtype.ext (add_smul r s f.val)
   zero_smul f := Subtype.ext (zero_smul R f.val)
 
+/-- The `A`-scalar action on `NovikovSeries Γ ι M` is coefficient-wise. -/
+@[simp]
+lemma smul_val_apply {R M : Type*} [Semiring R] [AddCommGroup M] [Module R M]
+    (a : R) (s : NovikovSeries Γ ι M) (d : ι → Γ) : (a • s).val d = a • s.val d := rfl
+
 /-- The Novikov finiteness condition for a scalar multiple of a monomial.
 Its support is a singleton, which is finite below any cutoff. -/
 lemma is_novikov_series_monomial (a : A) (d0 : ι → Γ) :

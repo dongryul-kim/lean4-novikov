@@ -59,7 +59,7 @@ noncomputable instance moduleNovikovSeries : Module (NovikovSeries Γ ι A) (Nov
   smul_zero f := by
     exact novikovSeriesMul_mul_zero (B := M) f smulAddHom
 
-private lemma algebraMapNovikov_smul (a : A) (z : NovikovSeries Γ ι M) :
+lemma algebraMapNovikov_smul (a : A) (z : NovikovSeries Γ ι M) :
     (algebraMapNovikov (Γ := Γ) (ι := ι) a : NovikovSeries Γ ι A) • z = a • z := by
   ext d
   have h := novikovSeriesMul_left_monomial a z smulAddHom 0 d

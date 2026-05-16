@@ -56,7 +56,7 @@ theorem map_comp (f : A →+ B) (g : B →+ C) :
 /-- If every value of a Novikov series `s` lies in the range of `f : A →+ B`,
 then there is a function `g` such that `f ∘ g = s.val` and `g` vanishes where `s` does.
 Used to lift preimages in `map_surjective` and `map_exact_backward`. -/
-private lemma exists_preimage_of_range {f : A →+ B} (s : NovikovSeries Γ ι B)
+lemma exists_preimage_of_range {f : A →+ B} (s : NovikovSeries Γ ι B)
     (h_range : ∀ d, s.val d ∈ f.range) :
     ∃ (g : (ι → Γ) → A), (∀ d, f (g d) = s.val d) ∧ (∀ d, g d ≠ 0 → s.val d ≠ 0) := by
   classical

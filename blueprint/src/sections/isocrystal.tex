@@ -61,7 +61,7 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
   \label{thm:vect_to_isoc_full_faith}
   \lean{Novikov.NovikovIsocrystal.vectToNovIsoc_fully_faithful}
   \leanok
-  \uses{def:novikov_isocrystal}
+  \uses{def:novikov_isocrystal, lem:novikov_isocrystal_category}
   The functor $\mathsf{Vect}(A) \to \mathsf{NovIsoc}(A)$ sends a finite
   projective $A$-module $M$ to its constant isocrystal $M((t^{\mathbb{R}}))
   = M \otimes_A A((t^{\mathbb{R}}))$ is fully faithful.
@@ -112,5 +112,55 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
     m' = \sum_{i=0}^{n-1} b_i \cdot F_M^i m_0
   $
   is a nonzero eigenvector satisfying $F_M(m') = c \cdot m'$.
+\end{proof}
+
+
+\begin{lemma}[Lemma~3.6]
+  \label{lem:frobenius_limit}
+  \lean{Novikov.frobenius_limit}
+  \leanok
+  \uses{def:novikov_series, def:frobenius, def:novikov_filtration,
+    thm:novikov_topology, thm:novikov_module}
+  Let $A$ be a commutative ring, $M$ an $A$-module, and $S \subseteq
+  M((t^\mathbb{R}))$ a closed $A$-submodule stable under $F$ and under
+  multiplication by every monomial $t^d$.  Then $S = S_0((t^\mathbb{R}))$
+  where $S_0 = \{ m \in M \mid \text{the constant series } m \in S \}$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Forward inclusion: for $s \in S$, each coefficient $s_d$ (viewed as a
+  constant series) is a limit of iterates $F^k(t^{-d} s)$, hence in $S$.
+  Reverse inclusion: approximate a series in $S_0((t^\mathbb{R}))$ by
+  its finite monomial truncations; each truncation lies in $S$ by the
+  shift-stability, and the limit is in $S$ by closedness.
+\end{proof}
+
+\begin{theorem}[Proposition~3.7]
+  \label{prop:nov_isoc_injective}
+  \lean{Novikov.nov_isoc_injective}
+  \leanok
+  \uses{def:novikov_isocrystal, lem:frobenius_limit, def:novikov_filtration,
+    thm:novikov_topology, def:canonical_topology, thm:canonical_topology_properties,
+    thm:projective_novikov_series, thm:novikov_base_change,
+    def:frobenius, thm:frobenius_properties, thm:novikov_ring, thm:novikov_module}
+  Let $f \colon A \to B$ be an injective ring homomorphism and $M$ a Novikov
+  isocrystal over $A$.  If the base change $M_B = M \otimes_{A((t^\mathbb{R}))} B((t^\mathbb{R}))$
+  is isomorphic to a constant isocrystal over $B$, then $M$ is itself
+  isomorphic to a constant isocrystal over $A$.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Embed $M$ into $M_B$ via $m \mapsto 1 \otimes m$; by flatness and
+  injectivity of $f$, this is injective.  Via the isomorphism
+  $M_B \cong N_0 \otimes_B B((t^\mathbb{R}))$, realize $M$ as a closed $A$-submodule
+  of $N_0((t^\mathbb{R}))$ stable under $F$ and $t^d$-shifts.  Lemma~3.6 identifies
+  this submodule as $M_0((t^\mathbb{R}))$ for an $A$-submodule $M_0 \subseteq N_0$.
+  The subspace topology induced from $N_0((t^\mathbb{R}))$ coincides with the canonical
+  $A((t^\mathbb{R}))$-module topology on $M((t^\mathbb{R}))$ (since $M$ is finite projective over
+  $A((t^\mathbb{R}))$ and $f$ is a closed embedding), hence also with the $t$-adic
+  topology on $M_0((t^\mathbb{R}))$.  By descent of finite projectivity
+  $M_0$ is finite projective over $A$, and $M \cong M_0((t^\mathbb{R}))$.
 \end{proof}
 

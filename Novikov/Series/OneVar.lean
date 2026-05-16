@@ -1,6 +1,7 @@
 
 import Novikov.Series.Basic
 import Novikov.Series.Ring
+import Novikov.Series.Exact
 import Mathlib.Topology.Algebra.Ring.Basic
 import Mathlib.Topology.Algebra.Group.Basic
 import Mathlib.Topology.Algebra.FilterBasis
@@ -42,6 +43,17 @@ def filtration {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] (Γ : S) (A
     simp only [AddSubgroup.coe_neg, Pi.neg_apply]
     rw [hf d hd, neg_zero]
 
+/-- For a one-variable Novikov series, the set of exponents with nonzero coefficient
+and value strictly below `D` is finite. -/
+lemma finite_support_below {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] {Γ : S}
+    {A : Type*} [AddCommGroup A] (s : OneVarNovikovSeries Γ A) (D : ℝ) :
+    ({d : Unit → Γ | s.val d ≠ 0 ∧ (d () : ℝ) < D} : Set _).Finite := by
+  let s_w : Unit → ℝ := fun _ => 1
+  have h_eq : {d : Unit → Γ | s.val d ≠ 0 ∧ (d () : ℝ) < D} =
+      {d | s.val d ≠ 0 ∧ ∑ i, s_w i * (d i : ℝ) < D} := by
+    ext d; simp [s_w]
+  rw [h_eq]; exact s.prop s_w (fun _ => zero_lt_one) D
+
 lemma filtration_mono [AddCommGroup A] {D₁ D₂ : ℝ} (h : D₁ ≤ D₂) :
     filtration Γ A D₂ ≤ filtration Γ A D₁ := by
   intro f hf d hd
@@ -72,8 +84,6 @@ lemma filtration_mul [CommRing A] {D₁ D₂ : ℝ} :
   | inr h2 => rw [hh d2 h2, mul_zero]
 
 lemma exists_filtration [AddCommGroup A] (f : OneVarNovikovSeries Γ A) : ∃ D : ℝ, f ∈ filtration Γ A D := by
-  let s : Unit → ℝ := fun _ => 1
-  have hs : ∀ i, 0 < s i := fun _ => zero_lt_one
   by_cases h0 : ∀ d : Unit → Γ, f d = 0
   · use 0
     intro d _
@@ -82,15 +92,7 @@ lemma exists_filtration [AddCommGroup A] (f : OneVarNovikovSeries Γ A) : ∃ D 
     rcases h0 with ⟨d0, hd0⟩
     let C := (d0 () : ℝ) + 1
     let S := {d : Unit → Γ | f d ≠ 0 ∧ (d () : ℝ) < C}
-    have hS : S.Finite := by
-      have h_sum : ∀ d : Unit → Γ, ∑ i, s i * (d i : ℝ) = (d () : ℝ) := by
-        intro d
-        simp [s, Finset.sum_singleton]
-      have h_eq : S = {d : Unit → Γ | f d ≠ 0 ∧ ∑ i, s i * (d i : ℝ) < C} := by
-        ext d
-        simp only [S, Set.mem_setOf_eq, h_sum]
-      rw [h_eq]
-      exact f.prop s hs C
+    have hS : S.Finite := finite_support_below f C
     have hSne : S.Nonempty := ⟨d0, hd0, by linarith⟩
     let Sf := hS.toFinset
     let D := (Sf.image (fun d => (d () : ℝ))).min' (by
@@ -353,13 +355,13 @@ lemma cauchySeq_of_succ_diff_filtration (b_seq : ℕ → OneVarNovikovSeries Γ 
     (h_succ : ∀ D : ℝ, ∃ N : ℕ, ∀ n ≥ N,
       b_seq (n + 1) - b_seq n ∈ filtration Γ A D) : CauchySeq b_seq := by
   let FB := filtrationBasis Γ A
-  apply (FB.cauchy_iff (F := map b_seq atTop)).mpr
+  apply (FB.cauchy_iff (F := Filter.map b_seq atTop)).mpr
   constructor
-  · exact atTop_neBot.map b_seq
+  · exact (atTop_neBot (α := ℕ)).map b_seq
   · intro U hU
     rcases hU with ⟨D, rfl⟩
     rcases h_succ D with ⟨N, hN⟩
-    have hmem : {x | ∃ n ≥ N, b_seq n = x} ∈ map b_seq Filter.atTop := by
+    have hmem : {x | ∃ n ≥ N, b_seq n = x} ∈ Filter.map b_seq Filter.atTop := by
       rw [Filter.mem_map]
       apply Filter.mem_of_superset (Filter.mem_atTop N)
       intro k hk; exact ⟨k, hk, rfl⟩
@@ -382,7 +384,131 @@ lemma cauchySeq_of_succ_diff_filtration (b_seq : ℕ → OneVarNovikovSeries Γ 
       rw [h_eq]
       exact (filtration Γ A D).neg_mem hsum
 
+/-- The "coefficient at `d`" projection `s ↦ s.val d` from `OneVarNovikovSeries Γ A` to `A`
+is continuous when `A` has the discrete topology. -/
+lemma coefficient_continuous [TopologicalSpace A] [DiscreteTopology A]
+    (d : Unit → Γ) :
+    Continuous (fun s : OneVarNovikovSeries Γ A => s.val d) := by
+  haveI := is_topological_add_group (Γ := Γ) (A := A)
+  refine continuous_iff_continuousAt.mpr fun s₀ => ?_
+  -- Discrete codomain: 𝓝 (f s₀) = pure (f s₀), so ContinuousAt is eventual constancy.
+  change Tendsto (fun s : OneVarNovikovSeries Γ A => s.val d) (𝓝 s₀) (𝓝 (s₀.val d))
+  rw [show (𝓝 (s₀.val d) : Filter A) = pure (s₀.val d) from
+        congrFun (nhds_discrete (α := A)) _,
+      Filter.tendsto_pure]
+  -- Local constancy: use neighborhood `s₀ + filtration Γ A ((d () : ℝ) + 1)`.
+  have h_nhds := (filtrationBasis Γ A).nhds_hasBasis (x₀ := s₀)
+  rw [h_nhds.eventually_iff]
+  refine ⟨(filtration Γ A ((d () : ℝ) + 1) : Set _), ⟨_, rfl⟩, ?_⟩
+  intro s hs
+  -- `s ∈ s₀ + filtration` means `s = s₀ + t` for some `t ∈ filtration`.
+  obtain ⟨t, ht, rfl⟩ := hs
+  change s₀.val d + t.val d = s₀.val d
+  rw [ht d (by linarith), add_zero]
+
+/-- The image of `Novikov.map f` is closed in `OneVarNovikovSeries Γ B`, for any
+additive group homomorphism `f : A →+ B` when `B` has the discrete topology.
+In particular, if `B` is a subgroup of `A` then `OneVarNovikovSeries Γ B` embeds
+as a closed subgroup of `OneVarNovikovSeries Γ A`. -/
+lemma map_range_closed {B : Type*} [AddCommGroup B]
+    [TopologicalSpace B] [DiscreteTopology B] (f : A →+ B) :
+    IsClosed (Set.range (Novikov.map (Γ := Γ) (ι := Unit) f) :
+      Set (OneVarNovikovSeries Γ B)) := by
+  -- Range of `Novikov.map f` = `⋂ d, {s | s.val d ∈ Set.range f}`, closed as
+  -- intersection of preimages of closed (discrete codomain) sets under continuous
+  -- coefficient projections.
+  have h_eq : (Set.range (Novikov.map (Γ := Γ) (ι := Unit) f) :
+      Set (OneVarNovikovSeries Γ B)) =
+      ⋂ d, {s : OneVarNovikovSeries Γ B | s.val d ∈ Set.range f} := by
+    ext s
+    simp only [Set.mem_iInter, Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨s', rfl⟩ d
+      exact ⟨s'.val d, (Novikov.map_apply f s' d).symm⟩
+    · intro hs
+      have hs_range : ∀ d, s.val d ∈ f.range := hs
+      rcases Novikov.exists_preimage_of_range s hs_range with ⟨g_val, hg_eq, hg_supp⟩
+      have hg_nov : isNovikovSeries g_val := is_novikov_series_of_subset s.prop hg_supp
+      refine ⟨⟨g_val, hg_nov⟩, ?_⟩
+      ext d
+      rw [Novikov.map_apply]
+      exact hg_eq d
+  rw [h_eq]
+  apply isClosed_iInter
+  intro d
+  exact IsClosed.preimage (coefficient_continuous (A := B) d) (isClosed_discrete _)
+
 end AddCommGroup
+
+/-- `lmap f` is continuous in the t-adic topology for any `R`-linear map `f : M →ₗ[R] N`. -/
+lemma lmap_continuous {R M N : Type*} [Semiring R] [AddCommGroup M] [Module R M]
+    [AddCommGroup N] [Module R N] (f : M →ₗ[R] N) :
+    Continuous (lmap (Γ := Γ) (ι := Unit) f) := by
+  apply continuous_of_continuousAt_zero
+  rw [ContinuousAt, map_zero,
+      (filtrationBasis Γ M).nhds_zero_hasBasis.tendsto_iff
+        (filtrationBasis Γ N).nhds_zero_hasBasis]
+  intro V ⟨D, hV⟩; subst hV
+  refine ⟨filtration Γ M D, ⟨D, rfl⟩, ?_⟩
+  intro x hx d hd
+  rw [lmap_apply, hx d hd, map_zero]
+
+/-- If `f : M →ₗ[R] N` is injective, then `lmap f` is a topological embedding
+in the t-adic topology. -/
+lemma lmap_isEmbedding {R M N : Type*} [Semiring R] [AddCommGroup M] [Module R M]
+    [AddCommGroup N] [Module R N] (f : M →ₗ[R] N) (hf : Function.Injective f) :
+    Topology.IsEmbedding (lmap (Γ := Γ) (ι := Unit) f) := by
+  have h_cont : Continuous (lmap (Γ := Γ) (ι := Unit) f) := lmap_continuous f
+  have h_inj : Function.Injective (lmap (Γ := Γ) (ι := Unit) f) :=
+    lmap_injective f hf
+  -- Show that the filtrations match: preimage of codomain filtration = domain filtration
+  have h_filt (D : ℝ) : (lmap (Γ := Γ) (ι := Unit) f)⁻¹'
+      (filtration Γ N D : Set (OneVarNovikovSeries Γ N)) =
+      (filtration Γ M D : Set (OneVarNovikovSeries Γ M)) := by
+    ext x
+    constructor
+    · intro h d hd
+      have hx := h d hd
+      rw [lmap_apply] at hx
+      -- hx : f (x.val d) = 0
+      exact hf (hx.trans (map_zero f).symm)
+    · intro h d hd
+      have hx := h d hd
+      rw [lmap_apply, hx, map_zero]
+  -- Using `IsTopologicalAddGroup.isInducing_iff_nhds_zero`, we show `lmap f` is inducing
+  have h_inducing : Topology.IsInducing (lmap (Γ := Γ) (ι := Unit) f) := by
+    haveI : IsTopologicalAddGroup (OneVarNovikovSeries Γ M) :=
+      is_topological_add_group (A := M)
+    haveI : IsTopologicalAddGroup (OneVarNovikovSeries Γ N) :=
+      is_topological_add_group (A := N)
+    refine (IsTopologicalAddGroup.isInducing_iff_nhds_zero
+      (f := (lmap (Γ := Γ) (ι := Unit) f).toAddMonoidHom)).mpr ?_
+    apply Filter.ext
+    intro s
+    rw [Filter.mem_comap]
+    let FB_M : AddGroupFilterBasis (OneVarNovikovSeries Γ M) :=
+      filtrationBasis Γ M
+    let FB_N : AddGroupFilterBasis (OneVarNovikovSeries Γ N) :=
+      filtrationBasis Γ N
+    rw [FB_M.nhds_zero_hasBasis.mem_iff]
+    constructor
+    · rintro ⟨t, ⟨D, ht⟩, hts⟩
+      subst ht
+      refine ⟨filtration Γ N D, FB_N.nhds_zero_hasBasis.mem_of_mem ⟨D, rfl⟩, ?_⟩
+      dsimp
+      rw [h_filt D]
+      exact hts
+    · rintro ⟨u, hu, hus⟩
+      rw [FB_N.nhds_zero_hasBasis.mem_iff] at hu
+      rcases hu with ⟨t, ⟨D, ht⟩, htu⟩
+      subst ht
+      refine ⟨filtration Γ M D, ⟨D, rfl⟩, ?_⟩
+      calc
+        filtration Γ M D = (lmap (Γ := Γ) (ι := Unit) f)⁻¹' (filtration Γ N D) :=
+          (h_filt D).symm
+        _ ⊆ (lmap (Γ := Γ) (ι := Unit) f)⁻¹' u := Set.preimage_mono htu
+        _ ⊆ s := hus
+  exact Topology.IsEmbedding.mk h_inducing h_inj
 
 section CommRing
 variable [CommRing A]

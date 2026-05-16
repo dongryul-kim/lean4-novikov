@@ -1,4 +1,5 @@
 import Novikov.Miscellany.Split
+import Novikov.Miscellany.Topology
 import Novikov.Series.Module
 import Novikov.Series.OneVar
 import Mathlib.RingTheory.Finiteness.Defs
@@ -9,15 +10,21 @@ import Mathlib.Algebra.Module.FinitePresentation
 
 /-! # Descent of finite projectivity along Novikov series
 
-This file shows that if `M` is an `A`-module such that `RealNovikovSeries M` is
-a finite projective `RealNovikovSeries A`-module whose canonical topology agrees
-with the natural topology, then `M` itself is a finite projective `A`-module.
+This file shows two things:
 
-The agreement of the canonical topology with the natural one is encoded as the
-hypothesis that every `RealNovikovSeries A`-linear map
-`RealNovikovSeries M → RealNovikovSeries A` is continuous, which is the
-direction of the agreement that the proofs in this file rely on.
+1. If `RealNovikovSeries M` is a finite projective `RealNovikovSeries A`-module
+   and every `RealNovikovSeries A`-linear map `RealNovikovSeries M → RealNovikovSeries A`
+   is continuous (i.e., the canonical topology agrees with the natural t-adic topology),
+   then `M` itself is a finite projective `A`-module (`projective_of_realNovikovSeries`).
+
+2. Conversely, if `M` is a finite projective `A`-module, then the canonical topology
+   on `RealNovikovSeries M` automatically equals its natural t-adic topology
+   (`canonicalTopology_realNovikovSeries_eq`).  In particular, every
+   `RealNovikovSeries A`-linear functional on `RealNovikovSeries M` is continuous
+   (`realNovikovSeries_functional_continuous`).
 -/
+
+open scoped Topology
 
 namespace Novikov
 
@@ -394,6 +401,86 @@ lemma module_finitePresentation_of_realNovikovSeries
     module_finite_of_realNovikovSeries h_canonical_K
   exact (Submodule.fg_top K).mp hK_fin.fg_top
 
+/-- `novikovPiEquiv` (forward direction) is continuous in the t-adic topology. -/
+lemma novikovPiEquiv_continuous
+    {Γ : AddSubgroup ℝ} {ι' : Type*} [Fintype ι'] :
+    Continuous ((novikovPiEquiv (A := A) (M := M) (ι := Unit) Γ).toLinearMap :
+      OneVarNovikovSeries Γ (ι' → M) →ₗ[OneVarNovikovSeries Γ A]
+        (ι' → OneVarNovikovSeries Γ M)) := by
+  apply continuous_pi
+  intro j
+  have h_component :
+      (fun (s : OneVarNovikovSeries Γ (ι' → M)) =>
+        ((novikovPiEquiv (A := A) (M := M) (ι := Unit) Γ).toLinearMap s : ι' →
+          OneVarNovikovSeries Γ M) j) =
+      lmap (R := A) (Γ := Γ) (ι := Unit) (LinearMap.proj j : (ι' → M) →ₗ[A] M) := by
+    ext s d; rfl
+  rw [h_component]
+  exact lmap_continuous (LinearMap.proj j : (ι' → M) →ₗ[A] M)
+
+/-- `novikovPiEquiv` (inverse direction) is continuous in the t-adic topology. -/
+lemma novikovPiEquiv_symm_continuous
+    {Γ : AddSubgroup ℝ} {ι' : Type*} [Fintype ι'] :
+    Continuous ((novikovPiEquiv (A := A) (M := M) (ι := Unit) Γ).symm :
+      (ι' → OneVarNovikovSeries Γ M) → OneVarNovikovSeries Γ (ι' → M)) := by
+  haveI : IsTopologicalAddGroup (OneVarNovikovSeries Γ (ι' → M)) := is_topological_add_group
+  haveI : IsTopologicalAddGroup (OneVarNovikovSeries Γ M) := is_topological_add_group
+  apply continuous_of_continuousAt_zero
+  rw [ContinuousAt, map_zero,
+      (filtrationBasis Γ (ι' → M)).nhds_zero_hasBasis.tendsto_right_iff]
+  rintro V ⟨D, rfl⟩
+  have h_each : ∀ j : ι',
+      (filtration Γ M D : Set _) ∈ 𝓝 (0 : OneVarNovikovSeries Γ M) :=
+    fun _ => (filtrationBasis Γ M).nhds_zero_hasBasis.mem_of_mem ⟨D, rfl⟩
+  have h_prod :
+      (Set.pi Set.univ (fun (_ : ι') => (filtration Γ M D : Set _))) ∈
+        𝓝 (0 : ι' → OneVarNovikovSeries Γ M) := by
+    rw [show (0 : ι' → OneVarNovikovSeries Γ M) = fun _ => 0 from rfl, nhds_pi]
+    exact Filter.pi_mem_pi Set.finite_univ (fun j _ => h_each j)
+  filter_upwards [h_prod] with v hv d hd
+  funext k
+  exact (hv k (Set.mem_univ k)) d hd
+
+/-- For the free `A`-module `Fin n → A`, every `R_A`-linear functional on
+`RealNovikovSeries (Fin n → A)` is continuous (i.e. canonical topology ⊆ t-adic
+topology on the free case). -/
+lemma every_linearMap_continuous_pi {n : ℕ}
+    (g : RealNovikovSeries (Fin n → A) →ₗ[RealNovikovSeries A] RealNovikovSeries A) :
+    Continuous g := by
+  haveI : IsTopologicalRing (RealNovikovSeries A) := is_topological_ring
+  haveI : IsTopologicalAddGroup (RealNovikovSeries A) := is_topological_add_group
+  let π := novikovPiEquiv (A := A) (M := A) (ι := Unit) (ι' := Fin n)
+    (⊤ : AddSubgroup ℝ)
+  let g' : (Fin n → RealNovikovSeries A) →ₗ[RealNovikovSeries A] RealNovikovSeries A :=
+    g ∘ₗ π.symm.toLinearMap
+  have hg' : Continuous g' := by
+    have h_formula (v : Fin n → RealNovikovSeries A) :
+        g' v = ∑ i, g' (Pi.basisFun (RealNovikovSeries A) (Fin n) i) * v i := by
+      have hv : ∑ i, v i • Pi.basisFun (RealNovikovSeries A) (Fin n) i = v :=
+        (Pi.basisFun (RealNovikovSeries A) (Fin n)).sum_repr v
+      calc
+        g' v = g' (∑ i, v i • Pi.basisFun (RealNovikovSeries A) (Fin n) i) := by
+          conv_lhs => rw [← hv]
+        _ = ∑ i, g' (v i • Pi.basisFun (RealNovikovSeries A) (Fin n) i) := map_sum _ _ _
+        _ = ∑ i, v i • g' (Pi.basisFun (RealNovikovSeries A) (Fin n) i) := by
+          simp only [map_smul]
+        _ = ∑ i, g' (Pi.basisFun (RealNovikovSeries A) (Fin n) i) * v i := by
+          refine Finset.sum_congr rfl (fun i _ => ?_)
+          exact mul_comm (v i) _
+    have h_eq : (g' : (Fin n → RealNovikovSeries A) → RealNovikovSeries A) =
+        fun v => ∑ i, g' (Pi.basisFun (RealNovikovSeries A) (Fin n) i) * v i := by
+      funext v; exact h_formula v
+    rw [h_eq]
+    refine continuous_finset_sum Finset.univ (fun i _ => ?_)
+    exact continuous_const.mul (continuous_apply i)
+  have h_decompose : (g : RealNovikovSeries (Fin n → A) → RealNovikovSeries A) =
+      (g' : (Fin n → RealNovikovSeries A) → RealNovikovSeries A) ∘ (π : _ → _) := by
+    funext s
+    change g s = g (π.symm (π s))
+    rw [π.symm_apply_apply]
+  rw [h_decompose]
+  exact hg'.comp novikovPiEquiv_continuous
+
 /-- The `A`-linear splitting of `A → RealNovikovSeries A` given by evaluating at `0`. -/
 def realNovikovSeriesSplit : RealNovikovSeries A →ₗ[A] A where
   toFun f := f.val fun _ => 0
@@ -428,5 +515,135 @@ theorem projective_of_realNovikovSeries
   haveI h_proj : Module.Projective (RealNovikovSeries A) (TensorProduct A (RealNovikovSeries A) M) := by
     exact Module.Projective.of_equiv iso.symm
   exact @Novikov.Miscellany.finite_projective_of_split_baseChange A _ M _ _ (RealNovikovSeries A) _ _ realNovikovSeriesSplit realNovikovSeriesSplit_comp_algebraMap ‹_› ‹_›
+
+/-- Canonical topology agreement (Lem:FiniteProjTopology, paper.tex:513).
+If `M` is a finite projective `A`-module, then the canonical `RealNovikovSeries A`-module
+topology on `RealNovikovSeries M` coincides with its natural t-adic topology.
+
+The proof lifts an A-linear projective splitting `σ_A : M → (Fin n → A)` via `lmap`
+to an R-linear t-adic embedding `σ_R : RealNovikovSeries M → RealNovikovSeries (Fin n → A)`
+and uses that the canonical and t-adic topologies agree on the free module
+(by `canonicalTopology_pi_eq` and `novikovPiEquiv`). -/
+lemma canonicalTopology_realNovikovSeries_eq
+    {A : Type*} [CommRing A]
+    {M : Type*} [AddCommGroup M] [Module A M]
+    [Module.Finite A M]
+    [Module.Projective A M] :
+    Novikov.Miscellany.canonicalTopology (RealNovikovSeries A) (RealNovikovSeries M) =
+      (inferInstance : TopologicalSpace (RealNovikovSeries M)) := by
+  classical
+  set R := RealNovikovSeries A
+  set M_seq := RealNovikovSeries M
+  haveI : IsTopologicalRing R := is_topological_ring
+  haveI : IsTopologicalAddGroup M_seq := is_topological_add_group
+  let Γ := (⊤ : AddSubgroup ℝ)
+  -- Get A-linear projective splitting: M is a direct summand of (Fin n → A)
+  obtain ⟨n, π_A, σ_A, _, _, hπσ⟩ :=
+    Module.Finite.exists_comp_eq_id_of_projective A M
+  let F' := RealNovikovSeries (Fin n → A)
+  haveI : IsTopologicalAddGroup F' := is_topological_add_group
+  -- Lift to R-linear maps σ_R : M_seq → F', π_R : F' → M_seq with π_R ∘ σ_R = id
+  let σ_R : M_seq →ₗ[R] F' := lmapNovikov (Γ := Γ) (ι := Unit) σ_A
+  let π_R : F' →ₗ[R] M_seq := lmapNovikov (Γ := Γ) (ι := Unit) π_A
+  have hπσ_R : π_R ∘ₗ σ_R = LinearMap.id := by
+    ext x d
+    dsimp [σ_R, π_R, lmapNovikov]
+    simpa using congrArg (fun f : M →ₗ[A] M => f (x.val d)) hπσ
+  -- σ_R is a t-adic topological embedding: continuous + continuous left inverse
+  have hσR_cont : Continuous σ_R := by
+    dsimp [σ_R, lmapNovikov]; exact lmap_continuous (Γ := Γ) σ_A
+  have hπR_cont : Continuous π_R := by
+    dsimp [π_R, lmapNovikov]; exact lmap_continuous (Γ := Γ) π_A
+  have hσR_emb : Topology.IsEmbedding σ_R :=
+    (Function.LeftInverse.isEmbedding (by
+      intro x; simpa using LinearMap.congr_fun hπσ_R x) hπR_cont hσR_cont)
+  -- The t-adic topology on M_seq equals the subspace topology via σ_R
+  have hτM_subspace : (inferInstance : TopologicalSpace M_seq) =
+      TopologicalSpace.induced (σ_R : M_seq → F') (inferInstance : TopologicalSpace F') := by
+    exact ((Topology.isInducing_iff (σ_R : M_seq → F')).mp hσR_emb.isInducing)
+  -- canonical F' = t-adic on F' (free module case)
+  have h_canon_F'_eq : Novikov.Miscellany.canonicalTopology R F' =
+      (inferInstance : TopologicalSpace F') := by
+    let φ := novikovPiEquiv (A := A) (M := A) (ι := Unit) (ι' := Fin n) (⊤ : AddSubgroup ℝ)
+    have h_canon_pi : Novikov.Miscellany.canonicalTopology R (Fin n → R) =
+        Pi.topologicalSpace := Novikov.Miscellany.canonicalTopology_pi_eq R n
+    have hτF'_eq : (inferInstance : TopologicalSpace F') =
+        TopologicalSpace.induced (φ : F' → (Fin n → R)) Pi.topologicalSpace := by
+      apply le_antisymm
+      · intro U hU; rw [isOpen_induced_iff] at hU
+        rcases hU with ⟨V, hV, rfl⟩; exact novikovPiEquiv_continuous.isOpen_preimage V hV
+      · intro U hU; rw [isOpen_induced_iff]
+        have hφ_open : IsOpen (φ '' U) := by
+          have : φ.symm ⁻¹' U = φ '' U := by
+            ext y; constructor
+            · intro hy; refine ⟨φ.symm y, hy, φ.apply_symm_apply y⟩
+            · rintro ⟨x, hx, rfl⟩; simpa [φ.symm_apply_apply] using hx
+          rw [← this]; exact novikovPiEquiv_symm_continuous.isOpen_preimage U hU
+        refine ⟨φ '' U, hφ_open, Set.preimage_image_eq U φ.injective⟩
+    have h_canon_ind := Novikov.Miscellany.canonicalTopology_linearEquiv φ
+    rw [h_canon_ind, h_canon_pi, hτF'_eq]
+  -- canonical M_seq = induced σ_R (canonical F') because σ_R has left inverse π_R
+  have h_canon_subspace :
+      Novikov.Miscellany.canonicalTopology R M_seq =
+      TopologicalSpace.induced (σ_R : M_seq → F')
+        (Novikov.Miscellany.canonicalTopology R F') := by
+    apply le_antisymm
+    · -- induced ≤ canonical: σ_R is R-linear, hence canonical-continuous
+      have h_cont : @Continuous _ _ (Novikov.Miscellany.canonicalTopology R M_seq)
+          (Novikov.Miscellany.canonicalTopology R F') σ_R :=
+        Novikov.Miscellany.canonicalTopology.continuous_linearMap R M_seq F' σ_R
+      rw [continuous_iff_le_induced] at h_cont; exact h_cont
+    · -- canonical ≤ induced: each f: M_seq → R factors as (f∘π_R)∘σ_R
+      dsimp [Novikov.Miscellany.canonicalTopology]
+      rw [induced_iInf]
+      refine le_iInf ?_
+      intro f
+      let g : F' →ₗ[R] R := f.comp π_R
+      have h_factor : g.comp σ_R = f := by
+        calc
+          g.comp σ_R = (f.comp π_R).comp σ_R := rfl
+          _ = f.comp (π_R.comp σ_R) := by rw [LinearMap.comp_assoc]
+          _ = f.comp LinearMap.id := by rw [hπσ_R]
+          _ = f := by simp
+      have h_term_eq : TopologicalSpace.induced (σ_R : M_seq → F')
+          (TopologicalSpace.induced (g : F' → R) inferInstance) =
+          TopologicalSpace.induced (f : M_seq → R) inferInstance := by
+        rw [induced_compose (f := σ_R) (g := (g : F' → R)), ← LinearMap.coe_comp, h_factor]
+        rfl
+      apply le_trans ?_ h_term_eq.le
+      apply iInf_le (f := fun (g' : F' →ₗ[R] R) =>
+        TopologicalSpace.induced (σ_R : M_seq → F')
+          (TopologicalSpace.induced (g' : F' → R) inferInstance))
+  -- Assemble the chain of equalities
+  calc
+    Novikov.Miscellany.canonicalTopology R M_seq
+        = TopologicalSpace.induced (σ_R : M_seq → F')
+            (Novikov.Miscellany.canonicalTopology R F') := h_canon_subspace
+    _ = TopologicalSpace.induced (σ_R : M_seq → F')
+            (inferInstance : TopologicalSpace F') := by rw [h_canon_F'_eq]
+    _ = (inferInstance : TopologicalSpace M_seq) := by rw [hτM_subspace]
+
+/-- Every `RealNovikovSeries A`-linear functional `RealNovikovSeries M → RealNovikovSeries A`
+is continuous in the t-adic topology, when `M` is a finite projective `A`-module.
+Follows from `canonicalTopology_realNovikovSeries_eq` together with
+`canonicalTopology.continuous_linearMap`. -/
+lemma realNovikovSeries_functional_continuous
+    {A : Type*} [CommRing A]
+    {M : Type*} [AddCommGroup M] [Module A M]
+    [Module.Finite A M]
+    [Module.Projective A M]
+    (g : RealNovikovSeries M →ₗ[RealNovikovSeries A] RealNovikovSeries A) :
+    Continuous g := by
+  haveI : IsTopologicalRing (RealNovikovSeries A) := is_topological_ring
+  have h_can :
+      @Continuous _ _
+        (Novikov.Miscellany.canonicalTopology (RealNovikovSeries A) (RealNovikovSeries M))
+        (Novikov.Miscellany.canonicalTopology (RealNovikovSeries A) (RealNovikovSeries A))
+        g :=
+    Novikov.Miscellany.canonicalTopology.continuous_linearMap (RealNovikovSeries A)
+      (RealNovikovSeries M) (RealNovikovSeries A) g
+  have h_eq_src := canonicalTopology_realNovikovSeries_eq (A := A) (M := M)
+  have h_eq_tgt := Novikov.Miscellany.canonicalTopology_self_eq (A := RealNovikovSeries A)
+  convert h_can <;> [exact h_eq_src.symm; exact h_eq_tgt.symm]
 
 end Novikov
