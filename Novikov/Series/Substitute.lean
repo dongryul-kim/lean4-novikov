@@ -439,6 +439,34 @@ lemma substitute_zero (f : ι → ι') :
   simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq,
     not_true_eq_false, and_false] at hg
 
+lemma substitute_algebraMap (f : ι → ι') (a : A) :
+    substitute f (algebraMapNovikov a : NovikovSeries Γ ι A) =
+      (algebraMapNovikov a : NovikovSeries Γ ι' A) := by
+  have h_push0 : pushExponents f (0 : ι → Γ) = 0 := by
+    ext j; simp [pushExponents]
+  ext d'
+  simp only [substitute, substituteFun, algebraMapNovikov, RingHom.coe_mk, MonoidHom.coe_mk,
+    OneHom.coe_mk]
+  by_cases hd' : d' = 0
+  · subst hd'
+    rw [Finset.sum_eq_single 0]
+    · simp
+    · intro g hg hg0
+      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hg
+      have : g ≠ 0 := hg0
+      simp [this]
+    · intro h0
+      simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, not_and] at h0
+      simp only [ite_true]
+      exact not_not.mp (h0 h_push0)
+  · simp only [hd', ↓reduceIte]
+    apply Finset.sum_eq_zero
+    intro g hg
+    simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hg
+    have hg0 : g ≠ 0 := by
+      intro hg0; exact hd' (by rw [← hg.1, hg0, h_push0])
+    simp [hg0]
+
 /-- Substitution is a ring homomorphism. -/
 noncomputable def substituteRingHom (f : ι → ι') :
     NovikovSeries Γ ι A →+* NovikovSeries Γ ι' A where
@@ -447,6 +475,21 @@ noncomputable def substituteRingHom (f : ι → ι') :
   map_mul' := substitute_mul f
   map_zero' := substitute_zero f
   map_add' := substitute_add f
+
+/-- Substitution as an algebra homomorphism. -/
+noncomputable def substituteAlgHom (f : ι → ι') :
+    NovikovSeries Γ ι A →ₐ[A] NovikovSeries Γ ι' A :=
+  AlgHom.mk' (substituteRingHom f) (fun a x => by
+    change substitute f (a • x) = a • substitute f x
+    have h1 : a • x = algebraMapNovikov a * x := by
+      rw [Algebra.smul_def]; rfl
+    have h2 : a • substitute f x = algebraMapNovikov a * substitute f x := by
+      rw [Algebra.smul_def]; rfl
+    rw [h1, h2]
+    change (substituteRingHom f) (algebraMapNovikov a * x) = _
+    rw [(substituteRingHom f).map_mul]
+    congr 1
+    exact substitute_algebraMap f a)
 
 end Ring
 

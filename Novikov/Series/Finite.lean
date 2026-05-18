@@ -1,4 +1,3 @@
-
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Algebra.Group.Pi.Basic
 import Mathlib.Data.Set.Finite.Basic
@@ -19,15 +18,21 @@ Novikov series). -/
 
 namespace Novikov
 
-variable {ι : Type*} [Fintype ι]
-variable {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] {Γ : S}
+variable {ι : Type*}
+variable {S : Type*} [SetLike S ℝ] {Γ : S}
 
-/-- A subset of `ι → Γ` has *Novikov finiteness* if, for any positive weight vector
-`s : ι → ℝ` and any cutoff `C`, the elements of the set whose `s`-weighted real
-coordinate sum is less than `C` form a finite set. -/
-def hasNovikovFiniteness (T : Set (ι → Γ)) : Prop :=
-  ∀ (s : ι → ℝ) (_ : ∀ i, 0 < s i) (C : ℝ),
-    {d ∈ T | ∑ i, s i * (d i : ℝ) < C}.Finite
+section Support
+
+/-- The support of a function `f : (ι → Γ) → A` valued in a type with `Zero`. -/
+abbrev fnSupport {A : Type*} [Zero A] (f : (ι → Γ) → A) : Set (ι → Γ) := {d | f d ≠ 0}
+
+lemma mem_fnSupport {A : Type*} [Zero A] {f : (ι → Γ) → A} {d : ι → Γ} :
+    d ∈ fnSupport f ↔ f d ≠ 0 := Iff.rfl
+
+end Support
+
+section WithAddSubmonoid
+variable [AddSubmonoidClass S ℝ]
 
 /-- Extract the degree-coordinate equality `(d1 i : ℝ) + (d2 i : ℝ) = (d i : ℝ)` from
 a Pi addition equality `d1 + d2 = d`. -/
@@ -40,11 +45,22 @@ lemma coe_add_apply_offset {d0 d1 d2 d : ι → Γ} (h : d0 + d1 + d2 = d) (i : 
     (d0 i : ℝ) + (d1 i : ℝ) + (d2 i : ℝ) = (d i : ℝ) := by
   simpa [Pi.add_apply, add_assoc] using congrArg (fun f : ι → Γ => (f i : ℝ)) h
 
-/-- The support of a function `f : (ι → Γ) → A` valued in a type with `Zero`. -/
-abbrev fnSupport {A : Type*} [Zero A] (f : (ι → Γ) → A) : Set (ι → Γ) := {d | f d ≠ 0}
+end WithAddSubmonoid
 
-lemma mem_fnSupport {A : Type*} [Zero A] {f : (ι → Γ) → A} {d : ι → Γ} :
-    d ∈ fnSupport f ↔ f d ≠ 0 := Iff.rfl
+section WithBoth
+variable [AddSubmonoidClass S ℝ] [Fintype ι]
+
+/-- A subset of `ι → Γ` has *Novikov finiteness* if, for any positive weight vector
+`s : ι → ℝ` and any cutoff `C`, the elements of the set whose `s`-weighted real
+coordinate sum is less than `C` form a finite set. -/
+def hasNovikovFiniteness (T : Set (ι → Γ)) : Prop :=
+  ∀ (s : ι → ℝ) (_ : ∀ i, 0 < s i) (C : ℝ),
+    {d ∈ T | ∑ i, s i * (d i : ℝ) < C}.Finite
+
+end WithBoth
+
+section WithFintype
+variable [Fintype ι]
 
 /-- Novikov finiteness is preserved by subsets. -/
 lemma hasNovikovFiniteness.subset {T T' : Set (ι → Γ)}
@@ -111,6 +127,13 @@ lemma finite_pair_lt {T1 T2 : Set (ι → Γ)}
   · right
     have hd2lt : ∑ i, s i * (d2 i : ℝ) < 0 := by linarith
     refine ⟨d2, ⟨hT2, hd2lt⟩, d1, ⟨hT1, by linarith⟩, rfl⟩
+
+end Convolution
+
+end WithFintype
+
+section WithBoth
+variable [AddSubmonoidClass S ℝ] [Fintype ι]
 
 /-- For Novikov-finite `T1, T2` and a target `d`, the set of pairs `(d1, d2) ∈ T1 × T2`
 with `d1 + d2 = d` is finite. -/
@@ -263,6 +286,6 @@ lemma finite_triple_sum_eq {T1 T2 T3 : Set (ι → Γ)}
     exact Set.Finite.of_finite_image h_image h_inj
   exact Set.Finite.subset ((hS1.union hS2).union hS3) h_sub
 
-end Convolution
+end WithBoth
 
 end Novikov

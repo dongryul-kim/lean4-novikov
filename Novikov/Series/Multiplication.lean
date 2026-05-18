@@ -559,6 +559,7 @@ private lemma novikovSeriesMul_left_eq_triple_sum {A B C D F : Type*}
         β (α (f σ.2.1) (g σ.2.2)) (h σ.1.2))]
   exact sum_triple_support_left f g h d (fun t => β (α (f t.1) (g t.2.1)) (h t.2.2))
 
+omit [Fintype ι] in
 /-- Auxiliary: the iterated product `f * (g * h)` evaluated at `d` rewrites as a sum over the
 finite triple support of `(f, g, h)` at `d`. -/
 private lemma novikovSeriesMul_right_eq_triple_sum {A B C E F : Type*}

@@ -42,20 +42,6 @@ section BaseChangeFunctor
 
 variable {A B : Type*} [CommRing A] [CommRing B] (f : A →+* B)
 
-lemma projective_base_change {R S : Type*} [CommRing R] [CommRing S] [Algebra R S]
-    (P : Type*) [AddCommGroup P] [Module R P] [Module.Finite R P] [Module.Projective R P] :
-    Module.Projective S (TensorProduct R S P) := by
-  obtain ⟨n, i, g, _, _, hig⟩ := Module.Finite.exists_comp_eq_id_of_projective R P
-  let iS : TensorProduct R S ((Fin n) → R) →ₗ[S] TensorProduct R S P := i.baseChange S
-  let gS : TensorProduct R S P →ₗ[S] TensorProduct R S ((Fin n) → R) := g.baseChange S
-  have higS : iS ∘ₗ gS = LinearMap.id := by
-    rw [← LinearMap.baseChange_comp, hig, LinearMap.baseChange_id]
-  have h_free : Module.Projective S (TensorProduct R S ((Fin n) → R)) := by
-    have h_iso : TensorProduct R S ((Fin n) → R) ≃ₗ[S] (Fin n) → S :=
-      TensorProduct.piScalarRight (N := S) (R := R) (S := S) (ι := Fin n)
-    exact Module.Projective.of_equiv h_iso.symm
-  exact Module.Projective.of_split gS iS higS
-
 -- Synthesizing Module.Projective is expensive
 noncomputable def baseChange (M : NovikovIsocrystal (Λ := Λ) A) : NovikovIsocrystal (Λ := Λ) B :=
   letI : Algebra (RealNovikovSeries A) (RealNovikovSeries B) := realNovikovSeriesAlgebra f
@@ -68,7 +54,7 @@ noncomputable def baseChange (M : NovikovIsocrystal (Λ := Λ) A) : NovikovIsocr
   haveI : Module.Finite (RealNovikovSeries B) ((RealNovikovSeries B) ⊗[RealNovikovSeries A] M.M) :=
     Module.Finite.base_change (RealNovikovSeries A) (RealNovikovSeries B) M.M
   haveI : Module.Projective (RealNovikovSeries B) ((RealNovikovSeries B) ⊗[RealNovikovSeries A] M.M) :=
-    projective_base_change (R := RealNovikovSeries A) (S := RealNovikovSeries B) M.M
+    Novikov.Miscellany.baseChange_projective M.M
   let φ_B_sl : (RealNovikovSeries B) →ₛₗ[φ_A] (RealNovikovSeries B) :=
     { toFun := φ_B
       map_add' := φ_B.map_add

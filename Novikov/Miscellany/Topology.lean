@@ -12,7 +12,7 @@ open scoped Topology
 open TopologicalSpace
 open TensorProduct
 
-variable (A M N : Type*) [CommRing A] [TopologicalSpace A] [IsTopologicalRing A]
+variable (A M N : Type*) [CommRing A] [TopologicalSpace A]
   [AddCommGroup M] [Module A M] [AddCommGroup N] [Module A N]
 
 /-- The canonical topology on an `A`-module `M` where `A` is a topological ring.
@@ -20,6 +20,21 @@ It is the coarsest topology making all `A`-linear maps `M → A` continuous. -/
 @[reducible]
 def canonicalTopology : TopologicalSpace M :=
   ⨅ (f : M →ₗ[A] A), TopologicalSpace.induced f ‹_›
+
+lemma canonicalTopology.continuous_linearMap (φ : M →ₗ[A] N) :
+    @Continuous M N (canonicalTopology A M) (canonicalTopology A N) φ := by
+  unfold canonicalTopology
+  rw [continuous_iInf_rng]
+  intro f
+  rw [continuous_induced_rng]
+  have h : (⨅ (g : M →ₗ[A] A), TopologicalSpace.induced g ‹_›) ≤
+      TopologicalSpace.induced (f.comp φ) ‹_› :=
+    iInf_le (fun g : M →ₗ[A] A => TopologicalSpace.induced g ‹_›) (f.comp φ)
+  rw [← continuous_iff_le_induced] at h
+  simpa using h
+
+section WithTopologicalRing
+variable [IsTopologicalRing A]
 
 lemma canonicalTopology_self_eq :
     canonicalTopology A A = ‹TopologicalSpace A› := by
@@ -98,18 +113,6 @@ lemma canonicalTopology.continuousSMul : @ContinuousSMul A M _ ‹TopologicalSpa
     rw [h_eq2]
     exact h_mul.comp h_prod
   refine @ContinuousSMul.mk A M _ ‹TopologicalSpace A› (canonicalTopology A M) ?_
-  simpa using h
-
-lemma canonicalTopology.continuous_linearMap (φ : M →ₗ[A] N) :
-    @Continuous M N (canonicalTopology A M) (canonicalTopology A N) φ := by
-  unfold canonicalTopology
-  rw [continuous_iInf_rng]
-  intro f
-  rw [continuous_induced_rng]
-  have h : (⨅ (g : M →ₗ[A] A), TopologicalSpace.induced g ‹_›) ≤
-      TopologicalSpace.induced (f.comp φ) ‹_› :=
-    iInf_le (fun g : M →ₗ[A] A => TopologicalSpace.induced g ‹_›) (f.comp φ)
-  rw [← continuous_iff_le_induced] at h
   simpa using h
 
 lemma canonicalTopology_prod_eq :
@@ -272,8 +275,8 @@ lemma isClosedEmbedding_baseChange {S R : Type*} [CommRing S] [TopologicalSpace 
     (Algebra.TensorProduct.piScalarRight S R R (Fin n)).toLinearEquiv
   let hF_equiv : Homeomorph (TensorProduct S R (Fin n → S)) (Fin n → R) := {
     toEquiv := F_equiv.toEquiv,
-    continuous_toFun := @canonicalTopology.continuous_linearMap R (TensorProduct S R (Fin n → S)) (Fin n → R) _ _ _ _ _ _ _ F_equiv,
-    continuous_invFun := @canonicalTopology.continuous_linearMap R (Fin n → R) (TensorProduct S R (Fin n → S)) _ _ _ _ _ _ _ F_equiv.symm
+    continuous_toFun := canonicalTopology.continuous_linearMap (A := R) (M := TensorProduct S R (Fin n → S)) (N := Fin n → R) F_equiv,
+    continuous_invFun := canonicalTopology.continuous_linearMap (A := R) (M := Fin n → R) (N := TensorProduct S R (Fin n → S)) F_equiv.symm
   }
   have h_f_free_closed : @Topology.IsClosedEmbedding _ _ tFn_S tFn_S_R f_free := by
     have h_eq : f_free = (F_equiv.symm : (Fin n → R) →ₗ[R] TensorProduct S R (Fin n → S)) ∘ g := by
@@ -305,18 +308,18 @@ lemma isClosedEmbedding_baseChange {S R : Type*} [CommRing S] [TopologicalSpace 
       rw [map_add, hy, hz, map_add, LinearMap.id_apply, LinearMap.id_apply]
   have h_tM_emb : @Topology.IsEmbedding M (Fin n → S) tM tFn_S σ := by
     have h_cont_t : @Continuous M (Fin n → S) tM tFn_S σ :=
-      @canonicalTopology.continuous_linearMap S M (Fin n → S) _ _ _ _ _ _ _ σ
+      canonicalTopology.continuous_linearMap (A := S) (M := M) (N := Fin n → S) σ
     have h_cont_p : @Continuous (Fin n → S) M tFn_S tM π :=
-      @canonicalTopology.continuous_linearMap S (Fin n → S) M _ _ _ _ _ _ _ π
+      canonicalTopology.continuous_linearMap (A := S) (M := Fin n → S) (N := M) π
     have h_leftInv : Function.LeftInverse (π : (Fin n → S) → M) (σ : M → Fin n → S) := by
       intro x; simpa using LinearMap.congr_fun h_split x
     exact h_leftInv.isEmbedding h_cont_p h_cont_t
   have h_tR_inducing : Topology.IsInducing σR := by
     -- t_R has a continuous left inverse p_R, so it's an embedding, hence inducing
     have h_cont : @Continuous (TensorProduct S R M) (TensorProduct S R (Fin n → S)) tM_R tFn_S_R σR :=
-      @canonicalTopology.continuous_linearMap R (TensorProduct S R M) (TensorProduct S R (Fin n → S)) _ _ _ _ _ _ _ σR
+      canonicalTopology.continuous_linearMap (A := R) (M := TensorProduct S R M) (N := TensorProduct S R (Fin n → S)) σR
     have h_cont_p : @Continuous (TensorProduct S R (Fin n → S)) (TensorProduct S R M) tFn_S_R tM_R πR :=
-      @canonicalTopology.continuous_linearMap R (TensorProduct S R (Fin n → S)) (TensorProduct S R M) _ _ _ _ _ _ _ πR
+      canonicalTopology.continuous_linearMap (A := R) (M := TensorProduct S R (Fin n → S)) (N := TensorProduct S R M) πR
     have h_leftInv : Function.LeftInverse (πR : TensorProduct S R (Fin n → S) → TensorProduct S R M)
         (σR : TensorProduct S R M → TensorProduct S R (Fin n → S)) := by
       intro x
@@ -367,8 +370,10 @@ lemma isClosedEmbedding_baseChange {S R : Type*} [CommRing S] [TopologicalSpace 
           _ = x := by simpa using LinearMap.congr_fun ht_R_inv x
     rw [h_eq]
     exact IsClosed.preimage
-      (@canonicalTopology.continuous_linearMap R (TensorProduct S R M) (TensorProduct S R (Fin n → S)) _ _ _ _ _ _ _ σR)
+      (canonicalTopology.continuous_linearMap (A := R) (M := TensorProduct S R M) (N := TensorProduct S R (Fin n → S)) σR)
       hS_closed
   exact Topology.IsClosedEmbedding.mk h_f_emb h_f_closedRange
+
+end WithTopologicalRing
 
 end Novikov.Miscellany

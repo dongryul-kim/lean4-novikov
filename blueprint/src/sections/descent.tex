@@ -1,0 +1,154 @@
+\section{Novikov descent}
+
+We now define the notion of a Novikov descent datum and prove that the category
+of Novikov descent data is equivalent to the category of finite projective
+modules.
+
+\subsection{Abstract descent data}
+
+\begin{definition}
+  \label{def:cosimplicial_ring}
+  \lean{Novikov.Descent.Abstract.CosimplicialRing}
+  \leanok
+  A \emph{cosimplicial ring} (truncated to levels $1$--$3$) consists of
+  three commutative rings $R_1, R_2, R_3$ with face maps
+  $\pi_1^\ast, \pi_2^\ast \colon R_1 \to R_2$ and
+  $\pi_{12}^\ast, \pi_{13}^\ast, \pi_{23}^\ast \colon R_2 \to R_3$,
+  defining composites $\rho_i^\ast = \pi_{\cdot}^\ast\pi_{\cdot}^\ast \colon R_1 \to R_3$
+  satisfying the six cosimplicial identities.
+  For a ring homomorphism $\pi^\ast \colon R \to S$, we write
+  $\pi^\ast M = S \otimes_{R, \pi^\ast} M$ for the base change of an $R$-module $M$.
+\end{definition}
+
+\begin{definition}
+  \label{def:descent_datum}
+  \lean{Novikov.Descent.Abstract.DescentDatum}
+  \leanok
+  \uses{def:cosimplicial_ring}
+  A \emph{descent datum} over a cosimplicial ring $C$ is a finite projective
+  $R_1$-module $M$ with an $R_2$-linear isomorphism
+  $\varphi \colon \pi_1^\ast M \xrightarrow{\sim} \pi_2^\ast M$ satisfying the
+  cocycle condition
+  $\pi_{23}^\ast\varphi \circ \pi_{12}^\ast\varphi = \pi_{13}^\ast\varphi$.
+  Morphisms are $R_1$-linear maps commuting with $\varphi$ after base change;
+  they form a category with an internal Hom.
+\end{definition}
+
+\begin{definition}
+  \label{def:extended_cosimplicial_ring}
+  \lean{Novikov.Descent.Abstract.ExtendedCosimplicialRing}
+  \leanok
+  \uses{def:cosimplicial_ring}
+  An \emph{extended cosimplicial ring} adds a ring $R_0$ and
+  $\pi_0^\ast \colon R_0 \to R_1$ with
+  $\pi_1^\ast\pi_0^\ast = \pi_2^\ast\pi_0^\ast$.
+\end{definition}
+
+\begin{definition}
+  \label{def:constant_descent_datum}
+  \lean{Novikov.Descent.Abstract.constantDescentDatum}
+  \leanok
+  \uses{def:extended_cosimplicial_ring, def:descent_datum}
+  For a finite projective $R_0$-module $M$, the \emph{constant descent datum}
+  $\operatorname{Const}(M)$ has underlying $R_1$-module $R_1 \otimes_{R_0} M$,
+  with $\varphi$ the composition of associativity isomorphisms
+  $\pi_1^\ast(R_1 \otimes_{R_0} M) \cong R_2 \otimes_{R_0} M
+   \cong \pi_2^\ast(R_1 \otimes_{R_0} M)$
+  via $\pi_1^\ast\pi_0^\ast = \pi_2^\ast\pi_0^\ast$.
+\end{definition}
+
+\begin{definition}
+  \label{def:constant_descent_functor}
+  \lean{Novikov.Descent.Abstract.constantDescentDatumFunctor}
+  \leanok
+  \uses{def:constant_descent_datum}
+  This defines a functor
+  $\operatorname{Const} \colon \mathsf{Vect}(R_0) \to \mathsf{Desc}(E)$.
+  It preserves internal Hom:
+  $\underline{\operatorname{Hom}}(\operatorname{Const}(M), \operatorname{Const}(N))
+   \cong \operatorname{Const}(\operatorname{Hom}_{R_0}(M, N))$.
+\end{definition}
+
+\begin{theorem}
+  \label{thm:constant_descent_fully_faithful}
+  \lean{Novikov.Descent.Abstract.constantDescentDatumFunctor_fullyFaithful}
+  \leanok
+  \uses{def:constant_descent_functor}
+  If the natural map $R_0 \to \operatorname{eq}(\pi_1^\ast, \pi_2^\ast)$ is bijective,
+  then $\operatorname{Const}$ is fully faithful.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  \textbf{Faithfulness.}  Bijectivity of $R_0 \to \operatorname{eq}(\pi_1^\ast,\pi_2^\ast)$
+  implies $\pi_0^\ast \colon R_0 \to R_1$ is injective, hence
+  $p \mapsto 1 \otimes p$ is injective for any finite projective $P$.
+  Taking $P = \operatorname{Hom}(M, N)$, two maps $f,g$ equal after
+  base change to $R_1$ satisfy $1 \otimes (f-g) = 0$, forcing $f=g$.
+
+  \textbf{Fullness.}  A morphism $F \colon \operatorname{Const}(M) \to
+  \operatorname{Const}(N)$ yields via the internal Hom isomorphism an
+  element $f \in R_1 \otimes_{R_0} \operatorname{Hom}(M,N)$ fixed by
+  $\varphi$.  The equalizer hypothesis plus finite projectivity show
+  $f = 1 \otimes f_0$ for some $R_0$-linear map $f_0$, which recovers $F$.
+\end{proof}
+
+\subsection{Novikov descent data}
+
+\begin{definition}[Definition~2.9]
+  \label{def:novikov_descent_datum}
+  \lean{Novikov.Descent.novikovCosimplicialRing}
+  \leanok
+  \uses{def:cosimplicial_ring, def:novikov_series, def:novikov_substitute}
+  Let $A$ be a commutative ring and $\Gamma \subseteq \mathbb{R}$ an additive
+  submonoid.  The \emph{Novikov cosimplicial ring} has
+  $R_1 = A((t^\Gamma))$,
+  $R_2 = A((t^\Gamma, u^\Gamma))$,
+  $R_3 = A((t^\Gamma, u^\Gamma, v^\Gamma))$,
+  with face maps given by substituting the variables:
+  $\pi_1^\ast, \pi_2^\ast \colon R_1 \to R_2$ send $t$ to $t$ or $u$ respectively;
+  $\pi_{12}^\ast, \pi_{13}^\ast, \pi_{23}^\ast \colon R_2 \to R_3$ are the three coface
+  maps between two and three variables.
+  The extended version sets $R_0 = A$ with $\pi_0^\ast \colon A \to A((t^\Gamma))$
+  the inclusion as constant series.
+  A \emph{Novikov descent datum} is a descent datum over this cosimplicial ring.
+\end{definition}
+
+\begin{lemma}
+  \label{lem:novikov_equalizer}
+  \lean{Novikov.Descent.novikovCosimplicialRing_equalizer,
+    Novikov.Descent.novikovExtendedCosimplicialRing_equalizer_bijective}
+  \leanok
+  \uses{def:novikov_descent_datum}
+  The equalizer of
+  $\pi_1^\ast, \pi_2^\ast \colon A((t^\Gamma)) \to A((t^\Gamma, u^\Gamma))$
+  is exactly the constant series $A$.
+  Hence $A \to \operatorname{eq}(\pi_1^\ast, \pi_2^\ast)$ is bijective.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  If $f(t) \in A((t^\Gamma))$ satisfies $f(t) = f(u)$ in $A((t^\Gamma, u^\Gamma))$,
+  evaluate at the exponent $(d, 0)$: the left side gives the
+  $d$-coefficient of $f$, while the right side gives the
+  $d$-coefficient of the series whose only variable is $u$, hence $0$ for $d \neq 0$.
+  Thus all coefficients of $f$ vanish except possibly the constant term, so
+  $f \in A$.
+\end{proof}
+
+\begin{proposition}[Proposition~2.12]
+  \label{prop:vect_to_novikov_descent_fully_faithful}
+  \lean{Novikov.Descent.vectToNovikovDescent_fullyFaithful}
+  \leanok
+  \uses{def:novikov_descent_datum, thm:constant_descent_fully_faithful,
+    lem:novikov_equalizer}
+  The constant-descent functor
+  $\mathsf{Vect}(A) \to \mathsf{NovDD}(A, \Gamma)$ is fully faithful.
+\end{proposition}
+
+\begin{proof}
+  \leanok
+  The equalizer hypothesis of
+  Theorem~\ref{thm:constant_descent_fully_faithful}
+  is satisfied by Lemma~\ref{lem:novikov_equalizer}.
+\end{proof}

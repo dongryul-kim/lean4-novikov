@@ -9,7 +9,11 @@ relaxedAutoImplicit = false
 weak.linter.mathlibStandardSet = true
 linter.style.longLine = false
 linter.unusedFintypeInType = false
-linter.unusedSectionVars = false
+weak.linter.unusedHavesSuffices = true
+weak.linter.unreachableTactic = true
+linter.unusedSectionVars = true
+weak.linter.unusedTactic = true
+weak.linter.style.dollar = true
 maxSynthPendingDepth = 3
 
 [[lean_lib]]

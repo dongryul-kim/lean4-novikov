@@ -12,7 +12,7 @@ We show that the functor $A \mapsto \text{NovikovSeries } \Gamma \ \iota \ A$ is
 namespace Novikov
 
 variable {ι A B C : Type*} [Fintype ι] [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
-variable {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ] {Γ : S}
+variable {S : Type*} [SetLike S ℝ] {Γ : S}
 
 /-- If `g` is a Novikov series, then its composition with a group homomorphism is also a
 Novikov series. -/
@@ -26,6 +26,8 @@ lemma isNovikovSeries.comp {f : A →+ B} {g : (ι → Γ) → A} (hg : isNoviko
   apply hd
   change f (g d) = 0
   rw [hgd, map_zero]
+
+variable [AddSubmonoidClass S ℝ]
 
 /-- Induced map on Novikov series from a map of abelian groups. -/
 def map (f : A →+ B) : NovikovSeries Γ ι A →+ NovikovSeries Γ ι B where

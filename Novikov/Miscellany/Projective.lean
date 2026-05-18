@@ -6,6 +6,7 @@ import Mathlib.LinearAlgebra.FreeModule.Finite.Matrix
 import Mathlib.LinearAlgebra.Matrix.ToLin
 import Mathlib.LinearAlgebra.TensorProduct.Basic
 import Mathlib.LinearAlgebra.TensorProduct.Tower
+import Mathlib.RingTheory.TensorProduct.Finite
 import Mathlib.RingTheory.TensorProduct.IsBaseChangeHom
 import Mathlib.CategoryTheory.Category.Basic
 
@@ -39,21 +40,21 @@ variable {R : Type*} [CommRing R]
 /-- If fM : F -> M is a retraction with gM : M -> F its section, 
     and fN : G -> N is a retraction with gN : N -> G its section,
     then Hom(M, N) is a retract of Hom(F, G). -/
-def homUP {M N F G : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+private def homUP {M N F G : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
     [AddCommGroup F] [Module R F] [AddCommGroup G] [Module R G]
     (gN : N →ₗ[R] G) (fM : F →ₗ[R] M) : (M →ₗ[R] N) →ₗ[R] (F →ₗ[R] G) where
   toFun := fun f => gN.comp (f.comp fM)
   map_add' := fun f g => by ext; simp
   map_smul' := fun r f => by ext; simp
 
-def homDOWN {M N F G : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+private def homDOWN {M N F G : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
     [AddCommGroup F] [Module R F] [AddCommGroup G] [Module R G]
     (fN : G →ₗ[R] N) (gM : M →ₗ[R] F) : (F →ₗ[R] G) →ₗ[R] (M →ₗ[R] N) where
   toFun := fun f => fN.comp (f.comp gM)
   map_add' := fun f g => by ext; simp
   map_smul' := fun r f => by ext; simp
 
-theorem homDOWN_homUP {M N F G : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+private theorem homDOWN_homUP {M N F G : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
     [AddCommGroup F] [Module R F] [AddCommGroup G] [Module R G]
     (gN : N →ₗ[R] G) (fM : F →ₗ[R] M) (fN : G →ₗ[R] N) (gM : M →ₗ[R] F)
     (hM : fM.comp gM = .id) (hN : fN.comp gN = .id) (f : M →ₗ[R] N) :
@@ -63,18 +64,21 @@ theorem homDOWN_homUP {M N F G : Type*} [AddCommGroup M] [Module R M] [AddCommGr
   rw [← LinearMap.comp_apply fM gM x, hM, LinearMap.id_apply]
   rw [← LinearMap.comp_apply fN gN (f x), hN, LinearMap.id_apply]
 
+private theorem homDOWN_comp_homUP {M N F G : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N]
+    [Module R N] [AddCommGroup F] [Module R F] [AddCommGroup G] [Module R G]
+    (gN : N →ₗ[R] G) (fM : F →ₗ[R] M) (fN : G →ₗ[R] N) (gM : M →ₗ[R] F)
+    (hM : fM.comp gM = .id) (hN : fN.comp gN = .id) :
+    (homDOWN fN gM).comp (homUP gN fM) = LinearMap.id :=
+  LinearMap.ext (homDOWN_homUP gN fM fN gM hM hN)
+
 /-- If M and N are finite projective over R, then Hom(M, N) is finite over R. -/
 instance linearMap_finite_projective {M N : Type*} [AddCommGroup M] [Module R M]
     [AddCommGroup N] [Module R N] [Module.Finite R M] [Module.Projective R M]
     [Module.Finite R N] [Module.Projective R N] : Module.Finite R (M →ₗ[R] N) := by
   obtain ⟨nM, fM, gM, _, _, hM⟩ := Module.Finite.exists_comp_eq_id_of_projective R M
   obtain ⟨nN, fN, gN, _, _, hN⟩ := Module.Finite.exists_comp_eq_id_of_projective R N
-  let up := homUP gN fM
-  let down := homDOWN fN gM
-  apply Module.Finite.of_surjective down
-  intro f
-  use up f
-  exact homDOWN_homUP gN fM fN gM hM hN f
+  exact Module.Finite.of_surjective (homDOWN fN gM)
+    (fun f => ⟨homUP gN fM f, LinearMap.ext_iff.mp (homDOWN_comp_homUP gN fM fN gM hM hN) f⟩)
 
 /-- If M and N are finite projective over R, then Hom(M, N) is projective over R. -/
 instance linearMap_projective_projective {M N : Type*} [AddCommGroup M] [Module R M]
@@ -82,12 +86,8 @@ instance linearMap_projective_projective {M N : Type*} [AddCommGroup M] [Module 
     [Module.Finite R N] [Module.Projective R N] : Module.Projective R (M →ₗ[R] N) := by
   obtain ⟨nM, fM, gM, _, _, hM⟩ := Module.Finite.exists_comp_eq_id_of_projective R M
   obtain ⟨nN, fN, gN, _, _, hN⟩ := Module.Finite.exists_comp_eq_id_of_projective R N
-  let up := homUP gN fM
-  let down := homDOWN fN gM
-  apply Module.Projective.of_split up down
-  apply LinearMap.ext
-  intro f
-  exact homDOWN_homUP gN fM fN gM hM hN f
+  exact Module.Projective.of_split (homUP gN fM) (homDOWN fN gM)
+    (homDOWN_comp_homUP gN fM fN gM hM hN)
 
 /-- The Hom between two finite projective modules as a finite projective module. -/
 noncomputable def FiniteProjectiveModule.homModule (M₀ N₀ : FiniteProjectiveModule R) :
@@ -105,13 +105,67 @@ def homBaseChangeMap {M N : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N
        map_add' := fun s1 s2 => by ext; simp [add_smul],
        map_smul' := fun s1 s2 => by ext; simp [mul_smul] } : S →ₗ[S] (M →ₗ[R] N) →ₗ[R] _)
 
+private theorem homBaseChangeMap_comp_homUP {M N F G : Type*}
+    [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+    [AddCommGroup F] [Module R F] [AddCommGroup G] [Module R G]
+    (gN : N →ₗ[R] G) (fM : F →ₗ[R] M) (S : Type*) [CommRing S] [Algebra R S] :
+    (homUP (LinearMap.baseChange S gN) (LinearMap.baseChange S fM)) ∘ₗ
+      (homBaseChangeMap (R := R) (M := M) (N := N) S) =
+    (homBaseChangeMap (R := R) (M := F) (N := G) S) ∘ₗ
+      (LinearMap.baseChange S (homUP gN fM)) := by
+  let up_hom := homUP (LinearMap.baseChange S gN) (LinearMap.baseChange S fM)
+  let upS := LinearMap.baseChange S (homUP gN fM)
+  apply LinearMap.ext_iff.mpr; intro f_tensor; apply LinearMap.ext_iff.mpr; intro m_tensor
+  change (up_hom (homBaseChangeMap S f_tensor)) m_tensor =
+    (homBaseChangeMap S (upS f_tensor)) m_tensor
+  refine TensorProduct.induction_on (motive := fun x => (up_hom (homBaseChangeMap S x)) m_tensor =
+    (homBaseChangeMap S (upS x)) m_tensor) f_tensor ?_ ?_ ?_
+  · simp
+  · intro s f
+    refine TensorProduct.induction_on (motive := fun y => (up_hom (homBaseChangeMap S (s ⊗ₜ f))) y =
+      (homBaseChangeMap S (upS (s ⊗ₜ f))) y) m_tensor ?_ ?_ ?_
+    · simp
+    · intro s' m; simp [homBaseChangeMap, up_hom, upS, homUP, baseChangeHom,
+        LinearMap.baseChange_tmul]
+    · intro m1 m2 hm1 hm2; rw [map_add, map_add, hm1, hm2]
+  · intro f1 f2 hf1 hf2
+    simp only [map_add, LinearMap.add_apply]
+    rw [hf1, hf2]
+
+private theorem homBaseChangeMap_comp_homDOWN {M N F G : Type*}
+    [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+    [AddCommGroup F] [Module R F] [AddCommGroup G] [Module R G]
+    (fN : G →ₗ[R] N) (gM : M →ₗ[R] F) (S : Type*) [CommRing S] [Algebra R S] :
+    (homBaseChangeMap (R := R) (M := M) (N := N) S) ∘ₗ
+      (LinearMap.baseChange S (homDOWN fN gM)) =
+    (homDOWN (LinearMap.baseChange S fN) (LinearMap.baseChange S gM)) ∘ₗ
+      (homBaseChangeMap (R := R) (M := F) (N := G) S) := by
+  let down_hom := homDOWN (LinearMap.baseChange S fN) (LinearMap.baseChange S gM)
+  let downS := LinearMap.baseChange S (homDOWN fN gM)
+  apply LinearMap.ext_iff.mpr; intro f_tensor; apply LinearMap.ext_iff.mpr; intro m_tensor
+  change (homBaseChangeMap S (downS f_tensor)) m_tensor =
+    (down_hom (homBaseChangeMap S f_tensor)) m_tensor
+  refine TensorProduct.induction_on (motive := fun x => (homBaseChangeMap S (downS x)) m_tensor =
+    (down_hom (homBaseChangeMap S x)) m_tensor) f_tensor ?_ ?_ ?_
+  · simp
+  · intro s f
+    refine TensorProduct.induction_on (motive := fun y => (homBaseChangeMap S (downS (s ⊗ₜ f))) y =
+      (down_hom (homBaseChangeMap S (s ⊗ₜ f))) y) m_tensor ?_ ?_ ?_
+    · simp
+    · intro s' m; simp [homBaseChangeMap, down_hom, downS, homDOWN, baseChangeHom,
+        LinearMap.baseChange_tmul]
+    · intro m1 m2 hm1 hm2; rw [map_add, map_add, hm1, hm2]
+  · intro f1 f2 hf1 hf2
+    simp only [map_add, LinearMap.add_apply]
+    rw [hf1, hf2]
+
 /-- Hom commutes with base change for finite projective modules. -/
 theorem homBaseChange_bijective {M N : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
     [Module.Finite R M] [Module.Projective R M] [Module.Finite R N] [Module.Projective R N]
     (S : Type*) [CommRing S] [Algebra R S] :
     Function.Bijective (homBaseChangeMap (R := R) (M := M) (N := N) S) := by
-  obtain ⟨nM, fM, gM, surjM, injM, hM⟩ := Module.Finite.exists_comp_eq_id_of_projective R M
-  obtain ⟨nN, fN, gN, surjN, injN, hN⟩ := Module.Finite.exists_comp_eq_id_of_projective R N
+  obtain ⟨nM, fM, gM, _, _, hM⟩ := Module.Finite.exists_comp_eq_id_of_projective R M
+  obtain ⟨nN, fN, gN, _, _, hN⟩ := Module.Finite.exists_comp_eq_id_of_projective R N
   let F := Fin nM → R
   let G := Fin nN → R
   let up := homUP gN fM
@@ -154,34 +208,15 @@ theorem homBaseChange_bijective {M N : Type*} [AddCommGroup M] [Module R M] [Add
       rw [hbc_eq]
     rw [hmap]
     exact h_ibc.equiv.bijective
-  have h_comm : up_hom ∘ₗ (homBaseChangeMap (M := M) (N := N) S) = (homBaseChangeMap (M := F) (N := G) S) ∘ₗ upS := by
-    apply LinearMap.ext_iff.mpr; intro f_tensor; apply LinearMap.ext_iff.mpr; intro m_tensor
-    refine TensorProduct.induction_on (motive := fun x => (up_hom (homBaseChangeMap S x)) m_tensor = (homBaseChangeMap S (upS x)) m_tensor) f_tensor ?_ ?_ ?_
-    · simp
-    · intro s f
-      refine TensorProduct.induction_on (motive := fun y => (up_hom (homBaseChangeMap S (s ⊗ₜ f))) y = (homBaseChangeMap S (upS (s ⊗ₜ f))) y) m_tensor ?_ ?_ ?_
-      · simp
-      · intro s' m; simp [homBaseChangeMap, up_hom, upS, homUP, baseChangeHom, LinearMap.baseChange_tmul, up]
-      · intro m1 m2 hm1 hm2; rw [map_add, map_add, hm1, hm2]
-    · intro f1 f2 hf1 hf2
-      simp only [map_add, LinearMap.add_apply]
-      rw [hf1, hf2]
-  have h_comm_down : (homBaseChangeMap (M := M) (N := N) S) ∘ₗ downS = down_hom ∘ₗ (homBaseChangeMap (M := F) (N := G) S) := by
-    apply LinearMap.ext_iff.mpr; intro f_tensor; apply LinearMap.ext_iff.mpr; intro m_tensor
-    refine TensorProduct.induction_on (motive := fun x => (homBaseChangeMap S (downS x)) m_tensor = (down_hom (homBaseChangeMap S x)) m_tensor) f_tensor ?_ ?_ ?_
-    · simp
-    · intro s f
-      refine TensorProduct.induction_on (motive := fun y => (homBaseChangeMap S (downS (s ⊗ₜ f))) y = (down_hom (homBaseChangeMap S (s ⊗ₜ f))) y) m_tensor ?_ ?_ ?_
-      · simp
-      · intro s' m; simp [homBaseChangeMap, down_hom, downS, homDOWN, baseChangeHom, LinearMap.baseChange_tmul, down]
-      · intro m1 m2 hm1 hm2; rw [map_add, map_add, hm1, hm2]
-    · intro f1 f2 hf1 hf2
-      simp only [map_add, LinearMap.add_apply]
-      rw [hf1, hf2]
+  have h_comm : up_hom ∘ₗ (homBaseChangeMap (M := M) (N := N) S) =
+      (homBaseChangeMap (M := F) (N := G) S) ∘ₗ upS :=
+    homBaseChangeMap_comp_homUP gN fM S
+  have h_comm_down : (homBaseChangeMap (M := M) (N := N) S) ∘ₗ downS =
+      down_hom ∘ₗ (homBaseChangeMap (M := F) (N := G) S) :=
+    homBaseChangeMap_comp_homDOWN fN gM S
   let k := LinearEquiv.ofBijective _ h_free
   let inv : (S ⊗[R] M →ₗ[S] S ⊗[R] N) →ₗ[S] S ⊗[R] (M →ₗ[R] N) := downS ∘ₗ (k.symm.toLinearMap ∘ₗ up_hom)
-  have hcomp_du : down.comp up = LinearMap.id := by
-    apply LinearMap.ext; exact homDOWN_homUP gN fM fN gM hM hN
+  have hcomp_du : down.comp up = LinearMap.id := homDOWN_comp_homUP gN fM fN gM hM hN
   have h_dnS_upS : ∀ y, downS (upS y) = y := fun y => by
     change LinearMap.baseChange S down (LinearMap.baseChange S up y) = y
     rw [← LinearMap.comp_apply, ← LinearMap.baseChange_comp, hcomp_du, LinearMap.baseChange_id]
@@ -213,6 +248,17 @@ theorem homBaseChange_bijective {M N : Type*} [AddCommGroup M] [Module R M] [Add
     rw [k.apply_symm_apply, h_dn_up]
   exact ⟨Function.LeftInverse.injective h_left, Function.RightInverse.surjective h_right⟩
 
+/-- Formula for `homBaseChangeMap` on a pure tensor. -/
+@[simp]
+theorem homBaseChangeMap_tmul {M N : Type*} [AddCommGroup M] [Module R M]
+    [AddCommGroup N] [Module R N]
+    (S : Type*) [CommRing S] [Algebra R S] (s : S) (f : M →ₗ[R] N) :
+    homBaseChangeMap (R := R) (M := M) (N := N) S (s ⊗ₜ[R] f) =
+      s • LinearMap.baseChange S f := by
+  unfold homBaseChangeMap
+  rw [TensorProduct.AlgebraTensorModule.lift_apply, TensorProduct.lift.tmul]
+  rfl
+
 /-- Hom commutes with base change for finite projective modules. -/
 noncomputable def homBaseChangeEquiv {M N : Type*} [AddCommGroup M] [Module R M]
     [AddCommGroup N] [Module R N] [Module.Finite R M] [Module.Projective R M]
@@ -221,6 +267,32 @@ noncomputable def homBaseChangeEquiv {M N : Type*} [AddCommGroup M] [Module R M]
     (S ⊗[R] (M →ₗ[R] N)) ≃ₗ[S] (S ⊗[R] M →ₗ[S] S ⊗[R] N) :=
   LinearEquiv.ofBijective (homBaseChangeMap (R := R) (M := M) (N := N) S) (homBaseChange_bijective S)
 
+/-- Formula for `homBaseChangeEquiv` on a pure tensor. -/
+@[simp]
+theorem homBaseChangeEquiv_tmul {M N : Type*} [AddCommGroup M] [Module R M]
+    [AddCommGroup N] [Module R N] [Module.Finite R M] [Module.Projective R M]
+    [Module.Finite R N] [Module.Projective R N]
+    (S : Type*) [CommRing S] [Algebra R S] (s : S) (f : M →ₗ[R] N) :
+    homBaseChangeEquiv (R := R) (M := M) (N := N) S (s ⊗ₜ[R] f) =
+      s • LinearMap.baseChange S f :=
+  homBaseChangeMap_tmul S s f
+
+/-- Base change preserves finite projectivity: if `P` is a finite projective
+`R`-module, then `S ⊗[R] P` is a finite projective `S`-module. -/
+lemma baseChange_projective {S : Type*} [CommRing S] [Algebra R S]
+    (P : Type*) [AddCommGroup P] [Module R P] [Module.Finite R P] [Module.Projective R P] :
+    Module.Projective S (TensorProduct R S P) := by
+  infer_instance
+
 end
+
+/-- Base change of a finite projective module along a ring homomorphism. -/
+noncomputable def FiniteProjectiveModule.baseChange {A B : Type*} [CommRing A] [CommRing B]
+    (f : A →+* B) (P : FiniteProjectiveModule A) : FiniteProjectiveModule B :=
+  letI : Algebra A B := f.toAlgebra
+  { M := B ⊗[A] P.M
+    instFinite := inferInstance
+    instProjective := baseChange_projective (R := A) (S := B) (P := P.M)
+  }
 
 end Novikov.Miscellany
