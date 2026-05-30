@@ -1,4 +1,4 @@
-import Novikov.Isocrystal.Frobenius
+import Novikov.Series.Frobenius
 import Novikov.Series.Ring
 import Mathlib.LinearAlgebra.TensorProduct.Basic
 import Mathlib.LinearAlgebra.Dual.Lemmas
@@ -42,33 +42,10 @@ instance hΛinv : Fact (1/Λ > 0) := ⟨by
 noncomputable def frobeniusRingHomInv : RealNovikovSeries A →+* RealNovikovSeries A := 
   @Novikov.frobeniusRingHom (1/Λ) hΛinv A _
 
-noncomputable instance : RingHomInvPair (@Novikov.frobeniusRingHom Λ hΛ A _) (frobeniusRingHomInv (Λ := Λ)) where
-  comp_eq := by
-    ext f d
-    simp only [Novikov.frobeniusRingHom, frobeniusRingHomInv, frobenius]
-    dsimp [frobeniusFun]
-    have h_eq : (fun (x : Unit) ↦ ⟨(d () : ℝ) / (1 / Λ) / Λ, AddSubgroup.mem_top _⟩) = d := by
-      ext i
-      have hΛ_ne_zero : Λ ≠ 0 := by have := hΛ1.out; linarith
-      change (d () : ℝ) / (1 / Λ) / Λ = (d i : ℝ)
-      have h_i : d () = d i := by congr
-      rw [h_i]
-      have h1 : 1 / Λ ≠ 0 := one_div_ne_zero hΛ_ne_zero
-      field_simp [hΛ_ne_zero, h1]
-    rw [h_eq]
-  comp_eq₂ := by
-    ext f d
-    simp only [Novikov.frobeniusRingHom, frobeniusRingHomInv, frobenius]
-    dsimp [frobeniusFun]
-    have h_eq : (fun (x : Unit) ↦ ⟨(d () : ℝ) / Λ / (1 / Λ), AddSubgroup.mem_top _⟩) = d := by
-      ext i
-      have hΛ_ne_zero : Λ ≠ 0 := by have := hΛ1.out; linarith
-      change (d () : ℝ) / Λ / (1 / Λ) = (d i : ℝ)
-      have h_i : d () = d i := by congr
-      rw [h_i]
-      have h1 : 1 / Λ ≠ 0 := one_div_ne_zero hΛ_ne_zero
-      field_simp [hΛ_ne_zero, h1]
-    rw [h_eq]
+noncomputable instance : RingHomInvPair (@Novikov.frobeniusRingHom Λ hΛ A _) (frobeniusRingHomInv (Λ := Λ)) := by
+  simpa [frobeniusRingHomInv, coordinateFrobeniusRingHomInv,
+    coordinateFrobeniusRingHom_unit_eq]
+    using coordinateFrobeniusRingHom_invPair (Λ := Λ) (R := A) (ι := Unit) ()
 
 noncomputable instance : RingHomInvPair (frobeniusRingHomInv (Λ := Λ)) (@Novikov.frobeniusRingHom Λ hΛ A _) := 
   RingHomInvPair.symm _ _

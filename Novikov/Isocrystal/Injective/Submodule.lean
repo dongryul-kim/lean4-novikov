@@ -1,5 +1,5 @@
 import Novikov.Isocrystal.Basic
-import Novikov.Isocrystal.Frobenius
+import Novikov.Series.Frobenius
 import Novikov.Series.Module
 import Mathlib.Analysis.SpecificLimits.Basic
 

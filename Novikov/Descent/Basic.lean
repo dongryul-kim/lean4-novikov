@@ -18,6 +18,102 @@ open Novikov.Descent.Abstract
 
 variable {S : Type*} [SetLike S ℝ] [AddSubmonoidClass S ℝ]
 
+section SubstituteApply
+
+variable {ι ι' : Type*} [Fintype ι] [Fintype ι'] {Γ : S}
+
+omit [Fintype ι'] in
+lemma pushExponents_apply_of_injective {φ : ι → ι'} (hφ : Function.Injective φ)
+    (g : ι → Γ) (i : ι) :
+    pushExponents φ g (φ i) = g i := by
+  classical
+  simp only [pushExponents]
+  apply Finset.sum_eq_single i
+  · intro k hk hki
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hk
+    exact (hki (hφ hk)).elim
+  · intro hi
+    exact (hi (by simp)).elim
+
+omit [Fintype ι'] in
+lemma pushExponents_eq_zero_of_not_mem {φ : ι → ι'} (g : ι → Γ) (j : ι')
+    (hj : ∀ i, φ i ≠ j) :
+    pushExponents φ g j = 0 := by
+  classical
+  simp only [pushExponents]
+  apply Finset.sum_eq_zero
+  intro i hi
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hi
+  exact (hj i hi).elim
+
+/-- If the variable map is injective, substitution has exactly one possible
+coefficient contribution: pull back along the image coordinates, provided all
+coordinates outside the image vanish. -/
+lemma substitute_apply_of_injective [DecidableEq ι'] {φ : ι → ι'}
+    (hφ : Function.Injective φ) {A : Type*} [AddCommGroup A]
+    (f : NovikovSeries Γ ι A) (d' : ι' → Γ) :
+    (substitute φ f).val d' =
+      if ∀ j, (∀ i, φ i ≠ j) → d' j = 0 then
+        f.val (fun i => d' (φ i))
+      else 0 := by
+  classical
+  have hpre (hzero : ∀ j, (∀ i, φ i ≠ j) → d' j = 0) :
+      pushExponents φ (fun i => d' (φ i)) = d' := by
+    funext j
+    by_cases hj : ∃ i, φ i = j
+    · rcases hj with ⟨i, rfl⟩
+      exact pushExponents_apply_of_injective hφ (fun i => d' (φ i)) i
+    · have hj' : ∀ i, φ i ≠ j := by
+        intro i hi
+        exact hj ⟨i, hi⟩
+      rw [pushExponents_eq_zero_of_not_mem (fun i => d' (φ i)) j hj', hzero j hj']
+  have huniq {g : ι → Γ} (hg : pushExponents φ g = d') :
+      g = fun i => d' (φ i) := by
+    funext i
+    rw [← pushExponents_apply_of_injective hφ g i, hg]
+  simp only [substitute, substituteFun]
+  by_cases hzero : ∀ j, (∀ i, φ i ≠ j) → d' j = 0
+  · rw [if_pos hzero]
+    exact Finset.sum_eq_single (fun i => d' (φ i))
+      (by
+        intro g hg hg_ne
+        simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hg
+        exact (hg_ne (huniq hg.1)).elim)
+      (by
+        intro h_not_mem
+        by_cases hf : f.val (fun i => d' (φ i)) = 0
+        · exact hf
+        · exfalso
+          exact h_not_mem (by
+            simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq]
+            exact ⟨hpre hzero, hf⟩))
+  · rw [if_neg hzero]
+    apply Finset.sum_eq_zero
+    intro g hg
+    simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hg
+    exfalso
+    apply hzero
+    intro j hj
+    rw [← congr_fun hg.1 j]
+    exact pushExponents_eq_zero_of_not_mem g j hj
+
+/-- Coefficient formula for substitution along the constant map `Unit → ι'`
+sending the unique point to `k`: the coefficient at `d` is the level-one
+coefficient at `d k`, provided every other coordinate vanishes. -/
+lemma substitute_const_apply [DecidableEq ι'] (k : ι') {A : Type*} [AddCommGroup A]
+    (f : NovikovSeries Γ Unit A) (d : ι' → Γ) :
+    (substitute (fun _ : Unit => k) f).val d =
+      if ∀ j, j ≠ k → d j = 0 then f.val (fun _ : Unit => d k) else 0 := by
+  rw [substitute_apply_of_injective (φ := fun _ : Unit => k)
+    (hφ := fun x y _ => by cases x; cases y; rfl) f d]
+  have hiff : (∀ j, (∀ _ : Unit, (k : ι') ≠ j) → d j = 0) ↔ (∀ j, j ≠ k → d j = 0) := by
+    constructor
+    · intro h j hj; exact h j (fun _ => Ne.symm hj)
+    · intro h j hj; exact h j (Ne.symm (hj ()))
+  simp only [hiff]
+
+end SubstituteApply
+
 /-- The cosimplicial ring of Novikov series.
 
 ```
@@ -85,6 +181,145 @@ noncomputable def novikovCosimplicialRing (Γ : S) (A : Type*) [CommRing A] :
       _ = substitute (Fin.succ ∘ (fun _ : Unit => (1 : Fin 2))) x := by rw [h]
       _ = substitute Fin.succ (substitute (fun _ : Unit => (1 : Fin 2)) x) := by
         rw [substitute_comp]
+
+section CoefficientFormulas
+
+variable (Γ : S) {A : Type*} [CommRing A]
+
+/-- Coefficient formula for the second face map `π₂ : R₁ → R₂`. -/
+lemma novikovCosimplicialRing_π₂_apply (f : (novikovCosimplicialRing Γ A).R₁)
+    (d : Fin 2 → Γ) :
+    ((novikovCosimplicialRing Γ A).π₂ f).val d =
+      if d 0 = 0 then f.val (fun _ : Unit => d 1) else 0 := by
+  change (substitute (fun _ : Unit => (1 : Fin 2)) f).val d = _
+  rw [substitute_const_apply]
+  have hcond : (∀ j : Fin 2, j ≠ 1 → d j = 0) ↔ d 0 = 0 := by
+    constructor
+    · intro h; exact h 0 (by decide)
+    · intro h j hj; fin_cases j
+      · exact h
+      · exact (hj rfl).elim
+  simp only [hcond]
+
+/-- Coefficient formula for `π₁₃ : R₂ → R₃`. -/
+lemma novikovCosimplicialRing_π₁₃_apply (f : (novikovCosimplicialRing Γ A).R₂)
+    (d : Fin 3 → Γ) :
+    ((novikovCosimplicialRing Γ A).π₁₃ f).val d =
+      if d 1 = 0 then f.val (fun i : Fin 2 => if i = 0 then d 0 else d 2) else 0 := by
+  let φ : Fin 2 → Fin 3 := Fin.succAbove 1
+  change (substitute φ f).val d =
+    if d 1 = 0 then f.val (fun i : Fin 2 => if i = 0 then d 0 else d 2) else 0
+  rw [substitute_apply_of_injective (A := A) (φ := φ)
+    (hφ := Fin.succAbove_right_injective) f d]
+  by_cases h1 : d 1 = 0
+  · have hcond : ∀ j, (∀ i, φ i ≠ j) → d j = 0 := by
+      intro j hj
+      fin_cases j
+      · exact (hj 0 rfl).elim
+      · exact h1
+      · exact (hj 1 rfl).elim
+    rw [if_pos hcond, if_pos h1]
+    rw [show (fun i => d (φ i)) = (fun i : Fin 2 => if i = 0 then d 0 else d 2) by
+      ext i
+      fin_cases i <;> rfl]
+  · have hcond : ¬ (∀ j, (∀ i, φ i ≠ j) → d j = 0) := by
+      intro hz
+      exact h1 (hz 1 (by intro i; fin_cases i <;> decide))
+    rw [if_neg hcond, if_neg h1]
+
+/-- Coefficient formula for `π₂₃ : R₂ → R₃`. -/
+lemma novikovCosimplicialRing_π₂₃_apply (f : (novikovCosimplicialRing Γ A).R₂)
+    (d : Fin 3 → Γ) :
+    ((novikovCosimplicialRing Γ A).π₂₃ f).val d =
+      if d 0 = 0 then f.val (fun i : Fin 2 => if i = 0 then d 1 else d 2) else 0 := by
+  let φ : Fin 2 → Fin 3 := Fin.succ
+  change (substitute φ f).val d =
+    if d 0 = 0 then f.val (fun i : Fin 2 => if i = 0 then d 1 else d 2) else 0
+  rw [substitute_apply_of_injective (A := A) (φ := φ)
+    (hφ := fun _ _ h => Fin.succ_injective _ h) f d]
+  by_cases h0 : d 0 = 0
+  · have hcond : ∀ j, (∀ i, φ i ≠ j) → d j = 0 := by
+      intro j hj
+      fin_cases j
+      · exact h0
+      · exact (hj 0 rfl).elim
+      · exact (hj 1 rfl).elim
+    rw [if_pos hcond, if_pos h0]
+    rw [show (fun i => d (φ i)) = (fun i : Fin 2 => if i = 0 then d 1 else d 2) by
+      ext i
+      fin_cases i <;> rfl]
+  · have hcond : ¬ (∀ j, (∀ i, φ i ≠ j) → d j = 0) := by
+      intro hz
+      exact h0 (hz 0 (by intro i; fin_cases i <;> decide))
+    rw [if_neg hcond, if_neg h0]
+
+/-- Coefficient formula for `ρ₃ : R₁ → R₃`. -/
+lemma novikovCosimplicialRing_ρ₃_apply (f : (novikovCosimplicialRing Γ A).R₁)
+    (d : Fin 3 → Γ) :
+    ((novikovCosimplicialRing Γ A).ρ₃ f).val d =
+      if d 0 = 0 ∧ d 1 = 0 then f.val (fun _ : Unit => d 2) else 0 := by
+  have hρ : (novikovCosimplicialRing Γ A).ρ₃ f =
+      substitute (fun _ : Unit => (2 : Fin 3)) f := by
+    change substituteRingHom Fin.succ (substituteRingHom (fun _ : Unit => (1 : Fin 2)) f) =
+      substituteRingHom (fun _ : Unit => (2 : Fin 3)) f
+    simp only [substituteRingHom, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
+    rw [← substitute_comp]
+    rfl
+  rw [hρ, substitute_const_apply]
+  have hcond : (∀ j : Fin 3, j ≠ 2 → d j = 0) ↔ (d 0 = 0 ∧ d 1 = 0) := by
+    constructor
+    · intro h; exact ⟨h 0 (by decide), h 1 (by decide)⟩
+    · intro h j hj; fin_cases j
+      · exact h.1
+      · exact h.2
+      · exact (hj rfl).elim
+  simp only [hcond]
+
+/-- Coefficient formula for `ρ₁ : R₁ → R₃`. -/
+lemma novikovCosimplicialRing_ρ₁_apply (f : (novikovCosimplicialRing Γ A).R₁)
+    (d : Fin 3 → Γ) :
+    ((novikovCosimplicialRing Γ A).ρ₁ f).val d =
+      if d 1 = 0 ∧ d 2 = 0 then f.val (fun _ : Unit => d 0) else 0 := by
+  have hρ : (novikovCosimplicialRing Γ A).ρ₁ f =
+      substitute (fun _ : Unit => (0 : Fin 3)) f := by
+    change substituteRingHom Fin.castSucc (substituteRingHom (fun _ : Unit => (0 : Fin 2)) f) =
+      substituteRingHom (fun _ : Unit => (0 : Fin 3)) f
+    simp only [substituteRingHom, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
+    rw [← substitute_comp]
+    rfl
+  rw [hρ, substitute_const_apply]
+  have hcond : (∀ j : Fin 3, j ≠ 0 → d j = 0) ↔ (d 1 = 0 ∧ d 2 = 0) := by
+    constructor
+    · intro h; exact ⟨h 1 (by decide), h 2 (by decide)⟩
+    · intro h j hj; fin_cases j
+      · exact (hj rfl).elim
+      · exact h.1
+      · exact h.2
+  simp only [hcond]
+
+/-- Coefficient formula for `ρ₂ : R₁ → R₃`. -/
+lemma novikovCosimplicialRing_ρ₂_apply (f : (novikovCosimplicialRing Γ A).R₁)
+    (d : Fin 3 → Γ) :
+    ((novikovCosimplicialRing Γ A).ρ₂ f).val d =
+      if d 0 = 0 ∧ d 2 = 0 then f.val (fun _ : Unit => d 1) else 0 := by
+  have hρ : (novikovCosimplicialRing Γ A).ρ₂ f =
+      substitute (fun _ : Unit => (1 : Fin 3)) f := by
+    change substituteRingHom Fin.succ (substituteRingHom (fun _ : Unit => (0 : Fin 2)) f) =
+      substituteRingHom (fun _ : Unit => (1 : Fin 3)) f
+    simp only [substituteRingHom, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
+    rw [← substitute_comp]
+    rfl
+  rw [hρ, substitute_const_apply]
+  have hcond : (∀ j : Fin 3, j ≠ 1 → d j = 0) ↔ (d 0 = 0 ∧ d 2 = 0) := by
+    constructor
+    · intro h; exact ⟨h 0 (by decide), h 2 (by decide)⟩
+    · intro h j hj; fin_cases j
+      · exact h.1
+      · exact (hj rfl).elim
+      · exact h.2
+  simp only [hcond]
+
+end CoefficientFormulas
 
 /-- The extended cosimplicial ring of Novikov series, with `R₀ = A` and
 `π₀ = algebraMapNovikov : A → A((t))`. -/

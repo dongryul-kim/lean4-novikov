@@ -99,7 +99,8 @@ modules.
   \label{def:novikov_descent_datum}
   \lean{Novikov.Descent.novikovCosimplicialRing}
   \leanok
-  \uses{def:cosimplicial_ring, def:novikov_series, def:novikov_substitute}
+  \uses{def:cosimplicial_ring, def:novikov_series, def:novikov_substitute,
+    thm:novikov_ring, thm:novikov_substitute_functorial}
   Let $A$ be a commutative ring and $\Gamma \subseteq \mathbb{R}$ an additive
   submonoid.  The \emph{Novikov cosimplicial ring} has
   $R_1 = A((t^\Gamma))$,
@@ -151,4 +152,110 @@ modules.
   The equalizer hypothesis of
   Theorem~\ref{thm:constant_descent_fully_faithful}
   is satisfied by Lemma~\ref{lem:novikov_equalizer}.
+\end{proof}
+
+\subsection{Isocrystal from a descent datum}
+
+Throughout, $\Gamma = \mathbb{R}$, $A$ is a commutative ring, and $\lambda > 1$.
+We construct a functor $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$.
+
+\begin{lemma}
+  \label{lem:pi2_module_equalizer}
+  \lean{Novikov.Descent.pi2_module_equalizer_oneTmul}
+  \leanok
+  \uses{def:novikov_descent_datum, lem:novikov_equalizer}
+  For a finite projective (hence flat) $A((t^{\mathbb{R}}))$-module $M$, the diagram
+  \[
+    M \xrightarrow{\pi_2^\ast} \pi_2^\ast M
+      \overset{\pi_{13}^\ast}{\underset{\pi_{23}^\ast}{\rightrightarrows}}
+      \rho_3^\ast M
+  \]
+  is an equalizer: every $x \in \pi_2^\ast M$ with $\pi_{13}^\ast x = \pi_{23}^\ast x$
+  equals $1 \otimes m$ for a unique $m \in M$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Tensoring with the flat $M$ preserves exactness, so it suffices to treat
+  $M = A((t^{\mathbb{R}}))$, where the claim is the ring-level equalizer of
+  $\pi_2^\ast$ against $\pi_{13}^\ast - \pi_{23}^\ast$ (a variant of
+  Lemma~\ref{lem:novikov_equalizer}).
+\end{proof}
+
+\begin{definition}
+  \label{def:face_frobenius}
+  \lean{Novikov.Descent.F2, Novikov.Descent.F3}
+  \leanok
+  \uses{def:novikov_descent_datum, def:frobenius, thm:frobenius_properties}
+  The $A$-algebra automorphisms scaling one variable by $\lambda$:
+  $F_2 \colon A((t^{\mathbb{R}}, u^{\mathbb{R}})) \to A((t^{\mathbb{R}}, u^{\mathbb{R}}))$,
+  $t \mapsto t$, $u \mapsto u^\lambda$; and
+  $F_3 \colon A((t^{\mathbb{R}}, u^{\mathbb{R}}, v^{\mathbb{R}})) \to
+  A((t^{\mathbb{R}}, u^{\mathbb{R}}, v^{\mathbb{R}}))$, fixing $t, u$ and $v \mapsto v^\lambda$.
+\end{definition}
+
+\begin{definition}
+  \label{def:face_frobenius_action}
+  \lean{Novikov.Descent.FM2, Novikov.Descent.FM3}
+  \leanok
+  \uses{def:face_frobenius, def:descent_datum}
+  For $(M, \varphi) \in \mathsf{NovDD}(A)$, the $F_2$-semilinear bijection
+  $F_{M,2} = \varphi \circ (\mathrm{id}_M \otimes F_2) \circ \varphi^{-1}$
+  on $\pi_2^\ast M$, and the $F_3$-semilinear bijection
+  $F_{M,3} = \pi_{13}^\ast\varphi \circ (\mathrm{id}_M \otimes F_3)
+  \circ (\pi_{13}^\ast\varphi)^{-1}$ on $\rho_3^\ast M$.
+\end{definition}
+
+\begin{lemma}
+  \label{lem:fm3_cocycle}
+  \lean{Novikov.Descent.FM3_13_eq_FM3_23}
+  \leanok
+  \uses{def:face_frobenius_action, def:descent_datum}
+  $F_{M,3}$ admits the equivalent description via $\pi_{23}^\ast\varphi$ in place
+  of $\pi_{13}^\ast\varphi$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Rewrite $\pi_{13}^\ast\varphi = \pi_{23}^\ast\varphi \circ \pi_{12}^\ast\varphi$
+  by the cocycle condition and slide $\mathrm{id}_M \otimes F_3$ across
+  $\pi_{12}^\ast\varphi$, using that $F_3$ fixes $\pi_{12}^\ast$.
+\end{proof}
+
+\begin{theorem}
+  \label{thm:descent_frobenius}
+  \lean{Novikov.Descent.descentFrobenius}
+  \leanok
+  \uses{lem:pi2_module_equalizer, def:face_frobenius_action, lem:fm3_cocycle}
+  The maps $\pi_2^\ast, \pi_{13}^\ast, \pi_{23}^\ast$ intertwine
+  $F_{M,2}$ and $F_{M,3}$, giving a commutative ladder between the two equalizer
+  rows.  Hence $F_{M,2}$ restricts to an $F$-semilinear bijection
+  $F_M \colon M \to M$.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  For $m \in M$, the element $F_{M,2}(1 \otimes m)$ lies in the equalizer:
+  its $\pi_{13}^\ast$- and $\pi_{23}^\ast$-images agree because $F_{M,3}$
+  intertwines them (Lemma~\ref{lem:fm3_cocycle}).
+  Lemma~\ref{lem:pi2_module_equalizer} produces a unique
+  $F_M(m) \in M$ with $F_{M,2}(1 \otimes m) = 1 \otimes F_M(m)$; additivity,
+  $F$-semilinearity, and invertibility descend from those of $F_{M,2}$.
+\end{proof}
+
+\begin{theorem}
+  \label{thm:descent_to_isocrystal}
+  \lean{Novikov.Descent.descentToIsocrystal}
+  \leanok
+  \uses{thm:descent_frobenius, def:novikov_isocrystal, lem:novikov_isocrystal_category}
+  The assignment $(M, \varphi) \mapsto (M, F_M)$ defines a functor
+  $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Objects go to $(M, F_M)$ via Theorem~\ref{thm:descent_frobenius}; a morphism
+  goes to its underlying $A((t^{\mathbb{R}}))$-linear map, which commutes with
+  $F_M$ by uniqueness in Lemma~\ref{lem:pi2_module_equalizer}.  Identities and
+  composites are preserved because the underlying maps are.
 \end{proof}

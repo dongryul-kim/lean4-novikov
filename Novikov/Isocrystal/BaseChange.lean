@@ -27,7 +27,7 @@ lemma frobeniusRingHom_comp_baseChange :
       (frobeniusRingHom (Λ := Λ) (A := A)) := by
   apply RingHom.ext; intro s; ext d
   dsimp [frobeniusRingHom]
-  simp [mapRingHom_apply, frobenius_apply_val]
+  simp [mapRingHom_apply]
 
 /-- The image of `mapRingHom` on real Novikov series is closed when `B` has
 discrete topology. -/
@@ -84,7 +84,7 @@ noncomputable def baseChange (M : NovikovIsocrystal (Λ := Λ) A) : NovikovIsocr
       rnghom.comp φ_A_inv := by
     apply RingHom.ext; intro s; ext d
     dsimp [φ_A_inv, frobeniusRingHomInv, frobeniusRingHom, rnghom]
-    simp [mapRingHom_apply, frobenius_apply_val]
+    simp [mapRingHom_apply]
   let φ_B_inv_sl : (RealNovikovSeries B) →ₛₗ[φ_A_inv] (RealNovikovSeries B) :=
     { toFun := frobeniusRingHomInv (Λ := Λ) (A := B)
       map_add' := (frobeniusRingHomInv (Λ := Λ) (A := B)).map_add

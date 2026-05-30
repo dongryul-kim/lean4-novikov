@@ -1,3 +1,7 @@
+import Novikov.Miscellany.Topology
+import Novikov.Miscellany.Projective
+import Novikov.Miscellany.Split
+import Novikov.Miscellany.BaseChange
 import Novikov.Series.Basic
 import Novikov.Series.Finite
 import Novikov.Series.Multiplication
@@ -5,10 +9,10 @@ import Novikov.Series.Ring
 import Novikov.Series.Module
 import Novikov.Series.Exact
 import Novikov.Series.OneVar
+import Novikov.Series.Frobenius
 import Novikov.Series.Field
 import Novikov.Series.Substitute
 import Novikov.Series.Projective
-import Novikov.Isocrystal.Frobenius
 import Novikov.Isocrystal.Basic
 import Novikov.Isocrystal.Constant
 import Novikov.Isocrystal.BaseChange
@@ -17,10 +21,7 @@ import Novikov.Isocrystal.Field.Contraction
 import Novikov.Isocrystal.Field
 import Novikov.Isocrystal.Injective.Submodule
 import Novikov.Isocrystal.Injective
-import Novikov.Miscellany.Topology
-import Novikov.Miscellany.Projective
-import Novikov.Miscellany.Split
-import Novikov.Miscellany.BaseChange
 import Novikov.Descent.Abstract.Descent
 import Novikov.Descent.Abstract.Constant
 import Novikov.Descent.Basic
+import Novikov.Descent.Isocrystal
