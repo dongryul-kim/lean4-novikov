@@ -185,20 +185,15 @@ theorem baseChange_assoc_tetrahedron (f : A →+* B) (g : B →+* C) (h : C →+
     (baseChange_assoc f (h.comp g) M) ((baseChange_assoc g h (B ⊗[A] M)) (d ⊗ₜ[C] y))
   refine TensorProduct.induction_on y ?_ ?_ ?_
   · simp only [tmul_zero, map_zero]
-    rfl
   · intro c z
     refine TensorProduct.induction_on z ?_ ?_ ?_
     · simp only [tmul_zero, map_zero]
-      rfl
     · intro b m
       simp [smul_assoc]
-      rfl
     · intro z₁ z₂ hz₁ hz₂
       simp only [TensorProduct.tmul_add, map_add, hz₁, hz₂]
-      rfl
   · intro y₁ y₂ hy₁ hy₂
     simp only [TensorProduct.tmul_add, map_add, hy₁, hy₂]
-    rfl
 
 end BaseChange
 

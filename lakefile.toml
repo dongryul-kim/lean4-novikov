@@ -8,6 +8,7 @@ pp.unicode.fun = true
 relaxedAutoImplicit = false
 weak.linter.mathlibStandardSet = true
 linter.style.longLine = false
+weak.linter.style.header = false
 linter.unusedFintypeInType = false
 weak.linter.unusedHavesSuffices = true
 weak.linter.unreachableTactic = true
@@ -26,4 +27,4 @@ name = "checkdecls"
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.30.0-rc2"
+rev = "v4.30.0"

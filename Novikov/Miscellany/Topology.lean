@@ -214,7 +214,7 @@ lemma canonicalTopology_pi_eq (A : Type*) [CommRing A] [TopologicalSpace A] [IsT
         _ = ∑ i, x i * L (Pi.basisFun A (Fin n) i) := by simp_rw [LinearMap.map_smul, smul_eq_mul]
         _ = ∑ i, L (Pi.basisFun A (Fin n) i) * x i := by simp_rw [mul_comm]
     rw [hL]
-    refine continuous_finset_sum (s := Finset.univ) ?_
+    refine continuous_finsetSum (s := Finset.univ) ?_
     intro i hi
     exact Continuous.mul continuous_const (continuous_apply i)
 

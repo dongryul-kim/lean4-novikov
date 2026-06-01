@@ -174,7 +174,7 @@ lemma module_finite_of_realNovikovSeries
         (∑ i, σi i y • xi i : RealNovikovSeries M).val dN :=
       congr_arg (fun z : RealNovikovSeries M => (z : (Unit → ↥(⊤ : AddSubgroup ℝ)) → M) dN)
         h_y_eq
-    rw [← h_y_dN, h_apply, AddSubmonoidClass.coe_finset_sum, Finset.sum_apply]
+    rw [← h_y_dN, h_apply, AddSubmonoidClass.coe_finsetSum, Finset.sum_apply]
   -- Each term lies in the `A`-span of `G`.
   rw [h_m_eq]
   apply Submodule.sum_mem
@@ -353,7 +353,7 @@ lemma module_finitePresentation_of_realNovikovSeries
       have h_eq : (g_ext : (Fin m → R) → R) = (fun (v : Fin m → R) => ∑ i, (g_ext (Pi.basisFun R (Fin m) i)) * v i) := by
         funext v; exact h_formula v
       rw [h_eq]
-      refine continuous_finset_sum (M := R) Finset.univ (fun i _ => ?_)
+      refine continuous_finsetSum (M := R) Finset.univ (fun i _ => ?_)
       exact (continuous_const.mul (continuous_apply i))
     -- Lemma B.1: lmap is continuous (preserves filtration)
     have h_lmap_cont : Continuous (lmap (Γ := (⊤ : AddSubgroup ℝ)) (ι := Unit) (K.subtype : K →ₗ[A] (Fin m → A))) := by
@@ -471,7 +471,7 @@ lemma every_linearMap_continuous_pi {n : ℕ}
         fun v => ∑ i, g' (Pi.basisFun (RealNovikovSeries A) (Fin n) i) * v i := by
       funext v; exact h_formula v
     rw [h_eq]
-    refine continuous_finset_sum Finset.univ (fun i _ => ?_)
+    refine continuous_finsetSum Finset.univ (fun i _ => ?_)
     exact continuous_const.mul (continuous_apply i)
   have h_decompose : (g : RealNovikovSeries (Fin n → A) → RealNovikovSeries A) =
       (g' : (Fin n → RealNovikovSeries A) → RealNovikovSeries A) ∘ (π : _ → _) := by
@@ -581,7 +581,8 @@ lemma canonicalTopology_realNovikovSeries_eq
           rw [← this]; exact novikovPiEquiv_symm_continuous.isOpen_preimage U hU
         refine ⟨φ '' U, hφ_open, Set.preimage_image_eq U φ.injective⟩
     have h_canon_ind := Novikov.Miscellany.canonicalTopology_linearEquiv φ
-    rw [h_canon_ind, h_canon_pi, hτF'_eq]
+    rw [h_canon_ind, hτF'_eq]
+    exact congrArg (TopologicalSpace.induced (φ : F' → (Fin n → R))) h_canon_pi
   -- canonical M_seq = induced σ_R (canonical F') because σ_R has left inverse π_R
   have h_canon_subspace :
       Novikov.Miscellany.canonicalTopology R M_seq =
@@ -609,7 +610,6 @@ lemma canonicalTopology_realNovikovSeries_eq
           (TopologicalSpace.induced (g : F' → R) inferInstance) =
           TopologicalSpace.induced (f : M_seq → R) inferInstance := by
         rw [induced_compose (f := σ_R) (g := (g : F' → R)), ← LinearMap.coe_comp, h_factor]
-        rfl
       apply le_trans ?_ h_term_eq.le
       apply iInf_le (f := fun (g' : F' →ₗ[R] R) =>
         TopologicalSpace.induced (σ_R : M_seq → F')

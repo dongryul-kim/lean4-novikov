@@ -240,14 +240,14 @@ lemma exists_nonzero_solution_of_algClosed {n : ℕ} (hn : 1 ≤ n) (a : Fin n �
         have h_eval : P.eval 0 = - a 0 := by
           dsimp [P]
           simp [Polynomial.eval_sub, Polynomial.eval_pow, Polynomial.eval_X,
-            Polynomial.eval_finset_sum, Fin.sum_univ_succ, Fin.val_succ,
+            Polynomial.eval_finsetSum, Fin.sum_univ_succ, Fin.val_succ,
             zero_pow (Nat.succ_ne_zero _)]
         have h_root : P.eval c = 0 := hc
         rw [hc0] at h_root
         rw [h_eval] at h_root
         exact ha0 (neg_eq_zero.mp h_root)
       use Units.mk0 c hc_ne_zero
-      simpa [P, Polynomial.eval_finset_sum, sub_eq_zero] using hc
+      simpa [P, Polynomial.eval_finsetSum, sub_eq_zero] using hc
 
 end Normalize
 

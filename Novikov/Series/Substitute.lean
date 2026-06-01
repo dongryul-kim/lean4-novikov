@@ -43,7 +43,7 @@ lemma finite_substitution_support (f : ι → ι') (s : NovikovSeries Γ ι A) (
     rw [← sum_fiberwise univ f (fun i => (g i : ℝ))]
     apply sum_congr rfl
     intro j _
-    simpa [pushExponents, AddSubmonoidClass.coe_finset_sum] using
+    simpa [pushExponents, AddSubmonoidClass.coe_finsetSum] using
       congrArg (fun f : ι' → Γ => (f j : ℝ)) hg.1
   simp only [w, one_mul]
   rw [h_sum]
@@ -80,7 +80,7 @@ lemma is_novikov_series_substituteFun (f : ι → ι') (s : NovikovSeries Γ ι 
       rw [← sum_fiberwise univ f (fun i => w' (f i) * (g i : ℝ))]
       apply sum_congr rfl
       intro j _
-      rw [AddSubmonoidClass.coe_finset_sum, mul_sum]
+      rw [AddSubmonoidClass.coe_finsetSum, mul_sum]
       apply sum_congr rfl
       intro i hi
       simp only [mem_filter, mem_univ, true_and] at hi
@@ -292,7 +292,7 @@ lemma finite_substitute_mul_support (f : ι → ι') (s1 s2 : NovikovSeries Γ �
     rw [← sum_fiberwise univ f (fun i => ((g1 + g2) i : ℝ))]
     apply sum_congr rfl
     intro j _
-    simpa [pushExponents, AddSubmonoidClass.coe_finset_sum] using
+    simpa [pushExponents, AddSubmonoidClass.coe_finsetSum] using
       congrArg (fun f : ι' → Γ => (f j : ℝ)) h_push
   have h_split : ∑ i, w i * (g1 i : ℝ) + ∑ i, w i * (g2 i : ℝ) = T := by
     simp only [w, one_mul]

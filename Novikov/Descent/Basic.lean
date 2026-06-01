@@ -365,7 +365,6 @@ lemma novikovCosimplicialRing_equalizer (Γ : S) {A : Type*} [CommRing A]
       by_cases hj : j = 0
       · subst hj
         convert sum_unit g using 1
-        congr 1; ext ⟨⟩; simp
       · simp only [hj, ↓reduceIte]
         convert Finset.sum_empty using 1
         congr 1; ext ⟨⟩; simp [Ne.symm hj]
@@ -376,7 +375,6 @@ lemma novikovCosimplicialRing_equalizer (Γ : S) {A : Type*} [CommRing A]
       by_cases hj : j = 1
       · subst hj
         convert sum_unit g using 1
-        congr 1; ext ⟨⟩; simp
       · simp only [hj, ↓reduceIte]
         convert Finset.sum_empty using 1
         congr 1; ext ⟨⟩; simp [Ne.symm hj]
