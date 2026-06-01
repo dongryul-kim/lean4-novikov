@@ -33,8 +33,9 @@ jobs:
           build: true
           lint: false
 
-      - name: Compile blueprint and documentation
+      - name: Compile blueprint and homepage
         uses: leanprover-community/docgen-action@main
         with:
+          api-docs: false
           blueprint: true
           homepage: home_page
