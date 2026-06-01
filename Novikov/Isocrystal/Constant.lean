@@ -14,7 +14,7 @@ to Novikov isocrystals, and proves it is fully faithful.
 
 ## Main results
 
-* `vectToNovIsoc_fully_faithful`: The functor `vectToNovIsoc` is fully faithful.
+* `vectToNovIsoc_fullyFaithful`: The functor `vectToNovIsoc` is fully faithful.
 -/
 
 open CategoryTheory
@@ -388,10 +388,9 @@ lemma frobenius_fixed_points_tensor (P : Type*) [AddCommGroup P] [Module A P]
 end FrobeniusFixedPointsTensor
 
 /-- The functor `vectToNovIsoc` is fully faithful. -/
-theorem vectToNovIsoc_fully_faithful :
-    (vectToNovIsoc (Λ := Λ) (A := A)).Full ∧ (vectToNovIsoc (Λ := Λ) (A := A)).Faithful := by
-  constructor
-  · -- Full
+noncomputable def vectToNovIsoc_fullyFaithful :
+    (vectToNovIsoc (Λ := Λ) (A := A)).FullyFaithful := by
+  have hFull : (vectToNovIsoc (Λ := Λ) (A := A)).Full := by
     refine { map_surjective := ?_ }
     intro M₀ N₀ g
     let R := RealNovikovSeries A
@@ -422,7 +421,7 @@ theorem vectToNovIsoc_fully_faithful :
         iso.apply_symm_apply]
     apply hom_ext
     exact h_eq
-  · -- Faithful
+  have hFaithful : (vectToNovIsoc (Λ := Λ) (A := A)).Faithful := by
     constructor
     intro M₀ N₀ f g h_eq
     refine LinearMap.ext (fun m => ?_)
@@ -442,6 +441,9 @@ theorem vectToNovIsoc_fully_faithful :
     erw [TensorProduct.lid_tmul, TensorProduct.lid_tmul] at h_eval
     simp only [one_smul] at h_eval
     exact h_eval
+  letI := hFull
+  letI := hFaithful
+  exact Functor.FullyFaithful.ofFullyFaithful (vectToNovIsoc (Λ := Λ) (A := A))
 
 end NovikovIsocrystal
 

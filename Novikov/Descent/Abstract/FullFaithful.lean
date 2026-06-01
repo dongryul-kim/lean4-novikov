@@ -14,36 +14,24 @@ def equalizerMap (E : ExtendedCosimplicialRing) : E.R₀ → E.π₁.eqLocus E.�
     rw [RingHom.mem_eqLocus]
     exact congr_fun (congr_arg DFunLike.coe E.π₁_π₀_eq_π₂_π₀) a⟩
 
-private noncomputable def face₁Linear :
+/-- A face map `π : R₁ → R₂` as an `R₀`-linear map, where `R₂` carries the
+`R₀`-action through the canonical middle composite `π₁ ∘ π₀`.  This requires
+`π ∘ π₀ = π₁ ∘ π₀`, which holds for both `π₁` (by `rfl`) and `π₂` (by
+`π₁_π₀_eq_π₂_π₀`). -/
+private noncomputable def faceLinear (π : E.R₁ →+* E.R₂)
+    (hπ : π.comp E.π₀ = E.π₁.comp E.π₀) :
     letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
     letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
     E.R₁ →ₗ[E.R₀] E.R₂ := by
   letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
   letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
   exact
-  { toFun := E.π₁
-    map_add' := E.π₁.map_add
+  { toFun := π
+    map_add' := π.map_add
     map_smul' := by
       intro a r
-      change E.π₁ (E.π₀ a * r) = (E.π₁.comp E.π₀) a * E.π₁ r
-      rw [map_mul]
-      rfl }
-
-private noncomputable def face₂Linear :
-    letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
-    letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
-    E.R₁ →ₗ[E.R₀] E.R₂ := by
-  letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
-  letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
-  exact
-  { toFun := E.π₂
-    map_add' := E.π₂.map_add
-    map_smul' := by
-      intro a r
-      change E.π₂ (E.π₀ a * r) = (E.π₁.comp E.π₀) a * E.π₂ r
-      rw [show (E.π₁.comp E.π₀) a = (E.π₂.comp E.π₀) a by
-        exact congr_fun (congr_arg DFunLike.coe E.π₁_π₀_eq_π₂_π₀) a]
-      rw [map_mul]
+      change π (E.π₀ a * r) = (E.π₁.comp E.π₀) a * π r
+      rw [map_mul, ← congr_fun (congr_arg DFunLike.coe hπ) a]
       rfl }
 
 private lemma equalizer_of_φ_fixed
@@ -69,14 +57,14 @@ private lemma equalizer_of_φ_fixed
   let e₂ : (letI : Algebra E.R₁ E.R₂ := E.π₂.toAlgebra
       E.R₂ ⊗[E.R₁] (E.R₁ ⊗[E.R₀] P)) ≃ₗ[E.R₂] E.R₂ ⊗[E.R₀] P :=
     baseChange_assoc_eq E.π₀ E.π₂ E.π₁_π₀_eq_π₂_π₀.symm P
-  let σ₁ := face₁Linear E
-  let σ₂ := face₂Linear E
+  let σ₁ := faceLinear E E.π₁ rfl
+  let σ₂ := faceLinear E E.π₂ E.π₁_π₀_eq_π₂_π₀.symm
   have h₁ (w : E.R₁ ⊗[E.R₀] P) :
       e₁ (letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra;
         (1 : E.R₂) ⊗ₜ[E.R₁] w) = TensorProduct.map σ₁ LinearMap.id w := by
     induction w using TensorProduct.induction_on with
     | zero => simp
-    | tmul r p => rw [TensorProduct.map_tmul]; simp [e₁, σ₁, face₁Linear, Algebra.smul_def]; rfl
+    | tmul r p => rw [TensorProduct.map_tmul]; simp [e₁, σ₁, faceLinear, Algebra.smul_def]; rfl
     | add x y hx hy =>
       letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra
       rw [TensorProduct.tmul_add, map_add, hx, hy, map_add]
@@ -85,7 +73,7 @@ private lemma equalizer_of_φ_fixed
         (1 : E.R₂) ⊗ₜ[E.R₁] w) = TensorProduct.map σ₂ LinearMap.id w := by
     induction w using TensorProduct.induction_on with
     | zero => simp
-    | tmul r p => rw [TensorProduct.map_tmul]; simp [e₂, σ₂, face₂Linear, Algebra.smul_def]; rfl
+    | tmul r p => rw [TensorProduct.map_tmul]; simp [e₂, σ₂, faceLinear, Algebra.smul_def]; rfl
     | add x y hx hy =>
       letI : Algebra E.R₁ E.R₂ := E.π₂.toAlgebra
       rw [TensorProduct.tmul_add, map_add, hx, hy, map_add]

@@ -154,6 +154,88 @@ lemma isNovikovSeries_coordinateFrobenius (j : ι)
   rw [h_S]
   exact Set.Finite.preimage (fun _ _ _ _ h => hg h) (f.prop s' hs' C)
 
+omit hΛ in
+/-- Coefficient-level fixed-point vanishing principle.  If a multivariable
+Novikov series `g` is invariant under scaling the `k`-th exponent coordinate by
+`1/Λ` (with `Λ > 1`), then every coefficient at an exponent whose `k`-th
+coordinate is nonzero vanishes: such an exponent would otherwise generate an
+infinite orbit `(d k) / Λ^n` inside a fixed half-space, contradicting Novikov
+finiteness.  The one-variable case is `frobenius_fixed_points`. -/
+lemma coordinateFrobenius_fixed_vanish [hΛ1 : Fact (Λ > 1)] (k : ι)
+    {g : (ι → ↥(⊤ : AddSubgroup ℝ)) → A} (hg : isNovikovSeries g)
+    (hrel : ∀ d, g (scaleCoordinate (Λ := Λ) k d) = g d)
+    {d : ι → ↥(⊤ : AddSubgroup ℝ)} (hdk : d k ≠ 0) : g d = 0 := by
+  by_contra hgd
+  -- The orbit of `d` under repeated division of the `k`-th coordinate by `Λ`.
+  let f_seq : ℕ → (ι → ↥(⊤ : AddSubgroup ℝ)) :=
+    fun n i => if i = k then ⟨(d k : ℝ) / Λ ^ n, AddSubgroup.mem_top _⟩ else d i
+  have hseq0 : f_seq 0 = d := by
+    funext i
+    by_cases hi : i = k
+    · subst i; apply Subtype.ext; simp [f_seq]
+    · simp [f_seq, hi]
+  have hval : ∀ n, g (f_seq n) = g d := by
+    intro n
+    induction n with
+    | zero => rw [hseq0]
+    | succ n ih =>
+      have hsc : f_seq (n + 1) = scaleCoordinate (Λ := Λ) k (f_seq n) := by
+        funext i
+        by_cases hi : i = k
+        · subst i
+          apply Subtype.ext
+          have e1 : (f_seq (n + 1) k : ℝ) = (d k : ℝ) / Λ ^ (n + 1) := by simp [f_seq]
+          have e2 : (scaleCoordinate (Λ := Λ) k (f_seq n) k : ℝ)
+              = (d k : ℝ) / Λ ^ n / Λ := by simp [scaleCoordinate, f_seq]
+          rw [e1, e2, pow_succ, div_div]
+        · simp only [f_seq, scaleCoordinate, if_neg hi]
+      rw [hsc, hrel]; exact ih
+  have hΛpos : (0 : ℝ) < Λ := lt_trans one_pos hΛ1.out
+  set s : ι → ℝ := fun _ => 1 with hs_def
+  have hs : ∀ i, 0 < s i := fun _ => one_pos
+  set C : ℝ := (∑ i, |(d i : ℝ)|) + 1 with hC_def
+  have hmem : ∀ n, f_seq n ∈ {d' ∈ fnSupport g | ∑ i, s i * (d' i : ℝ) < C} := by
+    intro n
+    refine ⟨mem_fnSupport.mpr ?_, ?_⟩
+    · rw [hval n]; exact hgd
+    · have hsum : ∑ i, s i * (f_seq n i : ℝ)
+          = (d k : ℝ) / Λ ^ n + ∑ i ∈ ({k}ᶜ : Finset ι), (d i : ℝ) := by
+        rw [Fintype.sum_eq_add_sum_compl k (fun i => s i * (f_seq n i : ℝ))]
+        congr 1
+        · simp [f_seq, hs_def]
+        · refine Finset.sum_congr rfl fun i hi => ?_
+          rw [Finset.mem_compl, Finset.mem_singleton] at hi
+          simp [f_seq, hs_def, hi]
+      rw [hsum]
+      have hΛn : (1 : ℝ) ≤ Λ ^ n := one_le_pow₀ (le_of_lt hΛ1.out)
+      have hbk : (d k : ℝ) / Λ ^ n ≤ |(d k : ℝ)| := by
+        calc (d k : ℝ) / Λ ^ n ≤ |(d k : ℝ) / Λ ^ n| := le_abs_self _
+          _ = |(d k : ℝ)| / Λ ^ n := by rw [abs_div, abs_pow, abs_of_pos hΛpos]
+          _ ≤ |(d k : ℝ)| := div_le_self (abs_nonneg _) hΛn
+      have hrest : ∑ i ∈ ({k}ᶜ : Finset ι), (d i : ℝ)
+          ≤ ∑ i ∈ ({k}ᶜ : Finset ι), |(d i : ℝ)| :=
+        Finset.sum_le_sum fun i _ => le_abs_self _
+      have hsplit : |(d k : ℝ)| + ∑ i ∈ ({k}ᶜ : Finset ι), |(d i : ℝ)|
+          = ∑ i, |(d i : ℝ)| :=
+        (Fintype.sum_eq_add_sum_compl k (fun i => |(d i : ℝ)|)).symm
+      rw [hC_def]; linarith
+  have hinj : Function.Injective f_seq := by
+    intro n1 n2 hseq
+    have hv := congr_fun hseq k
+    have hv' : (d k : ℝ) / Λ ^ n1 = (d k : ℝ) / Λ ^ n2 := by
+      have := Subtype.ext_iff.1 hv
+      simpa [f_seq] using this
+    have hdk' : (d k : ℝ) ≠ 0 := fun h0 => hdk (Subtype.ext (by simpa using h0))
+    have hΛn1 : Λ ^ n1 ≠ 0 := pow_ne_zero n1 hΛpos.ne'
+    have hΛn2 : Λ ^ n2 ≠ 0 := pow_ne_zero n2 hΛpos.ne'
+    field_simp [hΛn1, hΛn2, hdk'] at hv'
+    by_contra hne
+    rcases lt_or_gt_of_ne hne with hlt | hgt
+    · have := pow_lt_pow_right₀ hΛ1.out hlt; linarith
+    · have := pow_lt_pow_right₀ hΛ1.out hgt; linarith
+  exact (Set.infinite_range_of_injective hinj)
+    ((hg s hs C).subset (by rintro _ ⟨n, rfl⟩; exact hmem n))
+
 /-- Coordinate Frobenius as an additive endomorphism. -/
 noncomputable def coordinateFrobeniusAddHom (j : ι) :
     NovikovSeries (⊤ : AddSubgroup ℝ) ι A →+ NovikovSeries (⊤ : AddSubgroup ℝ) ι A where
@@ -440,79 +522,13 @@ lemma frobenius_fixed_points [hΛ1 : Fact (Λ > 1)] (f : RealNovikovSeries A) :
     by_cases hd : d = 0
     · rw [hd]
       simp [novikovMonomial]
-    · have h_eq : ∀ n : ℕ,
-          f (fun _ => ⟨(d () : ℝ) / Λ^n, AddSubgroup.mem_top _⟩) = f d := by
-        intro n
-        induction n with
-        | zero => simp
-        | succ n ih =>
-          rw [pow_succ, ← div_div]
-          have h1 : (frobenius Λ f)
-              (fun x ↦ ⟨↑(d ()) / Λ ^ n, AddSubgroup.mem_top _⟩) =
-              f (fun x ↦ ⟨↑(d ()) / Λ ^ n / Λ, AddSubgroup.mem_top _⟩) := by
-            simp [frobenius_apply_val]
-          rw [← h1, h]
-          exact ih
-      let S := { d' | f d' ≠ 0 ∧ (d' () : ℝ) < |(d () : ℝ)| + 1 }
-      let s : Unit → ℝ := fun _ => 1
-      have hs : ∀ i, 0 < s i := fun _ => zero_lt_one
-      have h_sum : ∀ d' : Unit → ↥(⊤ : AddSubgroup ℝ),
-          ∑ i, s i * (d' i : ℝ) = (d' () : ℝ) := by
-        intro d'
-        simp only [Fintype.sum_unique, s, one_mul]
-      have h_eqS : S =
-          {d' | f d' ≠ 0 ∧ ∑ i, s i * (d' i : ℝ) < |(d () : ℝ)| + 1} := by
-        apply Set.ext
-        intro d'
-        rw [Set.mem_setOf_eq, Set.mem_setOf_eq, h_sum]
-      have hS : S.Finite := by
-        rw [h_eqS]
-        exact f.prop s hs (|(d () : ℝ)| + 1)
-      by_contra h_nz
-      simp only [novikovMonomial, hd, ↓reduceIte, ne_eq] at h_nz
-      have h_in_S : ∀ n : ℕ,
-          (fun _ => ⟨(d () : ℝ) / Λ^n, AddSubgroup.mem_top _⟩) ∈ S := by
-        intro n
-        rw [h_eqS]
-        simp only [Set.mem_setOf_eq, h_sum]
-        constructor
-        · rw [h_eq]
-          exact h_nz
-        · have hΛpos : 0 < Λ := hΛ.out
-          have hΛn : 1 ≤ Λ^n := by
-            apply one_le_pow₀
-            have := hΛ1.out; linarith
-          have h_abs : |(d () : ℝ) / Λ^n| ≤ |(d () : ℝ)| := by
-            rw [abs_div, abs_pow, abs_of_nonneg hΛpos.le]
-            exact div_le_self (abs_nonneg _) hΛn
-          have h_le := abs_le.1 h_abs
-          have := hΛ.out; linarith
-      let f_seq : ℕ → (Unit → ↥(⊤ : AddSubgroup ℝ)) :=
-        fun n => fun _ => ⟨(d () : ℝ) / Λ^n, AddSubgroup.mem_top _⟩
-      have h_inj : Function.Injective f_seq := by
-        intro n1 n2 h_seq
-        have h_seq1 := congr_fun h_seq ()
-        have h1 : (d () : ℝ) / Λ^n1 = (d () : ℝ) / Λ^n2 := Subtype.ext_iff.1 h_seq1
-        have h_d0 : (d () : ℝ) ≠ 0 := by
-          intro h_d_zero
-          apply hd
-          ext x
-          simp [h_d_zero]
-        have hΛpos : 0 < Λ := hΛ.out
-        have hΛn1 : Λ^n1 ≠ 0 := pow_ne_zero n1 hΛpos.ne'
-        have hΛn2 : Λ^n2 ≠ 0 := pow_ne_zero n2 hΛpos.ne'
-        field_simp [hΛn1, hΛn2, h_d0] at h1
-        by_contra h_neq
-        rcases lt_or_gt_of_ne h_neq with h_lt | h_gt
-        · have hΛlt : Λ^n1 < Λ^n2 := pow_lt_pow_right₀ (by have := hΛ1.out; linarith) h_lt
-          have := hΛ.out; linarith
-        · have hΛlt : Λ^n2 < Λ^n1 := pow_lt_pow_right₀ (by have := hΛ1.out; linarith) h_gt
-          have := hΛ.out; linarith
-      have h_inf : {d' | d' ∈ Set.range f_seq}.Infinite := Set.infinite_range_of_injective h_inj
-      have h_sub : Set.range f_seq ⊆ S := by
-        rintro _ ⟨n, rfl⟩
-        exact h_in_S n
-      exact h_inf (hS.subset h_sub)
+    · -- `frobenius Λ f = f` is the fixed-point relation for the `()`-coordinate;
+      -- the coefficient at any `d` with `d () ≠ 0` vanishes.
+      have hrel : ∀ e, f.val (scaleCoordinate (Λ := Λ) () e) = f.val e :=
+        fun e => congr_fun (congr_arg Subtype.val h) e
+      have hd' : d () ≠ 0 := fun h0 => hd (funext fun _ => h0)
+      have hfd : f.val d = 0 := coordinateFrobenius_fixed_vanish () f.prop hrel hd'
+      simp [novikovMonomial, hd, hfd]
   · rintro ⟨a, rfl⟩
     rw [frobenius_monomial]
     congr

@@ -2,6 +2,7 @@ import Novikov.Miscellany.Topology
 import Novikov.Miscellany.Projective
 import Novikov.Miscellany.Split
 import Novikov.Miscellany.BaseChange
+import Novikov.Miscellany.Semilinear
 import Novikov.Series.Basic
 import Novikov.Series.Finite
 import Novikov.Series.Multiplication
@@ -25,3 +26,5 @@ import Novikov.Descent.Abstract.Descent
 import Novikov.Descent.Abstract.Constant
 import Novikov.Descent.Basic
 import Novikov.Descent.Isocrystal
+import Novikov.Descent.RecoverDDFromIsoc
+import Novikov.Descent.FullFaithful

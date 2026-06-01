@@ -186,8 +186,9 @@ We construct a functor $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$.
   \label{def:face_frobenius}
   \lean{Novikov.Descent.F2, Novikov.Descent.F3}
   \leanok
-  \uses{def:novikov_descent_datum, def:frobenius, thm:frobenius_properties}
-  The $A$-algebra automorphisms scaling one variable by $\lambda$:
+  \uses{def:novikov_descent_datum, def:coordinate_frobenius}
+  The $A$-algebra automorphisms scaling one variable by $\lambda$, i.e. the
+  coordinate Frobenii of Definition~\ref{def:coordinate_frobenius}:
   $F_2 \colon A((t^{\mathbb{R}}, u^{\mathbb{R}})) \to A((t^{\mathbb{R}}, u^{\mathbb{R}}))$,
   $t \mapsto t$, $u \mapsto u^\lambda$; and
   $F_3 \colon A((t^{\mathbb{R}}, u^{\mathbb{R}}, v^{\mathbb{R}})) \to
@@ -258,4 +259,86 @@ We construct a functor $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$.
   goes to its underlying $A((t^{\mathbb{R}}))$-linear map, which commutes with
   $F_M$ by uniqueness in Lemma~\ref{lem:pi2_module_equalizer}.  Identities and
   composites are preserved because the underlying maps are.
+\end{proof}
+
+\subsection{Full faithfulness of the descent-to-isocrystal functor}
+
+\begin{lemma}[Lemma~4.1]
+  \label{lem:recover_dd_from_isoc}
+  \lean{Novikov.Descent.recoverDDFromIsoc_equalizerLemma,
+    Novikov.Descent.RecoverDDFromIsocData}
+  \leanok
+  \uses{def:novikov_descent_datum, def:face_frobenius_action, lem:fm3_cocycle}
+  For a real Novikov descent datum $(M, \varphi)$, consider the two rows
+  \[
+    M \xrightarrow{\;\varphi \circ \pi_1^\ast\;} \pi_2^\ast M
+      \overset{\mathrm{id}}{\underset{F_{M,2}}{\rightrightarrows}} \pi_2^\ast M,
+    \qquad
+    \pi_2^\ast M \xrightarrow{\;\pi_{23}^\ast\varphi \circ \pi_{12}^\ast\;}
+      \rho_3^\ast M \overset{\mathrm{id}}{\underset{F_{M,3}}{\rightrightarrows}}
+      \rho_3^\ast M,
+  \]
+  joined by the vertical maps $\varphi \circ \pi_1^\ast$ (left column) and
+  $\pi_{13}^\ast$ (middle and right columns).  The resulting squares commute
+  (left square and both right squares $\pi_{13}^\ast \circ F_{M,2} = F_{M,3}
+  \circ \pi_{13}^\ast$), and both rows are equalizers: every $F_{M,2}$-fixed
+  element of $\pi_2^\ast M$ is $\varphi(\pi_1^\ast m)$ for a unique $m \in M$,
+  and every $F_{M,3}$-fixed element of $\rho_3^\ast M$ is
+  $\pi_{23}^\ast\varphi(\pi_{12}^\ast x)$ for a unique $x \in \pi_2^\ast M$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  The left square is the cocycle condition; the right squares hold by definition
+  of $F_{M,3}$ (Lemma~\ref{lem:fm3_cocycle}).  Since $F_{M,2} = F_M \otimes F_2$,
+  the top row being an equalizer reduces along $\pi_1^\ast$ and finite
+  projectivity of $M$ to the equalizer of $\mathrm{id}$ against $F_2$ on
+  $A((t^{\mathbb{R}}, u^{\mathbb{R}}))$, which is the ring-level fixed-point
+  statement.  The bottom row is treated the same way via $\pi_{12}^\ast$ and
+  $F_3$.
+\end{proof}
+
+\begin{lemma}
+  \label{lem:descent_to_isoc_full_aux}
+  \lean{Novikov.Descent.descentToIsocrystal_full_aux}
+  \leanok
+  \uses{lem:recover_dd_from_isoc, thm:descent_frobenius}
+  Let $(M, \varphi_M), (N, \varphi_N) \in \mathsf{NovDD}(A)$ and let
+  $f \colon M \to N$ be $A((t^{\mathbb{R}}))$-linear with $f \circ F_M = F_N
+  \circ f$.  Then $\pi_2^\ast f \circ \varphi_M = \varphi_N \circ \pi_1^\ast f$,
+  i.e. $f$ is a descent-datum morphism.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Apply Lemma~\ref{lem:recover_dd_from_isoc} to $M$ and $N$.  Because $f$
+  commutes with the Frobenii and the right squares involve only $F_M, F_N$, the
+  equalizer universal properties produce unique $A((t^{\mathbb{R}}))$-linear
+  $g \colon M \to N$ and $h \colon \pi_2^\ast M \to \pi_2^\ast N$ filling the
+  recovery cube.  Commutativity of the top face shows the bottom face commutes
+  with $\pi_2^\ast g$ in place of $h$, so $h = \pi_2^\ast g$ by uniqueness;
+  comparing with the left face gives $h = \pi_2^\ast f$, since
+  $\varphi_M \circ \pi_1^\ast$ generates $\pi_2^\ast M$.  As $\pi_2^\ast$ is
+  injective and $M, N$ are finite projective, $f = g$, and unraveling the top
+  face yields $\pi_2^\ast f \circ \varphi_M = \varphi_N \circ \pi_1^\ast f$.
+\end{proof}
+
+\begin{proposition}[Proposition~4.2]
+  \label{prop:descent_to_isoc_fully_faithful}
+  \lean{Novikov.Descent.descentToIsocrystal_fullyFaithful}
+  \leanok
+  \uses{thm:descent_to_isocrystal, lem:descent_to_isoc_full_aux}
+  For every commutative ring $A$, the functor
+  $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$ of
+  Theorem~\ref{thm:descent_to_isocrystal} is fully faithful.
+\end{proposition}
+
+\begin{proof}
+  \leanok
+  Faithfulness is immediate: the functor sends a morphism to its underlying
+  $A((t^{\mathbb{R}}))$-linear map.  For fullness, an isocrystal morphism
+  $\operatorname{descentToIsocrystal}(M) \to \operatorname{descentToIsocrystal}(N)$
+  is an $A((t^{\mathbb{R}}))$-linear $f \colon M \to N$ commuting with the
+  descended Frobenii; Lemma~\ref{lem:descent_to_isoc_full_aux} upgrades it to a
+  descent-datum morphism, which the functor sends back to $f$.
 \end{proof}

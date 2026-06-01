@@ -8,12 +8,29 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
 \subsection{Novikov isocrystals}
 
 \begin{definition}
-  \label{def:frobenius}
+  \label{def:coordinate_frobenius}
+  \lean{Novikov.coordinateFrobeniusRingHom}
   \leanok
-  \uses{def:novikov_series}
-  For an abelian group $A$, we define the Frobenius endomorphism $F \colon
-  A((t^{\mathbb{R}})) \to A((t^{\mathbb{R}}))$ by $A$-linearly extending $t^d
-  \mapsto t^{\lambda d}$.
+  \uses{def:novikov_series, thm:novikov_ring}
+  Let $R$ be a commutative ring, $\iota$ an index set, and $j \in \iota$ a
+  coordinate.  The \emph{coordinate Frobenius}
+  $F_j \colon R((t_\iota^{\mathbb{R}})) \to R((t_\iota^{\mathbb{R}}))$ is the
+  $R$-algebra endomorphism of the multivariable Novikov ring that scales the
+  $j$-th exponent by $\lambda$: it sends $t^d \mapsto t^{d'}$ where
+  $d'_j = \lambda d_j$ and $d'_i = d_i$ for $i \neq j$.  It is a ring
+  homomorphism, and an isomorphism whose inverse is the coordinate Frobenius for
+  $1/\lambda$.
+\end{definition}
+
+\begin{definition}
+  \label{def:frobenius}
+  \lean{Novikov.frobenius}
+  \leanok
+  \uses{def:novikov_series, def:coordinate_frobenius}
+  For an abelian group $A$, the Frobenius endomorphism $F \colon
+  A((t^{\mathbb{R}})) \to A((t^{\mathbb{R}}))$ is the $A$-linear extension of
+  $t^d \mapsto t^{\lambda d}$.  It is the single-variable case ($\iota = \ast$)
+  of the coordinate Frobenius of Definition~\ref{def:coordinate_frobenius}.
 \end{definition}
 
 \begin{theorem}

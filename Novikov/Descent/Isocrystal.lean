@@ -1,6 +1,7 @@
 import Novikov.Descent.Basic
 import Novikov.Isocrystal.Basic
 import Novikov.Miscellany.BaseChange
+import Novikov.Miscellany.Semilinear
 import Novikov.Series.Frobenius
 import Mathlib.RingTheory.Flat.Basic
 /-!
@@ -20,139 +21,6 @@ noncomputable abbrev realC (A : Type*) [CommRing A] :=
   novikovCosimplicialRing (⊤ : AddSubgroup ℝ) A
 
 section BaseChangeSemilinear
-
-/-- Semilinear companion to base change: given a ring hom `f : R →+* S` and
-an `S`-ring automorphism `σ` that fixes the image of `f`, the induced map
-`s ⊗ m ↦ σ s ⊗ m` is a `σ`-semilinear automorphism of `S ⊗[R] M`. -/
-noncomputable def baseChangeSemilinearSelf
-    {R S : Type*} [CommRing R] [CommRing S]
-    (f : R →+* S) (σ σinv : S →+* S)
-    [RingHomInvPair σ σinv] [RingHomInvPair σinv σ]
-    -- `_hσinv` is kept for interface symmetry; `TensorProduct.congr` derives the
-    -- inverse from `RingHomInvPair`, so `σinv` fixing `f` is no longer needed here.
-    (hσ : σ.comp f = f) (_hσinv : σinv.comp f = f)
-    (M : Type*) [AddCommGroup M] [Module R M] :
-    baseChange_along f M ≃ₛₗ[σ] baseChange_along f M := by
-  letI : Algebra R S := f.toAlgebra
-  -- `σ` fixes the image of `f = algebraMap`, so it is an `R`-algebra automorphism.
-  let e : S ≃ₐ[R] S :=
-    { toFun := σ
-      invFun := σinv
-      left_inv := fun s => RingHomInvPair.comp_apply_eq (σ := σ) (x := s)
-      right_inv := fun s => RingHomInvPair.comp_apply_eq₂ (σ := σ) (x := s)
-      map_mul' := σ.map_mul
-      map_add' := σ.map_add
-      commutes' := fun r => by change σ (f r) = f r; rw [← RingHom.comp_apply, hσ] }
-  -- The `R`-linear bijection of `S ⊗[R] M` twisting the `S`-factor by `σ`;
-  -- `TensorProduct.congr` supplies the inverse and the round-trip laws.
-  let cR : (S ⊗[R] M) ≃ₗ[R] (S ⊗[R] M) :=
-    TensorProduct.congr e.toLinearEquiv (LinearEquiv.refl R M)
-  exact
-    { toFun := cR
-      invFun := cR.symm
-      map_add' := cR.map_add
-      left_inv := cR.left_inv
-      right_inv := cR.right_inv
-      map_smul' := fun s x => by
-        induction x using TensorProduct.induction_on with
-        | zero => simp
-        | tmul a m =>
-            simp only [smul_tmul', smul_eq_mul, cR, TensorProduct.congr_tmul,
-              AlgEquiv.toLinearEquiv_apply, LinearEquiv.refl_apply, map_mul]
-            rfl
-        | add x y hx hy => simp only [smul_add, map_add, hx, hy] }
-
-@[simp]
-lemma baseChangeSemilinearSelf_tmul
-    {R S : Type*} [CommRing R] [CommRing S]
-    (f : R →+* S) (σ σinv : S →+* S)
-    [RingHomInvPair σ σinv] [RingHomInvPair σinv σ]
-    (hσ : σ.comp f = f) (hσinv : σinv.comp f = f)
-    (M : Type*) [AddCommGroup M] [Module R M]
-    (s : S) (m : M) :
-    baseChangeSemilinearSelf f σ σinv hσ hσinv M
-      (letI : Algebra R S := f.toAlgebra; s ⊗ₜ[R] m) =
-      (letI : Algebra R S := f.toAlgebra; σ s ⊗ₜ[R] m) := by
-  simp [baseChangeSemilinearSelf]
-
-/-- Naturality of `baseChangeSemilinearSelf` in the module variable. -/
-lemma baseChangeSemilinearSelf_baseChangeMap
-    {R S : Type*} [CommRing R] [CommRing S]
-    (f : R →+* S) (σ σinv : S →+* S)
-    [RingHomInvPair σ σinv] [RingHomInvPair σinv σ]
-    (hσ : σ.comp f = f) (hσinv : σinv.comp f = f)
-    {M N : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
-    (φ : M →ₗ[R] N) (x : baseChange_along f M) :
-    baseChangeSemilinearSelf f σ σinv hσ hσinv N (baseChangeMap f φ x) =
-      baseChangeMap f φ (baseChangeSemilinearSelf f σ σinv hσ hσinv M x) := by
-  letI : Algebra R S := f.toAlgebra
-  induction x using TensorProduct.induction_on with
-  | zero => simp
-  | tmul s m => simp only [baseChangeMap_tmul, baseChangeSemilinearSelf_tmul]
-  | add x y hx hy => simp only [map_add, hx, hy]
-
-/-- `baseChange_assoc` intertwines the semilinear self-maps at the middle ring
-`g` and at the composite `g ∘ f`, provided `σ` fixes the image of `g`. -/
-lemma baseChangeSemilinearSelf_baseChange_assoc
-    {R₁ R₂ R₃ : Type*} [CommRing R₁] [CommRing R₂] [CommRing R₃]
-    (f : R₁ →+* R₂) (g : R₂ →+* R₃)
-    (σ σinv : R₃ →+* R₃) [RingHomInvPair σ σinv] [RingHomInvPair σinv σ]
-    (hσg : σ.comp g = g) (hσing : σinv.comp g = g)
-    (hσgf : σ.comp (g.comp f) = g.comp f) (hσingf : σinv.comp (g.comp f) = g.comp f)
-    (M : Type*) [AddCommGroup M] [Module R₁ M]
-    (y : letI : Algebra R₁ R₂ := f.toAlgebra
-         letI : Algebra R₂ R₃ := g.toAlgebra
-         R₃ ⊗[R₂] (R₂ ⊗[R₁] M)) :
-    letI : Algebra R₁ R₂ := f.toAlgebra
-    letI : Algebra R₂ R₃ := g.toAlgebra
-    letI : Algebra R₁ R₃ := (g.comp f).toAlgebra
-    baseChangeSemilinearSelf (g.comp f) σ σinv hσgf hσingf M (baseChange_assoc f g M y) =
-      baseChange_assoc f g M
-        (baseChangeSemilinearSelf g σ σinv hσg hσing (R₂ ⊗[R₁] M) y) := by
-  letI : Algebra R₁ R₂ := f.toAlgebra
-  letI : Algebra R₂ R₃ := g.toAlgebra
-  letI : Algebra R₁ R₃ := (g.comp f).toAlgebra
-  induction y using TensorProduct.induction_on with
-  | zero => simp only [LinearEquiv.map_zero]
-  | tmul c z =>
-    induction z using TensorProduct.induction_on with
-    | zero => simp only [TensorProduct.tmul_zero, LinearEquiv.map_zero]
-    | tmul b m =>
-      simp only [baseChange_assoc_tmul, baseChangeSemilinearSelf_tmul]
-      have hbc : σ (b • c) = b • σ c := by
-        rw [Algebra.smul_def, Algebra.smul_def, map_mul]
-        congr 1
-        exact congrFun (congrArg DFunLike.coe hσg) b
-      rw [hbc]
-    | add z₁ z₂ hz₁ hz₂ =>
-      rw [TensorProduct.tmul_add, LinearEquiv.map_add, LinearEquiv.map_add,
-        LinearEquiv.map_add, LinearEquiv.map_add, hz₁, hz₂]
-  | add y₁ y₂ h₁ h₂ =>
-    rw [LinearEquiv.map_add, LinearEquiv.map_add, LinearEquiv.map_add,
-      LinearEquiv.map_add, h₁, h₂]
-
-/-- The base change of an `R₂`-linear equivalence along `g` commutes with the
-semilinear self-map at `g`. -/
-lemma baseChangeSemilinearSelf_baseChange_comm
-    {R₂ R₃ : Type*} [CommRing R₂] [CommRing R₃]
-    (g : R₂ →+* R₃) (σ σinv : R₃ →+* R₃) [RingHomInvPair σ σinv] [RingHomInvPair σinv σ]
-    (hσg : σ.comp g = g) (hσing : σinv.comp g = g)
-    {N P : Type*} [AddCommGroup N] [Module R₂ N] [AddCommGroup P] [Module R₂ P]
-    (φ : N ≃ₗ[R₂] P)
-    (y : letI : Algebra R₂ R₃ := g.toAlgebra; R₃ ⊗[R₂] N) :
-    letI : Algebra R₂ R₃ := g.toAlgebra
-    (LinearEquiv.baseChange R₂ R₃ N P φ)
-        (baseChangeSemilinearSelf g σ σinv hσg hσing N y) =
-      baseChangeSemilinearSelf g σ σinv hσg hσing P
-        (LinearEquiv.baseChange R₂ R₃ N P φ y) := by
-  letI : Algebra R₂ R₃ := g.toAlgebra
-  induction y using TensorProduct.induction_on with
-  | zero => simp only [LinearEquiv.map_zero]
-  | tmul c v =>
-    simp only [baseChangeSemilinearSelf_tmul, LinearEquiv.baseChange_tmul]
-  | add a b ha hb =>
-    rw [LinearEquiv.map_add, LinearEquiv.map_add, LinearEquiv.map_add,
-      LinearEquiv.map_add, ha, hb]
 
 /-- Naturality of the semilinear self-maps under the abstract `pullbackMap`,
 provided `σ` fixes the image of the face map `g`. -/
@@ -535,24 +403,12 @@ lemma coordinateFrobenius_comp_substitute_of_injective {ι ι' : Type*} [Fintype
 end CoordinateFrobeniusCompat
 
 lemma ρ₁_eq_substitute : (realC A).ρ₁ =
-    substituteRingHom (Γ := (⊤ : AddSubgroup ℝ)) (A := A) (fun _ : Unit => (0 : Fin 3)) := by
-  apply RingHom.ext
-  intro f
-  change substituteRingHom Fin.castSucc (substituteRingHom (fun _ : Unit => (0 : Fin 2)) f) =
-    substituteRingHom (fun _ : Unit => (0 : Fin 3)) f
-  simp only [substituteRingHom, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
-  rw [← substitute_comp]
-  rfl
+    substituteRingHom (Γ := (⊤ : AddSubgroup ℝ)) (A := A) (fun _ : Unit => (0 : Fin 3)) :=
+  RingHom.ext fun f => novikovCosimplicialRing_ρ₁_eq_substitute (⊤ : AddSubgroup ℝ) f
 
 lemma ρ₂_eq_substitute : (realC A).ρ₂ =
-    substituteRingHom (Γ := (⊤ : AddSubgroup ℝ)) (A := A) (fun _ : Unit => (1 : Fin 3)) := by
-  apply RingHom.ext
-  intro f
-  change substituteRingHom Fin.succ (substituteRingHom (fun _ : Unit => (0 : Fin 2)) f) =
-    substituteRingHom (fun _ : Unit => (1 : Fin 3)) f
-  simp only [substituteRingHom, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
-  rw [← substitute_comp]
-  rfl
+    substituteRingHom (Γ := (⊤ : AddSubgroup ℝ)) (A := A) (fun _ : Unit => (1 : Fin 3)) :=
+  RingHom.ext fun f => novikovCosimplicialRing_ρ₂_eq_substitute (⊤ : AddSubgroup ℝ) f
 
 lemma π₁_eq_substitute : (realC A).π₁ =
     substituteRingHom (Γ := (⊤ : AddSubgroup ℝ)) (A := A) (fun _ : Unit => (0 : Fin 2)) := by
@@ -807,6 +663,28 @@ lemma natExt_tmul (f : R₁ →+* R₂) (g : R₂ →+* R₃)
   subst hh
   rfl
 
+/-- The scalar-extension map `natExt f g hh` agrees, as a function, with
+`G.rTensor M` for any `R₁`-linear map `G : R₂ → R₃` equal to `g` pointwise
+(with the module structures induced by `f` and `h`). -/
+lemma natExt_eq_rTensor (f : R₁ →+* R₂) (g : R₂ →+* R₃)
+    {h : R₁ →+* R₃} (hh : g.comp f = h)
+    (M : Type*) [AddCommGroup M] [Module R₁ M]
+    (G : letI : Algebra R₁ R₂ := f.toAlgebra
+         letI : Algebra R₁ R₃ := h.toAlgebra
+         R₂ →ₗ[R₁] R₃)
+    (hG : ∀ s, G s = g s) (w : baseChange_along f M) :
+    natExt f g hh M w =
+      (letI : Algebra R₁ R₂ := f.toAlgebra
+       letI : Algebra R₁ R₃ := h.toAlgebra
+       G.rTensor M w) := by
+  subst hh
+  letI : Algebra R₁ R₂ := f.toAlgebra
+  letI : Algebra R₁ R₃ := (g.comp f).toAlgebra
+  induction w using TensorProduct.induction_on with
+  | zero => simp
+  | tmul s m => rw [natExt_tmul, LinearMap.rTensor_tmul, hG]
+  | add a b ha hb => simp only [map_add, ha, hb]
+
 /-- `natExt` intertwines the semilinear self-maps `τ` (at `R₂`) and `σ` (at
 `R₃`) when `g` intertwines them, i.e. `σ.comp g = g.comp τ`. -/
 lemma natExt_baseChangeSemilinearSelf
@@ -973,26 +851,19 @@ lemma π₁₃star_eq_natExt (M : Type*) [AddCommGroup M] [Module (realC A).R₁
     π₁₃star A M = natExt (realC A).π₂ (realC A).π₁₃ (realC A).ρ₃_eq_π₁₃_π₂.symm M := by
   apply LinearMap.ext
   intro w
-  induction w using TensorProduct.induction_on with
-  | zero => simp
-  | tmul s m =>
-      simp only [π₁₃star, π₁₃Linear, LinearMap.rTensor_tmul, natExt_tmul,
-        AlgHom.toLinearMap_apply, AlgHom.coe_mk]
-  | add x y hx hy => rw [map_add, map_add, hx, hy]
+  exact (natExt_eq_rTensor (realC A).π₂ (realC A).π₁₃
+    (realC A).ρ₃_eq_π₁₃_π₂.symm M (π₁₃Linear (A := A)) (fun _ => rfl) w).symm
 
 /-- `π₂₃^*` is the scalar extension `natExt` along `π₂₃`. -/
 lemma π₂₃star_eq_natExt (M : Type*) [AddCommGroup M] [Module (realC A).R₁ M] :
     π₂₃star A M = natExt (realC A).π₂ (realC A).π₂₃ (realC A).ρ₃_eq_π₂₃_π₂.symm M := by
   apply LinearMap.ext
   intro w
-  induction w using TensorProduct.induction_on with
-  | zero => simp
-  | tmul s m =>
-      simp only [π₂₃star, π₂₃Linear, LinearMap.rTensor_tmul, natExt_tmul,
-        AlgHom.toLinearMap_apply, AlgHom.coe_mk]
-  | add x y hx hy => rw [map_add, map_add, hx, hy]
+  exact (natExt_eq_rTensor (realC A).π₂ (realC A).π₂₃
+    (realC A).ρ₃_eq_π₂₃_π₂.symm M (π₂₃Linear (A := A)) (fun _ => rfl) w).symm
 
-private lemma oneTmulπ₂_faces (M : Type*) [AddCommGroup M] [Module (realC A).R₁ M] (m : M) :
+/-- The element `1 ⊗ m` in `π₂^* M` has equal `π₁₃`- and `π₂₃`-pullbacks. -/
+lemma oneTmulπ₂_faces (M : Type*) [AddCommGroup M] [Module (realC A).R₁ M] (m : M) :
     (π₁₃star A M) (oneTmulπ₂ (A := A) M m) =
       (π₂₃star A M) (oneTmulπ₂ (A := A) M m) := by
   rw [π₁₃star_eq_natExt, π₂₃star_eq_natExt, oneTmulπ₂_apply]
@@ -1041,7 +912,7 @@ Proof sketch:
    and close with an opaque constant (so the kernel never re-checks the
    heavy application together with the rewrite stack — that combination is what
    triggers the deterministic timeout). -/
-private lemma face13_FM2 (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
+lemma face13_FM2 (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
     (x : π₂s (realC A) M.M) :
     (π₁₃star A M.M) (FM2 (Λ := Λ) A M x) =
     FM3 (Λ := Λ) A M ((π₁₃star A M.M) x) := by
@@ -1074,7 +945,7 @@ private lemma face23_FM2_app (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
 
 Proof sketch: analogous to `face13_FM2`, using `FM3_13_eq_FM3_23` to replace
 `FM3` with `FM3_23` which is defined via `pullbackMap_23`. -/
-private lemma face23_FM2 (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
+lemma face23_FM2 (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
     (x : π₂s (realC A) M.M) :
     (π₂₃star A M.M) (FM2 (Λ := Λ) A M x) =
     FM3 (Λ := Λ) A M ((π₂₃star A M.M) x) := by
@@ -1087,13 +958,13 @@ private lemma face23_FM2 (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
 
 attribute [local semireducible] baseChangeSemilinearSelf pullbackMap_13 pullbackMap_23 natExt
 
-private lemma FM2_oneTmulπ₂_mem_equalizer (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
+lemma FM2_oneTmulπ₂_mem_equalizer (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
     (m : M.M) :
     (π₁₃star A M.M) (FM2 (Λ := Λ) A M (oneTmulπ₂ (A := A) M.M m)) =
       (π₂₃star A M.M) (FM2 (Λ := Λ) A M (oneTmulπ₂ (A := A) M.M m)) := by
   rw [face13_FM2, face23_FM2, oneTmulπ₂_faces]
 
-private lemma FM2_symm_oneTmulπ₂_mem_equalizer (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
+lemma FM2_symm_oneTmulπ₂_mem_equalizer (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
     (m : M.M) :
     (π₁₃star A M.M) ((FM2 (Λ := Λ) A M).symm (oneTmulπ₂ (A := A) M.M m)) =
       (π₂₃star A M.M) ((FM2 (Λ := Λ) A M).symm (oneTmulπ₂ (A := A) M.M m)) := by
@@ -1108,7 +979,7 @@ noncomputable def descentFrobeniusToFun (M : NovikovDescentDatum (⊤ : AddSubgr
     (FM2 (Λ := Λ) A M (oneTmulπ₂ (A := A) M.M m))
     (FM2_oneTmulπ₂_mem_equalizer (Λ := Λ) A M m)
 
-private lemma descentFrobeniusToFun_spec (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
+lemma descentFrobeniusToFun_spec (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
     (m : M.M) :
     FM2 (Λ := Λ) A M (oneTmulπ₂ (A := A) M.M m) =
       oneTmulπ₂ (A := A) M.M (descentFrobeniusToFun (Λ := Λ) A M m) :=
@@ -1122,7 +993,7 @@ noncomputable def descentFrobeniusInvFun (M : NovikovDescentDatum (⊤ : AddSubg
     ((FM2 (Λ := Λ) A M).symm (oneTmulπ₂ (A := A) M.M m))
     (FM2_symm_oneTmulπ₂_mem_equalizer (Λ := Λ) A M m)
 
-private lemma descentFrobeniusInvFun_spec (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
+lemma descentFrobeniusInvFun_spec (M : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A)
     (m : M.M) :
     (FM2 (Λ := Λ) A M).symm (oneTmulπ₂ (A := A) M.M m) =
       oneTmulπ₂ (A := A) M.M (descentFrobeniusInvFun (Λ := Λ) A M m) :=
@@ -1245,13 +1116,13 @@ noncomputable def descentFrobenius (M : NovikovDescentDatum (⊤ : AddSubgroup �
             rw [← descentFrobeniusInvFun_spec]
       _ = oneTmulπ₂ (A := A) M.M m := by simp only [LinearEquiv.apply_symm_apply]
 
-private lemma baseChangeMap_π₂_oneTmulπ₂ {M N : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A}
+lemma baseChangeMap_π₂_oneTmulπ₂ {M N : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A}
     (f : M ⟶ N) (m : M.M) :
     baseChangeMap (realC A).π₂ f.toLinearMap (oneTmulπ₂ (A := A) M.M m) =
       oneTmulπ₂ (A := A) N.M (f.toLinearMap m) := by
   rw [oneTmulπ₂_apply, baseChangeMap_tmul, oneTmulπ₂_apply]
 
-private lemma descentHom_baseChangeMap_π₂_FM2 {M N : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A}
+lemma descentHom_baseChangeMap_π₂_FM2 {M N : NovikovDescentDatum (⊤ : AddSubgroup ℝ) A}
     (f : M ⟶ N) (x : π₂s (realC A) M.M) :
     baseChangeMap (realC A).π₂ f.toLinearMap (FM2 (Λ := Λ) A M x) =
       FM2 (Λ := Λ) A N (baseChangeMap (realC A).π₂ f.toLinearMap x) := by

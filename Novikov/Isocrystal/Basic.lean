@@ -20,7 +20,7 @@ A Novikov isocrystal over a ring `A` is a finite projective module over
 
 ## Main results
 
-* `vectToNovIsoc_fully_faithful`: The functor `vectToNovIsoc` is fully faithful.
+* `vectToNovIsoc_fullyFaithful`: The functor `vectToNovIsoc` is fully faithful.
 -/
 
 open CategoryTheory

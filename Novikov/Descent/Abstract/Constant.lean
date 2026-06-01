@@ -31,6 +31,41 @@ attribute [instance] ExtendedCosimplicialRing.instR₀
 
 variable (E : ExtendedCosimplicialRing)
 
+/-- For an extended cosimplicial ring, the composite `ρ₂ ∘ π₀` agrees with
+`ρ₁ ∘ π₀`: both reduce to `π₁₂ ∘ π₁ ∘ π₀` using `π₁ ∘ π₀ = π₂ ∘ π₀`. -/
+lemma ExtendedCosimplicialRing.ρ₂_comp_π₀_eq :
+    E.toCosimplicialRing.ρ₂.comp E.π₀ = E.toCosimplicialRing.ρ₁.comp E.π₀ := by
+  dsimp [CosimplicialRing.ρ₁, CosimplicialRing.ρ₂]
+  calc
+    (E.toCosimplicialRing.π₂₃.comp E.toCosimplicialRing.π₁).comp E.π₀
+        = (E.toCosimplicialRing.π₁₂.comp E.toCosimplicialRing.π₂).comp E.π₀ := by
+      rw [E.toCosimplicialRing.π₁₂_π₂_eq_π₂₃_π₁.symm]
+    _ = E.toCosimplicialRing.π₁₂.comp (E.toCosimplicialRing.π₂.comp E.π₀) := by
+      rw [RingHom.comp_assoc]
+    _ = E.toCosimplicialRing.π₁₂.comp (E.toCosimplicialRing.π₁.comp E.π₀) := by
+      rw [E.π₁_π₀_eq_π₂_π₀]
+    _ = (E.toCosimplicialRing.π₁₂.comp E.toCosimplicialRing.π₁).comp E.π₀ := by
+      rw [RingHom.comp_assoc]
+
+/-- For an extended cosimplicial ring, the composite `ρ₃ ∘ π₀` agrees with
+`ρ₁ ∘ π₀`: both reduce to `π₁₂ ∘ π₁ ∘ π₀` using `π₁ ∘ π₀ = π₂ ∘ π₀` and the
+cosimplicial identities. -/
+lemma ExtendedCosimplicialRing.ρ₃_comp_π₀_eq :
+    E.toCosimplicialRing.ρ₃.comp E.π₀ = E.toCosimplicialRing.ρ₁.comp E.π₀ := by
+  dsimp [CosimplicialRing.ρ₁, CosimplicialRing.ρ₃]
+  calc
+    (E.toCosimplicialRing.π₂₃.comp E.toCosimplicialRing.π₂).comp E.π₀
+        = (E.toCosimplicialRing.π₁₃.comp E.toCosimplicialRing.π₂).comp E.π₀ := by
+      rw [E.toCosimplicialRing.π₁₃_π₂_eq_π₂₃_π₂.symm]
+    _ = E.toCosimplicialRing.π₁₃.comp (E.toCosimplicialRing.π₂.comp E.π₀) := by
+      rw [RingHom.comp_assoc]
+    _ = E.toCosimplicialRing.π₁₃.comp (E.toCosimplicialRing.π₁.comp E.π₀) := by
+      rw [E.π₁_π₀_eq_π₂_π₀]
+    _ = (E.toCosimplicialRing.π₁₃.comp E.toCosimplicialRing.π₁).comp E.π₀ := by
+      rw [RingHom.comp_assoc]
+    _ = (E.toCosimplicialRing.π₁₂.comp E.toCosimplicialRing.π₁).comp E.π₀ := by
+      rw [E.toCosimplicialRing.π₁₃_π₁_eq_π₁₂_π₁]
+
 /-- Key naturality fact: for `π₁ ∘ π₀ = π₂ ∘ π₀`, conjugating the base change
 of `LinearMap.baseChange R₁ f` by the associativity equivalences yields the
 same result regardless of which face map (`π₁` or `π₂`) is used.
@@ -241,32 +276,8 @@ noncomputable def constantDescentDatum (M : Type*) [AddCommGroup M] [Module E.R�
       -- Common composition σ : R₀ → R₃ used as the canonical Algebra R₀ → R₃.
       set σ : E.R₀ →+* E.R₃ := E.toCosimplicialRing.ρ₁.comp E.π₀ with hσ
       have hρ₁_σ : E.toCosimplicialRing.ρ₁.comp E.π₀ = σ := rfl
-      have hρ₂_σ : E.toCosimplicialRing.ρ₂.comp E.π₀ = σ := by
-        dsimp [σ, CosimplicialRing.ρ₁, CosimplicialRing.ρ₂]
-        calc
-          (E.toCosimplicialRing.π₂₃.comp E.toCosimplicialRing.π₁).comp E.π₀
-              = (E.toCosimplicialRing.π₁₂.comp E.toCosimplicialRing.π₂).comp E.π₀ := by
-            rw [E.toCosimplicialRing.π₁₂_π₂_eq_π₂₃_π₁.symm]
-          _ = E.toCosimplicialRing.π₁₂.comp (E.toCosimplicialRing.π₂.comp E.π₀) := by
-            rw [RingHom.comp_assoc]
-          _ = E.toCosimplicialRing.π₁₂.comp (E.toCosimplicialRing.π₁.comp E.π₀) := by
-            rw [E.π₁_π₀_eq_π₂_π₀]
-          _ = (E.toCosimplicialRing.π₁₂.comp E.toCosimplicialRing.π₁).comp E.π₀ := by
-            rw [RingHom.comp_assoc]
-      have hρ₃_σ : E.toCosimplicialRing.ρ₃.comp E.π₀ = σ := by
-        dsimp [σ, CosimplicialRing.ρ₁, CosimplicialRing.ρ₃]
-        calc
-          (E.toCosimplicialRing.π₂₃.comp E.toCosimplicialRing.π₂).comp E.π₀
-              = (E.toCosimplicialRing.π₁₃.comp E.toCosimplicialRing.π₂).comp E.π₀ := by
-            rw [E.toCosimplicialRing.π₁₃_π₂_eq_π₂₃_π₂.symm]
-          _ = E.toCosimplicialRing.π₁₃.comp (E.toCosimplicialRing.π₂.comp E.π₀) := by
-            rw [RingHom.comp_assoc]
-          _ = E.toCosimplicialRing.π₁₃.comp (E.toCosimplicialRing.π₁.comp E.π₀) := by
-            rw [E.π₁_π₀_eq_π₂_π₀]
-          _ = (E.toCosimplicialRing.π₁₃.comp E.toCosimplicialRing.π₁).comp E.π₀ := by
-            rw [RingHom.comp_assoc]
-          _ = (E.toCosimplicialRing.π₁₂.comp E.toCosimplicialRing.π₁).comp E.π₀ := by
-            rw [E.toCosimplicialRing.π₁₃_π₁_eq_π₁₂_π₁]
+      have hρ₂_σ : E.toCosimplicialRing.ρ₂.comp E.π₀ = σ := E.ρ₂_comp_π₀_eq
+      have hρ₃_σ : E.toCosimplicialRing.ρ₃.comp E.π₀ = σ := E.ρ₃_comp_π₀_eq
       letI A03 : Algebra E.R₀ E.R₃ := σ.toAlgebra
       -- Each `pullbackMap_ij φ'` factors through the associativity equivalences.
       have h12 := constantDescentDatum_pullback_factor (E := E) (M := M)
@@ -346,6 +357,11 @@ private lemma internalHom_φ_one_tmul_baseChange
     (baseChangeMap E.π₂ g)
     (N_dd.φ.toLinearMap ∘ₗ baseChangeMap E.π₁ g)).mp hkey.symm
   exact h.symm
+
+-- Fence: keep `homBaseChangeEquiv` opaque so the unifier in the proofs below
+-- matches it by head symbol instead of unfolding its heavy body (~33% less
+-- tactic-execution time). Restored to `semireducible` after the iso def.
+attribute [local irreducible] homBaseChangeEquiv
 
 lemma constantDescentDatum_internalHom_hom_commute_φ
     {E : ExtendedCosimplicialRing}
@@ -484,6 +500,8 @@ noncomputable def constantDescentDatum_internalHom
       ext x
       exact LinearEquiv.right_inv (homBaseChangeEquiv E.R₁) x
   }
+
+attribute [local semireducible] homBaseChangeEquiv
 
 /-- Base-changing a map of `R₀`-modules gives a morphism of the corresponding
 constant descent data. -/
