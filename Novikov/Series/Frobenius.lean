@@ -155,15 +155,14 @@ lemma isNovikovSeries_coordinateFrobenius (j : ι)
   exact Set.Finite.preimage (fun _ _ _ _ h => hg h) (f.prop s' hs' C)
 
 omit hΛ in
-/-- Coefficient-level fixed-point vanishing principle.  If a multivariable
-Novikov series `g` is invariant under scaling the `k`-th exponent coordinate by
-`1/Λ` (with `Λ > 1`), then every coefficient at an exponent whose `k`-th
-coordinate is nonzero vanishes: such an exponent would otherwise generate an
-infinite orbit `(d k) / Λ^n` inside a fixed half-space, contradicting Novikov
-finiteness.  The one-variable case is `frobenius_fixed_points`. -/
-lemma coordinateFrobenius_fixed_vanish [hΛ1 : Fact (Λ > 1)] (k : ι)
-    {g : (ι → ↥(⊤ : AddSubgroup ℝ)) → A} (hg : isNovikovSeries g)
-    (hrel : ∀ d, g (scaleCoordinate (Λ := Λ) k d) = g d)
+/-- Orbit vanishing principle.  If a multivariable Novikov series `g` satisfies
+the implication `g (scaleCoordinate k d) = 0 → g d = 0`, then every coefficient
+at an exponent whose `k`-th coordinate is nonzero vanishes: such an exponent
+would otherwise generate an infinite orbit `(d k) / Λ^n` inside a fixed
+half-space, contradicting Novikov finiteness. -/
+lemma coordinateFrobenius_vanish_of_scale_preserves_nonzero [hΛ1 : Fact (Λ > 1)]
+    (k : ι) {g : (ι → ↥(⊤ : AddSubgroup ℝ)) → A} (hg : isNovikovSeries g)
+    (h : ∀ d, g (scaleCoordinate (Λ := Λ) k d) = 0 → g d = 0)
     {d : ι → ↥(⊤ : AddSubgroup ℝ)} (hdk : d k ≠ 0) : g d = 0 := by
   by_contra hgd
   -- The orbit of `d` under repeated division of the `k`-th coordinate by `Λ`.
@@ -174,51 +173,50 @@ lemma coordinateFrobenius_fixed_vanish [hΛ1 : Fact (Λ > 1)] (k : ι)
     by_cases hi : i = k
     · subst i; apply Subtype.ext; simp [f_seq]
     · simp [f_seq, hi]
-  have hval : ∀ n, g (f_seq n) = g d := by
+  have hstep : ∀ n, f_seq (n + 1) = scaleCoordinate (Λ := Λ) k (f_seq n) := by
+    intro n
+    funext i
+    by_cases hi : i = k
+    · subst i
+      apply Subtype.ext
+      have e1 : (f_seq (n + 1) k : ℝ) = (d k : ℝ) / Λ ^ (n + 1) := by simp [f_seq]
+      have e2 : (scaleCoordinate (Λ := Λ) k (f_seq n) k : ℝ)
+          = (d k : ℝ) / Λ ^ n / Λ := by simp [scaleCoordinate, f_seq]
+      rw [e1, e2, pow_succ, div_div]
+    · simp only [f_seq, scaleCoordinate, if_neg hi]
+  have hnonzero : ∀ n, g (f_seq n) ≠ 0 := by
     intro n
     induction n with
-    | zero => rw [hseq0]
-    | succ n ih =>
-      have hsc : f_seq (n + 1) = scaleCoordinate (Λ := Λ) k (f_seq n) := by
-        funext i
-        by_cases hi : i = k
-        · subst i
-          apply Subtype.ext
-          have e1 : (f_seq (n + 1) k : ℝ) = (d k : ℝ) / Λ ^ (n + 1) := by simp [f_seq]
-          have e2 : (scaleCoordinate (Λ := Λ) k (f_seq n) k : ℝ)
-              = (d k : ℝ) / Λ ^ n / Λ := by simp [scaleCoordinate, f_seq]
-          rw [e1, e2, pow_succ, div_div]
-        · simp only [f_seq, scaleCoordinate, if_neg hi]
-      rw [hsc, hrel]; exact ih
+    | zero => rw [hseq0]; exact hgd
+    | succ n ih => rw [hstep n]; exact fun hz => ih (h (f_seq n) hz)
   have hΛpos : (0 : ℝ) < Λ := lt_trans one_pos hΛ1.out
   set s : ι → ℝ := fun _ => 1 with hs_def
   have hs : ∀ i, 0 < s i := fun _ => one_pos
   set C : ℝ := (∑ i, |(d i : ℝ)|) + 1 with hC_def
   have hmem : ∀ n, f_seq n ∈ {d' ∈ fnSupport g | ∑ i, s i * (d' i : ℝ) < C} := by
     intro n
-    refine ⟨mem_fnSupport.mpr ?_, ?_⟩
-    · rw [hval n]; exact hgd
-    · have hsum : ∑ i, s i * (f_seq n i : ℝ)
-          = (d k : ℝ) / Λ ^ n + ∑ i ∈ ({k}ᶜ : Finset ι), (d i : ℝ) := by
-        rw [Fintype.sum_eq_add_sum_compl k (fun i => s i * (f_seq n i : ℝ))]
-        congr 1
-        · simp [f_seq, hs_def]
-        · refine Finset.sum_congr rfl fun i hi => ?_
-          rw [Finset.mem_compl, Finset.mem_singleton] at hi
-          simp [f_seq, hs_def, hi]
-      rw [hsum]
-      have hΛn : (1 : ℝ) ≤ Λ ^ n := one_le_pow₀ (le_of_lt hΛ1.out)
-      have hbk : (d k : ℝ) / Λ ^ n ≤ |(d k : ℝ)| := by
-        calc (d k : ℝ) / Λ ^ n ≤ |(d k : ℝ) / Λ ^ n| := le_abs_self _
-          _ = |(d k : ℝ)| / Λ ^ n := by rw [abs_div, abs_pow, abs_of_pos hΛpos]
-          _ ≤ |(d k : ℝ)| := div_le_self (abs_nonneg _) hΛn
-      have hrest : ∑ i ∈ ({k}ᶜ : Finset ι), (d i : ℝ)
-          ≤ ∑ i ∈ ({k}ᶜ : Finset ι), |(d i : ℝ)| :=
-        Finset.sum_le_sum fun i _ => le_abs_self _
-      have hsplit : |(d k : ℝ)| + ∑ i ∈ ({k}ᶜ : Finset ι), |(d i : ℝ)|
-          = ∑ i, |(d i : ℝ)| :=
-        (Fintype.sum_eq_add_sum_compl k (fun i => |(d i : ℝ)|)).symm
-      rw [hC_def]; linarith
+    refine ⟨mem_fnSupport.mpr (hnonzero n), ?_⟩
+    have hsum : ∑ i, s i * (f_seq n i : ℝ)
+        = (d k : ℝ) / Λ ^ n + ∑ i ∈ ({k}ᶜ : Finset ι), (d i : ℝ) := by
+      rw [Fintype.sum_eq_add_sum_compl k (fun i => s i * (f_seq n i : ℝ))]
+      congr 1
+      · simp [f_seq, hs_def]
+      · refine Finset.sum_congr rfl fun i hi => ?_
+        rw [Finset.mem_compl, Finset.mem_singleton] at hi
+        simp [f_seq, hs_def, hi]
+    rw [hsum]
+    have hΛn : (1 : ℝ) ≤ Λ ^ n := one_le_pow₀ (le_of_lt hΛ1.out)
+    have hbk : (d k : ℝ) / Λ ^ n ≤ |(d k : ℝ)| := by
+      calc (d k : ℝ) / Λ ^ n ≤ |(d k : ℝ) / Λ ^ n| := le_abs_self _
+        _ = |(d k : ℝ)| / Λ ^ n := by rw [abs_div, abs_pow, abs_of_pos hΛpos]
+        _ ≤ |(d k : ℝ)| := div_le_self (abs_nonneg _) hΛn
+    have hrest : ∑ i ∈ ({k}ᶜ : Finset ι), (d i : ℝ)
+        ≤ ∑ i ∈ ({k}ᶜ : Finset ι), |(d i : ℝ)| :=
+      Finset.sum_le_sum fun i _ => le_abs_self _
+    have hsplit : |(d k : ℝ)| + ∑ i ∈ ({k}ᶜ : Finset ι), |(d i : ℝ)|
+        = ∑ i, |(d i : ℝ)| :=
+      (Fintype.sum_eq_add_sum_compl k (fun i => |(d i : ℝ)|)).symm
+    rw [hC_def]; linarith
   have hinj : Function.Injective f_seq := by
     intro n1 n2 hseq
     have hv := congr_fun hseq k
@@ -235,6 +233,20 @@ lemma coordinateFrobenius_fixed_vanish [hΛ1 : Fact (Λ > 1)] (k : ι)
     · have := pow_lt_pow_right₀ hΛ1.out hgt; linarith
   exact (Set.infinite_range_of_injective hinj)
     ((hg s hs C).subset (by rintro _ ⟨n, rfl⟩; exact hmem n))
+
+omit hΛ in
+/-- Coefficient-level fixed-point vanishing principle.  If a multivariable
+Novikov series `g` is invariant under scaling the `k`-th exponent coordinate by
+`1/Λ` (with `Λ > 1`), then every coefficient at an exponent whose `k`-th
+coordinate is nonzero vanishes: such an exponent would otherwise generate an
+infinite orbit `(d k) / Λ^n` inside a fixed half-space, contradicting Novikov
+finiteness.  The one-variable case is `frobenius_fixed_points`. -/
+lemma coordinateFrobenius_fixed_vanish [hΛ1 : Fact (Λ > 1)] (k : ι)
+    {g : (ι → ↥(⊤ : AddSubgroup ℝ)) → A} (hg : isNovikovSeries g)
+    (hrel : ∀ d, g (scaleCoordinate (Λ := Λ) k d) = g d)
+    {d : ι → ↥(⊤ : AddSubgroup ℝ)} (hdk : d k ≠ 0) : g d = 0 :=
+  coordinateFrobenius_vanish_of_scale_preserves_nonzero (Λ := Λ) k hg
+    (fun d hd => (hrel d).symm.trans hd) hdk
 
 /-- Coordinate Frobenius as an additive endomorphism. -/
 noncomputable def coordinateFrobeniusAddHom (j : ι) :

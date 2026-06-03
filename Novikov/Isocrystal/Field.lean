@@ -1,5 +1,6 @@
 import Novikov.Isocrystal.Field.Prep
 import Novikov.Isocrystal.Field.Contraction
+import Novikov.Isocrystal.Constant
 import Novikov.Series.Field
 
 /-!
@@ -20,6 +21,7 @@ open scoped BigOperators
 open Filter Topology
 
 namespace Novikov
+open TensorProduct Novikov.Miscellany
 variable {Λ : ℝ} [hΛ1 : Fact (Λ > 1)]
 
 section Field
@@ -351,4 +353,140 @@ theorem exists_frobenius_eigenvector (M : NovikovIsocrystal (Λ := Λ) K) (hM_no
     exact ⟨m', hm', c, h_eq⟩
 
 end Field
+
+section RankOne
+variable {K : Type*} [CommRing K]
+
+namespace NovikovIsocrystal
+
+/-- The rank-one twisted Novikov isocrystal `(K((t)), c · F)`: its underlying
+module is `RealNovikovSeries K` and its Frobenius is
+`x ↦ algebraMap K _ (c : K) * frobenius x`. -/
+noncomputable def rankOneTwist (c : Kˣ) : NovikovIsocrystal (Λ := Λ) K where
+  M := RealNovikovSeries K
+  F_M :=
+    { toFun := fun x =>
+        algebraMap K (RealNovikovSeries K) (c : K) * frobeniusRingHom (Λ := Λ) x
+      invFun := fun y =>
+        algebraMap K (RealNovikovSeries K) ((c⁻¹ : Kˣ) : K) * frobeniusRingHomInv (Λ := Λ) y
+      map_add' := fun x y => by rw [map_add, mul_add]
+      map_smul' := fun s x => by
+        simp only [smul_eq_mul, map_mul]
+        ring
+      left_inv := fun x => by
+        dsimp only
+        rw [map_mul,
+          show frobeniusRingHomInv (Λ := Λ) (algebraMap K (RealNovikovSeries K) (c : K))
+            = algebraMap K (RealNovikovSeries K) (c : K) from frobenius_algebraMap _,
+          RingHomInvPair.comp_apply_eq (σ := frobeniusRingHom (Λ := Λ) (A := K)),
+          ← mul_assoc, ← map_mul, Units.inv_mul, map_one, one_mul]
+      right_inv := fun y => by
+        dsimp only
+        rw [map_mul,
+          show frobeniusRingHom (Λ := Λ) (A := K)
+              (algebraMap K (RealNovikovSeries K) ((c⁻¹ : Kˣ) : K))
+            = algebraMap K (RealNovikovSeries K) ((c⁻¹ : Kˣ) : K) from frobenius_algebraMap _,
+          RingHomInvPair.comp_apply_eq₂ (σ := frobeniusRingHom (Λ := Λ) (A := K)),
+          ← mul_assoc, ← map_mul, Units.mul_inv, map_one, one_mul] }
+
+/-- Formula for the Frobenius on the rank-one twisted isocrystal. -/
+lemma rankOneTwist_F_M_apply (c : Kˣ) (x : RealNovikovSeries K) :
+    (rankOneTwist (Λ := Λ) c).F_M x =
+      algebraMap K (RealNovikovSeries K) (c : K) * frobeniusRingHom (Λ := Λ) x :=
+  rfl
+
+/-- For `c = 1`, the rank-one twisted Frobenius is the ordinary Frobenius. -/
+lemma rankOneTwist_one_F_M_apply (x : RealNovikovSeries K) :
+    (rankOneTwist (Λ := Λ) (1 : Kˣ)).F_M x = frobeniusRingHom (Λ := Λ) x := by
+  simp [rankOneTwist_F_M_apply]
+
+/-- The rank-one twisted isocrystal with scalar `1` is the constant isocrystal
+attached to the rank-one free `K`-module. -/
+noncomputable def rankOneTwist_one_iso_const :
+    rankOneTwist (Λ := Λ) (1 : Kˣ) ≅
+      ConstIsocrystal (Λ := Λ) ({ M := K } : FiniteProjectiveModule K) := by
+  let e : (ConstIsocrystal (Λ := Λ) ({ M := K } : FiniteProjectiveModule K)).M ≃ₗ[RealNovikovSeries K]
+      (rankOneTwist (Λ := Λ) (1 : Kˣ)).M :=
+    TensorProduct.AlgebraTensorModule.rid K (RealNovikovSeries K) (RealNovikovSeries K)
+  refine
+    { hom :=
+        { toLinearMap := e.symm.toLinearMap
+          commute_frobenius := ?_ }
+      inv :=
+        { toLinearMap := e.toLinearMap
+          commute_frobenius := ?_ }
+      hom_inv_id := ?_
+      inv_hom_id := ?_ }
+  · intro x
+    change RealNovikovSeries K at x
+    change TensorProduct.map (frobeniusAlgHom (Λ := Λ) (A := K)).toLinearMap LinearMap.id (e.symm x) =
+      e.symm ((rankOneTwist (Λ := Λ) (1 : Kˣ)).F_M x)
+    rw [rankOneTwist_one_F_M_apply]
+    have hx : e.symm x = x ⊗ₜ[K] (1 : K) :=
+      TensorProduct.AlgebraTensorModule.rid_symm_apply (R := K)
+        (A := RealNovikovSeries K) (M := RealNovikovSeries K) x
+    have hFx : e.symm (frobeniusRingHom (Λ := Λ) (A := K) x) =
+        frobeniusRingHom (Λ := Λ) (A := K) x ⊗ₜ[K] (1 : K) :=
+      TensorProduct.AlgebraTensorModule.rid_symm_apply (R := K)
+        (A := RealNovikovSeries K) (M := RealNovikovSeries K) _
+    rw [hx, hFx, TensorProduct.map_tmul, LinearMap.id_apply]
+    rfl
+  · intro x
+    induction x using TensorProduct.induction_on with
+    | zero =>
+        calc
+          (rankOneTwist (Λ := Λ) (1 : Kˣ)).F_M (e 0)
+              = (rankOneTwist (Λ := Λ) (1 : Kˣ)).F_M 0 := by rw [e.map_zero]
+          _ = 0 := by rw [map_zero]
+          _ = e 0 := by rw [e.map_zero]
+          _ = e (((ConstIsocrystal (Λ := Λ) ({ M := K } : FiniteProjectiveModule K)).F_M) 0) := by
+                symm
+                calc
+                  e (((ConstIsocrystal (Λ := Λ) ({ M := K } : FiniteProjectiveModule K)).F_M) 0)
+                      = e 0 := by rw [map_zero]
+                  _ = 0 := e.map_zero
+    | tmul r a =>
+        change (rankOneTwist (Λ := Λ) (1 : Kˣ)).F_M (e (r ⊗ₜ[K] a)) =
+          e (TensorProduct.map (frobeniusAlgHom (Λ := Λ) (A := K)).toLinearMap LinearMap.id (r ⊗ₜ[K] a))
+        rw [TensorProduct.map_tmul, LinearMap.id_apply, rankOneTwist_one_F_M_apply]
+        have hr : e (r ⊗ₜ[K] (a : K)) = (a : K) • r :=
+          TensorProduct.AlgebraTensorModule.rid_tmul (R := K)
+            (A := RealNovikovSeries K) (M := RealNovikovSeries K) (a : K) r
+        have hFr : e ((frobeniusAlgHom (Λ := Λ) (A := K)).toLinearMap r ⊗ₜ[K] (a : K)) =
+            (a : K) • frobeniusRingHom (Λ := Λ) (A := K) r :=
+          TensorProduct.AlgebraTensorModule.rid_tmul (R := K)
+            (A := RealNovikovSeries K) (M := RealNovikovSeries K) (a : K)
+            ((frobeniusAlgHom (Λ := Λ) (A := K)).toLinearMap r)
+        rw [hr, hFr]
+        change frobeniusRingHom (Λ := Λ) (A := K) ((a : K) • r) =
+          (a : K) • frobeniusRingHom (Λ := Λ) (A := K) r
+        rw [Algebra.smul_def, Algebra.smul_def, map_mul, frobenius_algebraMap]
+    | add x y hx hy =>
+        change (rankOneTwist (Λ := Λ) (1 : Kˣ)).F_M (e (x + y)) =
+          e (((ConstIsocrystal (Λ := Λ) ({ M := K } : FiniteProjectiveModule K)).F_M) (x + y))
+        rw [show e (x + y) = e x + e y from e.map_add x y]
+        rw [map_add]
+        calc
+          (rankOneTwist (Λ := Λ) (1 : Kˣ)).F_M (e x) +
+              (rankOneTwist (Λ := Λ) (1 : Kˣ)).F_M (e y)
+              = e (((ConstIsocrystal (Λ := Λ) ({ M := K } : FiniteProjectiveModule K)).F_M) x) +
+                  e (((ConstIsocrystal (Λ := Λ) ({ M := K } : FiniteProjectiveModule K)).F_M) y) := by
+                exact congrArg₂ HAdd.hAdd hx hy
+          _ = e (((ConstIsocrystal (Λ := Λ) ({ M := K } : FiniteProjectiveModule K)).F_M) x +
+                  ((ConstIsocrystal (Λ := Λ) ({ M := K } : FiniteProjectiveModule K)).F_M) y) := by
+                rw [e.map_add]
+          _ = e (((ConstIsocrystal (Λ := Λ) ({ M := K } : FiniteProjectiveModule K)).F_M) (x + y)) := by
+                exact congrArg e (((ConstIsocrystal (Λ := Λ) ({ M := K } : FiniteProjectiveModule K)).F_M).map_add x y).symm
+  · apply hom_ext
+    apply LinearMap.ext
+    intro x
+    exact e.apply_symm_apply x
+  · apply hom_ext
+    apply LinearMap.ext
+    intro x
+    exact e.symm_apply_apply x
+
+end NovikovIsocrystal
+
+end RankOne
 end Novikov

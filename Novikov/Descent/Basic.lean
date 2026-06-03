@@ -369,10 +369,8 @@ abbrev NovikovDescentDatum (Γ : S) (A : Type*) [CommRing A] :=
 
 /-- The constant-descent functor from finite projective `A`-modules to Novikov descent data. -/
 noncomputable def vectToNovikovDescent (Γ : S) (A : Type*) [CommRing A] :
-    Novikov.Miscellany.FiniteProjectiveModule A ⥤ NovikovDescentDatum Γ A := by
-  change Novikov.Miscellany.FiniteProjectiveModule (novikovExtendedCosimplicialRing Γ A).R₀ ⥤
-    DescentDatum (novikovExtendedCosimplicialRing Γ A).toCosimplicialRing
-  exact constantDescentDatumFunctor (novikovExtendedCosimplicialRing Γ A)
+    Novikov.Miscellany.FiniteProjectiveModule A ⥤ NovikovDescentDatum Γ A :=
+  constantDescentDatumFunctor (novikovExtendedCosimplicialRing Γ A)
 
 lemma algebraMapNovikov_injective (Γ : S) (A : Type*) [CommRing A] :
     Function.Injective (algebraMapNovikov : A → NovikovSeries Γ Unit A) := by

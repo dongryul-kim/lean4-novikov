@@ -248,7 +248,8 @@ We construct a functor $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$.
   \label{thm:descent_to_isocrystal}
   \lean{Novikov.Descent.descentToIsocrystal}
   \leanok
-  \uses{thm:descent_frobenius, def:novikov_isocrystal, lem:novikov_isocrystal_category}
+  \uses{thm:descent_frobenius, lem:pi2_module_equalizer, def:novikov_isocrystal,
+    lem:novikov_isocrystal_category}
   The assignment $(M, \varphi) \mapsto (M, F_M)$ defines a functor
   $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$.
 \end{theorem}
@@ -259,6 +260,28 @@ We construct a functor $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$.
   goes to its underlying $A((t^{\mathbb{R}}))$-linear map, which commutes with
   $F_M$ by uniqueness in Lemma~\ref{lem:pi2_module_equalizer}.  Identities and
   composites are preserved because the underlying maps are.
+\end{proof}
+
+\begin{proposition}
+  \label{prop:descent_isoc_constant_compat}
+  \lean{Novikov.Descent.descentToIsocrystal_comp_vectToNovikovDescent_iso,
+    Novikov.Descent.descentToIsocrystal_vectToNovikovDescent_obj_iso}
+  \leanok
+  \uses{thm:descent_to_isocrystal, def:constant_descent_functor,
+    thm:vect_to_isoc_full_faith}
+  For a finite projective $A$-module $P$, the isocrystal associated to the
+  constant Novikov descent datum on $P$ (Theorem~\ref{thm:descent_to_isocrystal})
+  is naturally isomorphic to the constant Novikov isocrystal on $P$.
+\end{proposition}
+
+\begin{proof}
+  \leanok
+  Objectwise both functors give $A((t^{\mathbb{R}})) \otimes_A P$, on which the
+  descended Frobenius $F_M = F \otimes \mathrm{id}$ is the Frobenius of the
+  constant isocrystal on $P$; the comparison map is thus an isomorphism.
+  (The base-change and global $A$-algebra structures on $A((t^{\mathbb{R}}))$ are
+  only propositionally equal, but that suffices to identify the two tensors.)
+  Naturality holds on pure tensors.
 \end{proof}
 
 \subsection{Full faithfulness of the descent-to-isocrystal functor}
@@ -337,8 +360,66 @@ We construct a functor $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$.
   \leanok
   Faithfulness is immediate: the functor sends a morphism to its underlying
   $A((t^{\mathbb{R}}))$-linear map.  For fullness, an isocrystal morphism
-  $\operatorname{descentToIsocrystal}(M) \to \operatorname{descentToIsocrystal}(N)$
+  $\operatorname{descentToIsoc}(M) \to \operatorname{descentToIsoc}(N)$
   is an $A((t^{\mathbb{R}}))$-linear $f \colon M \to N$ commuting with the
   descended Frobenii; Lemma~\ref{lem:descent_to_isoc_full_aux} upgrades it to a
   descent-datum morphism, which the functor sends back to $f$.
+\end{proof}
+
+\subsection{The case of an algebraically closed field}
+
+\begin{theorem}
+  \label{thm:descent_isoc_const_of_algclosed}
+  \lean{Novikov.Descent.descentToIsocrystal_obj_is_const_of_algClosed}
+  \leanok
+  \uses{thm:descent_to_isocrystal, thm:frobenius_eigenvector,
+    thm:vect_to_isoc_full_faith}
+  Let $K$ be an algebraically closed field and $\lambda > 1$.  For every real
+  Novikov descent datum $M$ the isocrystal associated to $M$ is constant: it is
+  isomorphic to the constant isocrystal on $P$ for some finite projective
+  $K$-module $P$.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Write $I$ for the isocrystal associated to $M$.  Iterating
+  Theorem~\ref{thm:frobenius_eigenvector}, $F_I$ is upper-triangular in some
+  $A((t^{\mathbb{R}}))$-basis, with constant unit diagonal $T_{ii} = c_i \in
+  K^\times$.  The fixed elements recovered from $M$ span after $\pi_1^\ast$-base
+  change, forcing each such $c_i = 1$: a nonzero constant-scalar
+  $F_2$-eigenvector is a unit, since otherwise an infinite Frobenius orbit in a
+  fixed half-space would contradict Novikov finiteness.  Dividing the extension
+  equations by such a unit and taking the first-variable degree-zero part solves
+  $Z = A\,F(Z) + C$; shearing by $Z$ clears the extension column.  Induction on
+  the rank conjugates $T$ to the identity Frobenius, so $I$ is the constant
+  isocrystal on $K^{n}$.
+\end{proof}
+
+\begin{theorem}[Proposition~4.3]
+  \label{thm:novikov_descent_equivalence_algclosed}
+  \lean{Novikov.Descent.vectToNovikovDescent_isEquivalence_algClosed,
+    Novikov.Descent.vectToNovikovDescent_equivalence_algClosed}
+  \leanok
+  \uses{prop:vect_to_novikov_descent_fully_faithful,
+    prop:descent_to_isoc_fully_faithful,
+    prop:descent_isoc_constant_compat,
+    thm:descent_isoc_const_of_algclosed}
+  Over an algebraically closed field $K$ the constant-descent functor
+  $\mathsf{Vect}(K) \to \mathsf{NovDD}(K, \mathbb{R})$ is an equivalence of
+  categories.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Full faithfulness is
+  Proposition~\ref{prop:vect_to_novikov_descent_fully_faithful}, so only
+  essential surjectivity remains.  For a datum $M$,
+  Theorem~\ref{thm:descent_isoc_const_of_algclosed} gives an isomorphism from
+  the isocrystal associated to $M$ to the constant isocrystal on some finite
+  projective $P$, which by Proposition~\ref{prop:descent_isoc_constant_compat}
+  is the isocrystal associated to the constant descent datum on $P$.  So the
+  isocrystals associated to that datum and to $M$ are isomorphic, and since the
+  associated-isocrystal functor is fully faithful
+  (Proposition~\ref{prop:descent_to_isoc_fully_faithful}) this isomorphism comes
+  from an isomorphism between the constant descent datum on $P$ and $M$.
 \end{proof}

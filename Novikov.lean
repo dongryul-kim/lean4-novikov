@@ -26,5 +26,7 @@ import Novikov.Descent.Abstract.Descent
 import Novikov.Descent.Abstract.Constant
 import Novikov.Descent.Basic
 import Novikov.Descent.Isocrystal
+import Novikov.Descent.Constant
 import Novikov.Descent.RecoverDDFromIsoc
 import Novikov.Descent.FullFaithful
+import Novikov.Descent.AlgClosed
