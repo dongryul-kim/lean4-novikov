@@ -1,0 +1,301 @@
+\section{The case of a product of algebraically closed fields}
+
+Let $I$ be an arbitrary index set, let $(K_i)_{i\in I}$ be algebraically
+closed fields, and put
+\[
+  A=\prod_{i\in I}K_i.
+\]
+For $r\geq 1$, write
+\[
+  R_A^{(r)}=A((t_1^{\mathbb R},\ldots,t_r^{\mathbb R})),
+  \qquad
+  R_i^{(r)}=K_i((t_1^{\mathbb R},\ldots,t_r^{\mathbb R})).
+\]
+Applying the projection $A\to K_i$ coefficientwise gives an injective ring
+homomorphism
+\[
+  \jmath_r\colon R_A^{(r)}\longrightarrow\prod_{i\in I}R_i^{(r)}.
+\]
+When $I$ is infinite this map is generally not surjective: a family of
+fiberwise Novikov series need not satisfy one uniform Novikov finiteness
+condition.  Overcoming precisely this obstruction is the main point of the
+section.
+
+\subsection{Fiberwise trivializations and the product module}
+
+\begin{lemma}[Uniform product of fiber constants]
+  \label{lem:product_fiber_constants}
+  \lean{Novikov.Descent.coeffwiseRealCHom,
+    Novikov.Descent.fiberDescentDatum,
+    Novikov.Descent.fiberConstModule,
+    Novikov.Descent.fiberConstIso,
+    Novikov.Descent.fiberConstModule_finrank_le,
+    Novikov.Miscellany.FiniteProjectiveModule.piOfUniformFinrank,
+    Novikov.Descent.productConstModule}
+  \leanok
+  \uses{def:novikov_descent_datum, def:constant_descent_functor,
+    thm:novikov_field, thm:novikov_descent_equivalence_algclosed}
+  Let $M$ be a real Novikov descent datum over $A$.  Its base change $M_i$ to
+  $K_i$ is constant: there are finite-dimensional $K_i$-vector spaces $P_i$
+  and isomorphisms
+  \[
+    \varepsilon_i\colon \operatorname{Const}(P_i)\xrightarrow{\sim}M_i.
+  \]
+  The $P_i$ may be chosen with a common dimension bound.  Consequently
+  \[
+    P=\prod_{i\in I}P_i
+  \]
+  is a finite projective $A$-module.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Base change along the coefficient projection $A\to K_i$, at every level of
+  the Novikov cosimplicial ring, gives $M_i$.  Theorem~\ref{thm:novikov_descent_equivalence_algclosed}
+  supplies $P_i$ and $\varepsilon_i$.
+
+  Choose a surjection $(R_A^{(1)})^N\twoheadrightarrow M$.  Its base change to
+  $R_i^{(1)}$ is still surjective.  Since $R_i^{(1)}$ is a field and
+  $M_i\cong R_i^{(1)}\otimes_{K_i}P_i$, it follows that
+  $\dim_{K_i}P_i\leq N$ for every $i$.  Choose split injections
+  $P_i\hookrightarrow K_i^N$.  Taking their product gives a split
+  $A$-linear injection $P\hookrightarrow A^N$, so $P$ is a direct summand of a
+  finite free $A$-module and hence is finite projective.
+\end{proof}
+
+\subsection{Uniform support and coefficientwise lifting}
+
+For a family $x=(x_i)\in\prod_iR_i^{(r)}$, set
+\[
+  \operatorname{Supp}(x)=\bigcup_{i\in I}\operatorname{supp}(x_i)
+  \subseteq\mathbb R^r.
+\]
+Thus $x$ has \emph{uniformly Novikov-finite support} if for every positive
+weight vector $w\in\mathbb R_{>0}^r$ and every $C\in\mathbb R$, the set
+\[
+  \left\{d\in\operatorname{Supp}(x)\ \middle|\;
+    \sum_{a=1}^r w_a d_a<C\right\}
+\]
+is finite.  For $r=1$, this says that the union of the fiber supports is finite
+below every cutoff.
+
+Fix the choices in Lemma~\ref{lem:product_fiber_constants}, together with split
+injections $P_i\hookrightarrow K_i^N$.  For $m\in M$, let
+$g_{m,c,i}\in R_i^{(1)}$ be the $c$-th coordinate of the image of $m$ under
+\[
+  M\longrightarrow M_i\xrightarrow{\varepsilon_i^{-1}}
+  R_i^{(1)}\otimes_{K_i}P_i\longrightarrow (R_i^{(1)})^N.
+\]
+
+\begin{lemma}[Uniform support and coefficientwise lifting]
+  \label{lem:product_coordinate_lifting}
+  \lean{Novikov.coeffwisePiRingHom_injective,
+    Novikov.Descent.coeffwiseSupportUnion,
+    Novikov.Descent.InCoeffwiseRange,
+    Novikov.Descent.inCoeffwiseRange_iff_hasNovikovFiniteness_supportUnion,
+    Novikov.Descent.generatorForwardCoordinateEquality,
+    Novikov.Descent.generatorInverseCoordinateEquality,
+    Novikov.Descent.TrivializedCoordinatesInCoeffwiseRange,
+    Novikov.Descent.trivializedCoordinatesInCoeffwiseRange}
+  \leanok
+  \uses{def:novikov_series, def:novikov_multiplication,
+    thm:novikov_ring, def:novikov_substitute, def:novikov_descent_datum,
+    lem:product_fiber_constants}
+  A family $x\in\prod_iR_i^{(r)}$ lies in the image of $\jmath_r$ if and only
+  if $\operatorname{Supp}(x)$ is uniformly Novikov-finite.  In particular, for
+  every $m\in M$ and every coordinate $c$, the family
+  $(g_{m,c,i})_{i\in I}$ has a unique lift in $R_A^{(1)}$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  The coefficientwise map is injective.  A family $(x_i)$ is in its image
+  exactly when the coefficient function
+  \[
+    d\longmapsto (x_i(d))_{i\in I}\in A
+  \]
+  defines a Novikov series; its support is precisely
+  $\operatorname{Supp}(x)$.  This proves the first assertion.
+
+  It remains to verify the uniform condition for the trivialized coordinates.
+  Choose generators $m_1,\ldots,m_N$ of $M$.  The descent isomorphism and its
+  inverse provide matrices $(a_{jk})$ and $(b_{jk})$ over $R_A^{(2)}$.  After
+  passing to the $i$-th fiber and taking the $c$-th trivialized coordinate,
+  they give the two relations
+  \[
+    \pi_1^*g_{m_j,c,i}
+      =\sum_k a_{jk,i}\,\pi_2^*g_{m_k,c,i},
+    \qquad
+    \pi_2^*g_{m_j,c,i}
+      =\sum_k b_{jk,i}\,\pi_1^*g_{m_k,c,i}.
+  \]
+  Since the family $(a_{jk})$ is finite, Novikov finiteness gives a common
+  $C\in\mathbb R$ such that
+  \[
+    2p_1+p_2\geq C
+  \]
+  on the support of every $a_{jk}$ and hence on every fiber support.  Fix $i$
+  and $c$.  If all the $g_{m_j,c,i}$ vanish there is nothing to prove;
+  otherwise, let $D$ be the least exponent occurring among them.  The first
+  transition relation, evaluated at an occurrence of $D$, gives a support point
+  $p$ and another occurring exponent
+  $y$ with $p_1=D$ and $p_2+y=0$.  Since $y\geq D$,
+  \[
+    C\leq 2p_1+p_2=2D-y\leq D.
+  \]
+  Thus the supports of all generator coordinates, in every fiber, have the
+  same lower bound $C$.
+
+  Now let $y\leq B$ occur in a generator coordinate.  The inverse transition
+  relation supplies $p$ in the support of some $b_{jk}$ and an occurring
+  exponent $x\geq C$ with
+  \[
+    p_1+x=0,\qquad p_2=y.
+  \]
+  Hence $p_1+p_2\leq B-C$.  The finite family $(b_{jk})$ has only finitely many
+  support points below this weighted cutoff, so only finitely many such values
+  $y$ occur across all fibers.  The union of the supports is therefore finite
+  below every $B$, which is the one-variable coefficientwise-range criterion.
+
+  Finally, an arbitrary $m$ is a finite sum $\sum_j r_jm_j$ with
+  $r_j\in R_A^{(1)}$.  Finite sums and multiplication by the coefficientwise
+  images of the $r_j$ preserve the range of $\jmath_1$, proving the claim for
+  every $m$.
+\end{proof}
+
+\begin{lemma}[The forward comparison]
+  \label{lem:product_to_constant}
+  \lean{Novikov.Descent.trivializedCoordLift,
+    Novikov.Descent.toConstantLinearMap,
+    Novikov.Descent.toConstant,
+    Novikov.Descent.toConstant_injective,
+    Novikov.Descent.productConstFiberBaseChangeLinearEquiv_toConstant_toLinearMap}
+  \leanok
+  \uses{def:descent_datum, def:constant_descent_functor,
+    lem:product_fiber_constants, lem:product_coordinate_lifting}
+  The lifted coordinates define an injective morphism of descent data
+  \[
+    f_M\colon M\longrightarrow\operatorname{Const}(P).
+  \]
+  After base change to $K_i$ and the natural identification of the $i$-th fiber
+  of $\operatorname{Const}(P)$ with $\operatorname{Const}(P_i)$, this morphism
+  is $\varepsilon_i^{-1}$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Let $z_c(m)\in R_A^{(1)}$ be the unique lift of
+  $(g_{m,c,i})_i$ from Lemma~\ref{lem:product_coordinate_lifting}.  Uniqueness
+  and coefficientwise calculation show that $m\mapsto(z_c(m))_c$ is
+  $R_A^{(1)}$-linear.  The split embeddings $P_i\hookrightarrow K_i^N$ define
+  a coordinate projector onto $P\subseteq A^N$.  Every fiberwise coordinate
+  vector is fixed by the corresponding fiber projector, so injectivity of
+  $\jmath_1$ shows that $(z_c(m))_c$ is fixed by the product projector.  It
+  therefore represents an element of $R_A^{(1)}\otimes_AP$, defining $f_M$.
+
+  The forward transition relation in the preceding proof says precisely that
+  $f_M$ commutes with the descent isomorphisms on the chosen generators.  By
+  linearity and generation it commutes everywhere, so it is a descent-datum
+  morphism.  Its fiber is $\varepsilon_i^{-1}$ by construction.  Finally,
+  base change along the injective coefficientwise map remains injective on the
+  finite projective module underlying $M$, and after that base change $f_M$ is
+  the product of the fiber trivializations.  Hence $f_M$ itself is injective.
+\end{proof}
+
+\subsection{The inverse map and the equivalence}
+
+\begin{lemma}[The reverse comparison by duality]
+  \label{lem:product_from_constant}
+  \lean{Novikov.Descent.Abstract.DescentDatum.dual,
+    Novikov.Descent.Abstract.DescentDatum.doubleDualIso,
+    Novikov.Descent.fiberDescentDatumDualIso,
+    Novikov.Descent.productConstModuleDualFiberIsoOf,
+    Novikov.Descent.productConstModuleFiberDualsDualIsoProduct,
+    Novikov.Descent.fromConstantModule,
+    Novikov.Descent.fromConstant,
+    Novikov.Descent.fromConstant_fiber_inv}
+  \leanok
+  \uses{def:descent_datum, def:constant_descent_functor,
+    prop:vect_to_novikov_descent_fully_faithful,
+    lem:product_fiber_constants, lem:product_to_constant}
+  There is a morphism of descent data
+  \[
+    g_M\colon\operatorname{Const}(P)\longrightarrow M
+  \]
+  whose $i$-th fiber is $\varepsilon_i$ under the natural identification of the
+  fiber of $\operatorname{Const}(P)$ with $\operatorname{Const}(P_i)$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Apply Lemma~\ref{lem:product_to_constant} to the dual datum $M^\vee$ and
+  dualize the resulting map.  Base change commutes with descent duals, so the
+  chosen constant module for the $i$-th fiber of $M^\vee$ is identified with
+  $P_i^\vee$; full faithfulness of constant descent makes this identification
+  compatible with the chosen fiber trivializations.  Uniform boundedness gives
+  \[
+    \left(\prod_iP_i^\vee\right)^\vee\cong\prod_iP_i=P.
+  \]
+  Together with the double-dual isomorphism $M\cong M^{\vee\vee}$, the dualized
+  map therefore has the displayed source and target; call it $g_M$.
+
+  To identify its $i$-th fiber, pair both it and $\varepsilon_i$ with an
+  arbitrary functional on $P_i$.  Under the dual/base-change identifications,
+  a pure functional $q\in P_i^\vee$ paired with $p\in P_i$ evaluates on both
+  sides as $q(p)$.  Linearity extends the equality to all base-change tensors,
+  and finite projectivity makes the pairing nondegenerate.  Thus the two fiber
+  maps agree.  This is the fiberwise inverse characterization of $g_M$.
+\end{proof}
+
+\begin{theorem}[Product descent data are constant]
+  \label{thm:product_descent_is_constant}
+  \lean{Novikov.Descent.hom_ext_of_fiber_baseChange_toLinearMap_eq,
+    Novikov.Descent.fromConstant_toConstant,
+    Novikov.Descent.toConstant_fromConstant,
+    Novikov.Descent.toConstantIso}
+  \leanok
+  \uses{lem:product_fiber_constants, lem:product_coordinate_lifting,
+    lem:product_to_constant, lem:product_from_constant}
+  Every real Novikov descent datum $M$ over a product of algebraically closed
+  fields is isomorphic to the constant datum on the finite projective
+  $A$-module $P$ of Lemma~\ref{lem:product_fiber_constants}.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Lemmas~\ref{lem:product_to_constant} and~\ref{lem:product_from_constant}
+  identify the fibers of $f_M$ and $g_M$ as $\varepsilon_i^{-1}$ and
+  $\varepsilon_i$.  Hence $f_M\circ g_M$ is the identity after every fiber base
+  change.  Morphisms between product descent data are detected on all fibers,
+  because the coefficientwise maps are injective and the underlying modules
+  are finite projective.  Therefore
+  \[
+    f_M\circ g_M=\mathrm{id}_{\operatorname{Const}(P)}.
+  \]
+  Since $f_M$ is injective, composing this identity with $f_M$ also gives
+  $g_M\circ f_M=\mathrm{id}_M$.  Thus $f_M$ and $g_M$ define the required
+  isomorphism.
+\end{proof}
+
+\begin{theorem}[Proposition~4.4]
+  \label{thm:novikov_descent_equivalence_prod_algclosed}
+  \lean{Novikov.Descent.vectToNovikovDescent_isEquivalence_prod_algClosed,
+    Novikov.Descent.vectToNovikovDescent_equivalence_prod_algClosed}
+  \leanok
+  \uses{prop:vect_to_novikov_descent_fully_faithful,
+    thm:product_descent_is_constant}
+  Let $A=\prod_{i\in I}K_i$ be an arbitrary product of algebraically closed
+  fields.  Then the constant-descent functor
+  \[
+    \mathsf{Vect}(A)\longrightarrow\mathsf{NovDD}(A,\mathbb R)
+  \]
+  is an equivalence of categories.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Full faithfulness is
+  Proposition~\ref{prop:vect_to_novikov_descent_fully_faithful}.  Essential
+  surjectivity is Theorem~\ref{thm:product_descent_is_constant}: every datum is
+  isomorphic to the constant datum on the finite projective module $P$.
+\end{proof}

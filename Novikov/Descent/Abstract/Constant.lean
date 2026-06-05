@@ -330,6 +330,179 @@ lemma constantDescentDatum_φ_tmul (M : Type*) [AddCommGroup M] [Module E.R₀ M
       ((E.π₁ s * r) ⊗ₜ[E.R₀] m) = _
   rw [baseChange_assoc_eq_symm_tmul]
 
+/-- Associating the target of the constant descent isomorphism recovers the
+association of its source.  This is the arbitrary-source form of the defining
+formula for the constant descent isomorphism. -/
+lemma constantDescentDatum_baseChange_assoc_φ_apply
+    (M : Type*) [AddCommGroup M] [Module E.R₀ M]
+    [Module.Finite E.R₀ M] [Module.Projective E.R₀ M]
+    (x : letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra;
+      π₁s E.toCosimplicialRing (E.R₁ ⊗[E.R₀] M)) :
+    letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
+    letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
+    (baseChange_assoc_eq E.π₀ E.π₂ E.π₁_π₀_eq_π₂_π₀.symm M)
+      ((constantDescentDatum E M).φ x) =
+    (baseChange_assoc_eq E.π₀ E.π₁ rfl M) x := by
+  letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
+  letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
+  change (baseChange_assoc_eq E.π₀ E.π₂ E.π₁_π₀_eq_π₂_π₀.symm M)
+      (((baseChange_assoc_eq E.π₀ E.π₁ rfl M).trans
+        (baseChange_assoc_eq E.π₀ E.π₂ E.π₁_π₀_eq_π₂_π₀.symm M).symm) x) =
+    (baseChange_assoc_eq E.π₀ E.π₁ rfl M) x
+  rw [LinearEquiv.trans_apply, LinearEquiv.apply_symm_apply]
+
+@[simp]
+lemma constantDescentDatum_φ_symm_tmul (M : Type*) [AddCommGroup M] [Module E.R₀ M]
+    [Module.Finite E.R₀ M] [Module.Projective E.R₀ M]
+    (r : E.R₂) (s : E.R₁) (m : M) :
+    letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
+    letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
+    (constantDescentDatum E M).φ.symm
+      (letI : Algebra E.R₁ E.R₂ := E.π₂.toAlgebra
+       r ⊗ₜ[E.R₁] (s ⊗ₜ[E.R₀] m)) =
+    (letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra
+     (E.π₂ s * r) ⊗ₜ[E.R₁] ((1 : E.R₁) ⊗ₜ[E.R₀] m)) := by
+  letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
+  letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
+  letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra
+  apply (constantDescentDatum E M).φ.injective
+  rw [LinearEquiv.apply_symm_apply]
+  change (letI : Algebra E.R₁ E.R₂ := E.π₂.toAlgebra;
+      r ⊗ₜ[E.R₁] (s ⊗ₜ[E.R₀] m)) =
+    (constantDescentDatum E M).φ
+      (letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra;
+       (E.π₂ s * r) ⊗ₜ[E.R₁] ((1 : E.R₁) ⊗ₜ[E.R₀] m))
+  rw [constantDescentDatum_φ_tmul E M (E.π₂ s * r) (1 : E.R₁) m]
+  rw [map_one, one_mul]
+  letI : Algebra E.R₁ E.R₂ := E.π₂.toAlgebra
+  change r ⊗ₜ[E.R₁] (s ⊗ₜ[E.R₀] m) =
+    (E.π₂ s * r) ⊗ₜ[E.R₁] ((1 : E.R₁) ⊗ₜ[E.R₀] m)
+  rw [show s ⊗ₜ[E.R₀] m = s • ((1 : E.R₁) ⊗ₜ[E.R₀] m) by
+    rw [TensorProduct.smul_tmul']
+    simp]
+  rw [TensorProduct.tmul_smul]
+  rfl
+
+/-- Applying the constant descent isomorphism to a `π₁`-pullback and then
+associating the `π₂` base change gives the same tensor as directly associating
+the original `π₁`-pullback. -/
+lemma constantDescentDatum_baseChange_assoc_φ_tmul (M : Type*) [AddCommGroup M] [Module E.R₀ M]
+    [Module.Finite E.R₀ M] [Module.Projective E.R₀ M]
+    (r : E.R₂) (s : E.R₁) (m : M) :
+    letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
+    letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
+    (baseChange_assoc_eq E.π₀ E.π₂ E.π₁_π₀_eq_π₂_π₀.symm M)
+      ((constantDescentDatum E M).φ
+        (letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra
+         ((r : E.R₂) ⊗ₜ[E.R₁] (s ⊗ₜ[E.R₀] m)))) =
+    (baseChange_assoc_eq E.π₀ E.π₁ rfl M)
+      (letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra
+       ((r : E.R₂) ⊗ₜ[E.R₁] (s ⊗ₜ[E.R₀] m))) := by
+  classical
+  letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
+  letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
+  letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra
+  rw [constantDescentDatum_φ_tmul]
+  simp only [baseChange_assoc_eq_tmul]
+  have h1 : (letI : Algebra E.R₁ E.R₂ := E.π₂.toAlgebra
+      (1 : E.R₁) • (E.π₁ s * r)) = E.π₁ s * r := by
+    letI : Algebra E.R₁ E.R₂ := E.π₂.toAlgebra
+    exact one_smul E.R₁ (E.π₁ s * r)
+  have hs : (letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra
+      s • r) = E.π₁ s * r := rfl
+  exact (congrArg (fun x => x ⊗ₜ[E.R₀] m) h1).trans
+    (congrArg (fun x => x ⊗ₜ[E.R₀] m) hs).symm
+
+/-- Arbitrary-element version of `constantDescentDatum_baseChange_assoc_φ_tmul`:
+applying the constant descent isomorphism to a `π₁` pullback and associating the
+`π₂` base change agrees with directly associating the original `π₁` pullback. -/
+lemma constantDescentDatum_baseChange_assoc_φ_one_tmul (M : Type*) [AddCommGroup M]
+    [Module E.R₀ M] [Module.Finite E.R₀ M] [Module.Projective E.R₀ M]
+    (y : letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra; E.R₁ ⊗[E.R₀] M) :
+    letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
+    letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
+    (baseChange_assoc_eq E.π₀ E.π₂ E.π₁_π₀_eq_π₂_π₀.symm M)
+      ((constantDescentDatum E M).φ
+        (letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra
+         ((1 : E.R₂) ⊗ₜ[E.R₁] y))) =
+    (baseChange_assoc_eq E.π₀ E.π₁ rfl M)
+      (letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra
+       ((1 : E.R₂) ⊗ₜ[E.R₁] y)) := by
+  classical
+  letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
+  letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
+  letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra
+  change E.R₁ ⊗[E.R₀] M at y
+  induction y using TensorProduct.induction_on with
+  | zero =>
+      let assoc₂ := baseChange_assoc_eq E.π₀ E.π₂ E.π₁_π₀_eq_π₂_π₀.symm M
+      let assoc₁ := baseChange_assoc_eq E.π₀ E.π₁ rfl M
+      have hzero : ((1 : E.R₂) ⊗ₜ[E.R₁] (0 : E.R₁ ⊗[E.R₀] M)) = 0 := by
+        rw [TensorProduct.tmul_zero]
+      have hφzero : (constantDescentDatum E M).φ
+          ((1 : E.R₂) ⊗ₜ[E.R₁] (0 : E.R₁ ⊗[E.R₀] M)) = 0 := by
+        exact (congrArg (fun q => (constantDescentDatum E M).φ q) hzero).trans
+          (map_zero (constantDescentDatum E M).φ)
+      calc
+        assoc₂ ((constantDescentDatum E M).φ
+            ((1 : E.R₂) ⊗ₜ[E.R₁] (0 : E.R₁ ⊗[E.R₀] M))) = assoc₂ 0 := by
+              rw [hφzero]
+              rfl
+        _ = 0 := map_zero assoc₂
+        _ = assoc₁ 0 := (map_zero assoc₁).symm
+        _ = assoc₁ ((1 : E.R₂) ⊗ₜ[E.R₁] (0 : E.R₁ ⊗[E.R₀] M)) := by
+              rw [hzero]
+  | add y z hy hz =>
+      let assoc₂ := baseChange_assoc_eq E.π₀ E.π₂ E.π₁_π₀_eq_π₂_π₀.symm M
+      let assoc₁ := baseChange_assoc_eq E.π₀ E.π₁ rfl M
+      have hadd : ((1 : E.R₂) ⊗ₜ[E.R₁] (y + z)) =
+          ((1 : E.R₂) ⊗ₜ[E.R₁] y) + ((1 : E.R₂) ⊗ₜ[E.R₁] z) := by
+        rw [TensorProduct.tmul_add]
+      have hφadd : (constantDescentDatum E M).φ
+          ((1 : E.R₂) ⊗ₜ[E.R₁] (y + z)) =
+          (constantDescentDatum E M).φ ((1 : E.R₂) ⊗ₜ[E.R₁] y) +
+          (constantDescentDatum E M).φ ((1 : E.R₂) ⊗ₜ[E.R₁] z) := by
+        exact (congrArg (fun q => (constantDescentDatum E M).φ q) hadd).trans
+          (map_add (constantDescentDatum E M).φ _ _)
+      have hright : assoc₁ ((1 : E.R₂) ⊗ₜ[E.R₁] (y + z)) =
+          assoc₁ ((1 : E.R₂) ⊗ₜ[E.R₁] y) +
+          assoc₁ ((1 : E.R₂) ⊗ₜ[E.R₁] z) := by
+        exact (congrArg (fun q => assoc₁ q) hadd).trans (map_add assoc₁ _ _)
+      calc
+        assoc₂ ((constantDescentDatum E M).φ ((1 : E.R₂) ⊗ₜ[E.R₁] (y + z))) =
+            assoc₂ ((constantDescentDatum E M).φ ((1 : E.R₂) ⊗ₜ[E.R₁] y) +
+              (constantDescentDatum E M).φ ((1 : E.R₂) ⊗ₜ[E.R₁] z)) := by
+              rw [hφadd]
+        _ = assoc₂ ((constantDescentDatum E M).φ ((1 : E.R₂) ⊗ₜ[E.R₁] y)) +
+              assoc₂ ((constantDescentDatum E M).φ ((1 : E.R₂) ⊗ₜ[E.R₁] z)) :=
+              map_add assoc₂ _ _
+        _ = assoc₁ ((1 : E.R₂) ⊗ₜ[E.R₁] y) + assoc₁ ((1 : E.R₂) ⊗ₜ[E.R₁] z) := by
+              rw [hy, hz]
+        _ = assoc₁ ((1 : E.R₂) ⊗ₜ[E.R₁] (y + z)) := hright.symm
+  | tmul s m =>
+      exact constantDescentDatum_baseChange_assoc_φ_tmul E M 1 s m
+
+/-- Applying any linear map after the arbitrary-element association identity for
+constant descent.  This keeps later coordinate-comparison proofs from building
+large `congrArg` terms inline. -/
+lemma constantDescentDatum_baseChange_assoc_φ_one_tmul_linear_apply
+    (M : Type*) [AddCommGroup M] [Module E.R₀ M]
+    [Module.Finite E.R₀ M] [Module.Projective E.R₀ M]
+    (Q : Type*) [AddCommGroup Q] [Module E.R₂ Q]
+    (L : (letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra;
+        E.R₂ ⊗[E.R₀] M) →ₗ[E.R₂] Q)
+    (y : letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra; E.R₁ ⊗[E.R₀] M) :
+    letI : Algebra E.R₀ E.R₁ := E.π₀.toAlgebra
+    letI : Algebra E.R₀ E.R₂ := (E.π₁.comp E.π₀).toAlgebra
+    L ((baseChange_assoc_eq E.π₀ E.π₂ E.π₁_π₀_eq_π₂_π₀.symm M)
+      ((constantDescentDatum E M).φ
+        (letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra
+         ((1 : E.R₂) ⊗ₜ[E.R₁] y)))) =
+    L ((baseChange_assoc_eq E.π₀ E.π₁ rfl M)
+      (letI : Algebra E.R₁ E.R₂ := E.π₁.toAlgebra
+       ((1 : E.R₂) ⊗ₜ[E.R₁] y))) := by
+  exact congrArg L (constantDescentDatum_baseChange_assoc_φ_one_tmul E M y)
+
 private lemma internalHom_φ_one_tmul_baseChange
     (E : ExtendedCosimplicialRing) (M N : Type*)
     [AddCommGroup M] [Module E.R₀ M] [Module.Finite E.R₀ M] [Module.Projective E.R₀ M]

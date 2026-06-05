@@ -57,7 +57,7 @@ basic facts about them.
   = \alpha(a, b) t_1^{d_1+e_1} \dotsm t_n^{d_n+e_n}. \]
 \end{definition}
 
-\begin{theorem}
+\begin{theorem}[Novikov series form a ring]
   \label{thm:novikov_ring}
   \lean{Novikov.NovikovSeriesRing}
   \leanok
@@ -78,7 +78,7 @@ basic facts about them.
   summation.
 \end{proof}
 
-\begin{theorem}
+\begin{theorem}[Module structure on Novikov series]
   \label{thm:novikov_module}
   \lean{Novikov.moduleNovikovSeries}
   \leanok
@@ -97,7 +97,7 @@ basic facts about them.
   and distributivity of the underlying module $M$ over $A$.
 \end{proof}
 
-\begin{theorem}
+\begin{theorem}[Base change for Novikov series]
   \label{thm:novikov_base_change}
   \lean{Novikov.novikovModule_base_change_equiv}
   \leanok
@@ -130,7 +130,7 @@ basic facts about them.
   shall denote this induced map by $f$ instead of $f_\ast$.
 \end{definition}
 
-\begin{theorem}
+\begin{theorem}[Functoriality of substitution]
   \label{thm:novikov_substitute_functorial}
   \lean{Novikov.substitute_id, Novikov.substitute_comp, Novikov.substituteRingHom}
   \leanok
@@ -181,7 +181,7 @@ When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
   F_{D_1 + D_2}$.
 \end{proof}
 
-\begin{theorem}
+\begin{theorem}[One-variable Novikov series form a field]
   \label{thm:novikov_field}
   \lean{Novikov.novikovField}
   \leanok
@@ -211,7 +211,7 @@ When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
   for which every $A$-linear map $f \colon M \to A$ is continuous.
 \end{definition}
 
-\begin{theorem}
+\begin{theorem}[Basic properties of the canonical topology]
   \label{thm:canonical_topology_properties}
   \lean{Novikov.Miscellany.canonicalTopology.continuousAdd,
     Novikov.Miscellany.canonicalTopology.continuousSMul,
@@ -260,7 +260,7 @@ When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
   canonical topology is finer than the product topology.
 \end{proof}
 
-\begin{lemma}
+\begin{lemma}[Split descent of finite projectivity]
   \label{lem:split_base_change_descent}
   \lean{Novikov.Miscellany.finite_projective_of_split_baseChange}
   \leanok

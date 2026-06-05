@@ -1,0 +1,252 @@
+\section{The case of an algebraically closed field}
+
+Throughout this section, let $K$ be an algebraically closed field and let
+$\lambda>1$.  Put
+\[
+  R=K((t^{\mathbb R})), \qquad
+  R_2=K((t^{\mathbb R},u^{\mathbb R})).
+\]
+Write $F$ for the Frobenius on $R$, $F_2$ for the Frobenius on $R_2$ fixing
+$t$ and sending $u$ to $u^\lambda$, and $\pi_2^*\colon R\to R_2$ for the face
+map sending $t$ to $u$.  Frobenius is applied coordinatewise to vectors, and
+for a matrix $T$ over $R$ we write $T^{(2)}$ for the matrix obtained by applying
+$\pi_2^*$ entrywise.
+
+\subsection{Triangularization of isocrystals}
+
+\begin{theorem}[Proposition~3.5]
+  \label{thm:nov_isoc_geom_pt_triangular}
+  \lean{Novikov.nov_isoc_geom_pt_triangular}
+  \leanok
+  \uses{def:novikov_isocrystal, thm:frobenius_eigenvector, thm:novikov_field}
+  Let $I$ be a Novikov isocrystal over $K$.  There are an integer $n$, an
+  $R$-linear isomorphism $e\colon I\xrightarrow{\sim}R^n$, units
+  $c_1,\ldots,c_n\in K^\times$, and an upper-triangular matrix
+  $T\in\operatorname{Mat}_n(R)$ with diagonal entries $T_{ii}=c_i$ such that
+  \[
+    e(F_I(x))=T F(e(x))
+  \]
+  for every $x\in I$.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Induct on $n=\dim_R I$.  If $n>0$, Theorem~\ref{thm:frobenius_eigenvector}
+  gives $0\ne m\in I$ and $c\in K^\times$ with $F_I(m)=cm$.  The line $Rm$ is
+  stable under both $F_I$ and $F_I^{-1}$, so the quotient $I/Rm$ inherits a
+  Novikov-isocrystal structure.  Apply the induction hypothesis to this
+  quotient.  Since $R$ is a field, split the underlying sequence of
+  $R$-vector spaces, lift the triangular basis of the quotient, and place $m$
+  first.  In the resulting basis the first column is $(c,0,\ldots,0)^T$, the
+  remaining diagonal entries come from the quotient, and semilinearity gives
+  the displayed matrix formula.
+\end{proof}
+
+\subsection{Descent constraints on a triangular Frobenius}
+
+\begin{lemma}[Two-variable Frobenius rigidity]
+  \label{lem:f2_eigen_rigidity}
+  \lean{Novikov.Descent.F2_eigen_vanish_of_second_ne_zero,
+    Novikov.Descent.F2_eigen_constant_scalar_eq_one,
+    Novikov.Descent.F2_fixed_nonzero_isUnit}
+  \leanok
+  \uses{def:novikov_series, def:face_frobenius, lem:recover_dd_from_isoc,
+    thm:novikov_field}
+  Suppose that $c\in K^\times$ and $0\ne x\in R_2$ satisfy
+  \[
+    x=cF_2(x).
+  \]
+  Then every coefficient of $x$ of nonzero $u$-degree vanishes and $c=1$.
+  Moreover, every nonzero $F_2$-fixed element of $R_2$ is a unit.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  The coefficient equation at degree $(a,b)$ is
+  $x_{a,b}=c\,x_{a,b/\lambda}$.  If $b\ne0$, nonvanishing would propagate along
+  the infinite orbit $b,b/\lambda,b/\lambda^2,\ldots$, all lying in a fixed
+  Novikov half-space, contradicting the finiteness condition.  Thus $x$ is
+  supported in $u$-degree zero.  At any nonzero coefficient the same equation
+  now reads $x_{a,0}=c\,x_{a,0}$, hence $c=1$.
+
+  If $F_2(x)=x$, the ring-level equalizer used in
+  Lemma~\ref{lem:recover_dd_from_isoc} writes $x=\pi_1^*(y)$ for some
+  $0\ne y\in R$.  The ring $R$ is a field, so $y$, and therefore $x$, is a
+  unit.
+\end{proof}
+
+\begin{lemma}[Fixed solutions supplied by descent]
+  \label{lem:descent_fixed_solutions_span}
+  \lean{Novikov.Descent.matrixFixedSpans,
+    Novikov.Descent.matrixFixedSpans_of_descent,
+    Novikov.Descent.matrixFixedSpans_exists_fixed_coord_ne_zero}
+  \leanok
+  \uses{def:face_frobenius, lem:recover_dd_from_isoc,
+    thm:descent_to_isocrystal}
+  For $T\in\operatorname{Mat}_n(R)$, set
+  \[
+    \operatorname{Fix}_2(T)
+      =\{y\in R_2^n\mid y=T^{(2)}F_2(y)\}.
+  \]
+  Say that these fixed solutions \emph{span} if every $R_2$-linear functional
+  $\ell\colon R_2^n\to R_2$ which vanishes on $\operatorname{Fix}_2(T)$ is
+  zero.  If $T$ is the coordinate matrix of the isocrystal associated to a
+  real Novikov descent datum, then its fixed solutions span.  Consequently,
+  for every coordinate $k$ there is a $y\in\operatorname{Fix}_2(T)$ with
+  $y_k\ne0$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  By Lemma~\ref{lem:recover_dd_from_isoc}, the recovered elements
+  $\varphi(\pi_1^*m)\in\pi_2^*M$ are fixed by $F_{M,2}$, and they generate
+  $\pi_2^*M$ after extension of scalars.  In the coordinates defining $T$, the
+  equation $F_{M,2}(y)=y$ becomes $y=T^{(2)}F_2(y)$.  Hence a functional
+  vanishing on all such fixed solutions vanishes on a generating set and is
+  zero.  For the last assertion, otherwise the $k$-th coordinate projection
+  would vanish on every fixed solution; spanning would make that projection
+  zero, contrary to its value on the $k$-th standard basis vector.
+\end{proof}
+
+\begin{lemma}[Removing a rank-one extension]
+  \label{lem:split_frobenius_extension}
+  \lean{Novikov.Descent.extract_t_degree_zero,
+    Novikov.Descent.generalized_extension_extract,
+    Novikov.Descent.blockShear_conjugates_general}
+  \leanok
+  \uses{def:novikov_series, def:frobenius, thm:frobenius_properties,
+    def:face_frobenius, lem:f2_eigen_rigidity}
+  Let $A\in\operatorname{Mat}_n(R)$ and $C\in R^n$.  Suppose
+  $0\ne\xi\in R_2$ is $F_2$-fixed and $x\in R_2^n$ satisfies
+  \[
+    x_i=\sum_j\pi_2^*(A_{ij})F_2(x_j)
+      +\pi_2^*(C_i)F_2(\xi).
+  \]
+  Then there is a $Z\in R^n$ satisfying
+  \[
+    Z=AF(Z)+C.
+  \]
+  For any such $Z$, the shear $S_Z(v,r)=(v+Zr,r)$ removes the extension
+  column:
+  \[
+    S_Z^{-1}\,\Phi_{A,C}\,S_Z=\Phi_{A,0},
+    \qquad
+    \Phi_{A,C}(v,r)=(AF(v)+CF(r),F(r)).
+  \]
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Lemma~\ref{lem:f2_eigen_rigidity} makes $\xi$ a unit.  Dividing $x$ by
+  $\xi$ therefore gives $z\in R_2^n$ with
+  \[
+    z=A^{(2)}F_2(z)+\pi_2^*(C).
+  \]
+  Let $E\colon R_2\to R$ extract first-variable degree zero:
+  \[
+    E\left(\sum_{a,b}q_{a,b}t^a u^b\right)
+      =\sum_b q_{0,b}t^b.
+  \]
+  Novikov finiteness makes this a well-defined series, and coefficient
+  calculation gives
+  $E(\pi_2^*(a)y)=aE(y)$, $E\circ F_2=F\circ E$, and
+  $E\circ\pi_2^*=\mathrm{id}$.  Applying $E$ coordinatewise and setting
+  $Z=E(z)$ yields $Z=AF(Z)+C$.  Substitution in the definitions of $S_Z$ and
+  $\Phi_{A,C}$ gives the conjugacy formula; its upper coordinate is precisely
+  the equation just obtained.
+\end{proof}
+
+\begin{lemma}[Triviality of triangular descent Frobenius]
+  \label{lem:triangular_frobenius_trivial}
+  \lean{Novikov.Descent.matrixFixedSpans_last_scalar_eq_one,
+    Novikov.Descent.matrixFixedSpans_upper_left_of_extension,
+    Novikov.Descent.triangular_matrix_conjugates_to_identity}
+  \leanok
+  \uses{lem:f2_eigen_rigidity, lem:descent_fixed_solutions_span,
+    lem:split_frobenius_extension}
+  Let $T\in\operatorname{Mat}_n(R)$ be upper triangular with diagonal entries
+  $c_i\in K^\times$.  If $\operatorname{Fix}_2(T)$ spans in the sense of
+  Lemma~\ref{lem:descent_fixed_solutions_span}, then there is an
+  $R$-linear automorphism $B$ of $R^n$ such that
+  \[
+    B(TF(v))=F(Bv)
+  \]
+  for every $v\in R^n$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Induct on $n$ and write
+  \[
+    T=\begin{pmatrix}A&C\\0&c\end{pmatrix}.
+  \]
+  Spanning provides a fixed solution $y$ with nonzero last coordinate.  Its
+  last equation is $y_n=cF_2(y_n)$, so
+  Lemma~\ref{lem:f2_eigen_rigidity} gives $c=1$ and makes $y_n$ a unit.
+  Lemma~\ref{lem:split_frobenius_extension}, applied to the upper coordinates
+  of $y$, produces $Z$ and a shear removing $C$.
+
+  It remains to apply induction to $A$.  If a functional $\ell$ vanishes on
+  $\operatorname{Fix}_2(A)$, compose it with the top unshearing map
+  \[
+    y\longmapsto y_{\mathrm{top}}-\pi_2^*(Z)y_n.
+  \]
+  The shear calculation shows that this composite vanishes on
+  $\operatorname{Fix}_2(T)$, hence it is zero by spanning.  Evaluating it on
+  $(v,0)$ shows $\ell(v)=0$, so the fixed solutions for $A$ also span.  The
+  induction hypothesis conjugates $A$ to the identity Frobenius; composing
+  that change of basis with the shear gives the required $B$.
+\end{proof}
+
+\subsection{Constancy and the descent equivalence}
+
+\begin{theorem}[Constancy of descended isocrystals]
+  \label{thm:descent_isoc_const_of_algclosed}
+  \lean{Novikov.Descent.descentToIsocrystal_obj_is_const_of_algClosed}
+  \leanok
+  \uses{thm:descent_to_isocrystal, thm:vect_to_isoc_full_faith,
+    thm:nov_isoc_geom_pt_triangular, lem:descent_fixed_solutions_span,
+    lem:triangular_frobenius_trivial}
+  Let $K$ be an algebraically closed field and $\lambda > 1$.  For every real
+  Novikov descent datum $M$ the isocrystal associated to $M$ is constant: it is
+  isomorphic to the constant isocrystal on $P$ for some finite projective
+  $K$-module $P$.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Apply Theorem~\ref{thm:nov_isoc_geom_pt_triangular} to the isocrystal $I$
+  associated to $M$, obtaining coordinates in which its Frobenius is $TF$.
+  Lemma~\ref{lem:descent_fixed_solutions_span} supplies the spanning condition
+  for $T$, and Lemma~\ref{lem:triangular_frobenius_trivial} supplies a change of
+  coordinates conjugating $TF$ to coordinatewise $F$.  Thus $I$ is isomorphic
+  to the constant isocrystal on $K^n$.
+\end{proof}
+
+\begin{theorem}[Proposition~4.3]
+  \label{thm:novikov_descent_equivalence_algclosed}
+  \lean{Novikov.Descent.vectToNovikovDescent_isEquivalence_algClosed,
+    Novikov.Descent.vectToNovikovDescent_equivalence_algClosed}
+  \leanok
+  \uses{prop:vect_to_novikov_descent_fully_faithful,
+    prop:descent_to_isoc_fully_faithful,
+    prop:descent_isoc_constant_compat,
+    thm:descent_isoc_const_of_algclosed}
+  Over an algebraically closed field $K$ the constant-descent functor
+  $\mathsf{Vect}(K) \to \mathsf{NovDD}(K, \mathbb{R})$ is an equivalence of
+  categories.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Full faithfulness is
+  Proposition~\ref{prop:vect_to_novikov_descent_fully_faithful}, so only
+  essential surjectivity remains.  Choose $\lambda=2$.  For a datum $M$,
+  Theorem~\ref{thm:descent_isoc_const_of_algclosed} gives an isomorphism from
+  the isocrystal associated to $M$ to the constant isocrystal on some finite
+  projective $P$, which by Proposition~\ref{prop:descent_isoc_constant_compat}
+  is the isocrystal associated to the constant descent datum on $P$.  Since the
+  associated-isocrystal functor is fully faithful
+  (Proposition~\ref{prop:descent_to_isoc_fully_faithful}), this isomorphism
+  lifts to an isomorphism between the constant descent datum on $P$ and $M$.
+\end{proof}

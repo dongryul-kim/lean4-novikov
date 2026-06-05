@@ -24,9 +24,11 @@ import Novikov.Isocrystal.Injective.Submodule
 import Novikov.Isocrystal.Injective
 import Novikov.Descent.Abstract.Descent
 import Novikov.Descent.Abstract.Constant
+import Novikov.Descent.Abstract.Dual
 import Novikov.Descent.Basic
 import Novikov.Descent.Isocrystal
 import Novikov.Descent.Constant
 import Novikov.Descent.RecoverDDFromIsoc
 import Novikov.Descent.FullFaithful
 import Novikov.Descent.AlgClosed
+import Novikov.Descent.ProdAlgClosed

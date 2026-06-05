@@ -277,6 +277,32 @@ theorem homBaseChangeEquiv_tmul {M N : Type*} [AddCommGroup M] [Module R M]
       s • LinearMap.baseChange S f :=
   homBaseChangeMap_tmul S s f
 
+/-- Base-changing the double-dual evaluation map and then applying the
+Hom/base-change equivalence is evaluation after base change. -/
+lemma homBaseChangeEquiv_baseChange_eval_apply {M : Type*}
+    [AddCommGroup M] [Module R M] [Module.Finite R M] [Module.Projective R M]
+    (S : Type*) [CommRing S] [Algebra R S]
+    (x : S ⊗[R] M) (y : S ⊗[R] Module.Dual R M) :
+    (homBaseChangeEquiv (R := R) (M := Module.Dual R M) (N := R) S
+      ((LinearMap.baseChange S (Module.Dual.eval R M)) x)) y =
+    (homBaseChangeEquiv (R := R) (M := M) (N := R) S y) x := by
+  induction x using TensorProduct.induction_on with
+  | zero =>
+      simp
+  | add x z hx hz =>
+      simp only [map_add, LinearMap.add_apply, hx, hz]
+  | tmul s m =>
+      induction y using TensorProduct.induction_on with
+      | zero => simp
+      | add y z hy hz => simp only [map_add, LinearMap.add_apply, hy, hz]
+      | tmul t f =>
+          rw [LinearMap.baseChange_tmul]
+          rw [homBaseChangeEquiv_tmul]
+          rw [homBaseChangeEquiv_tmul]
+          simp only [LinearMap.smul_apply, LinearMap.baseChange_tmul, Module.Dual.eval_apply]
+          change (s * t) ⊗ₜ[R] f m = (t * s) ⊗ₜ[R] f m
+          rw [mul_comm]
+
 /-- Base change preserves finite projectivity: if `P` is a finite projective
 `R`-module, then `S ⊗[R] P` is a finite projective `S`-module. -/
 lemma baseChange_projective {S : Type*} [CommRing S] [Algebra R S]

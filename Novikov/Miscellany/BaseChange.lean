@@ -63,6 +63,23 @@ theorem baseChange_assoc_tmul (f : A →+* B) (g : B →+* C)
     IsScalarTower.of_algebraMap_eq (R := A) (S := B) (A := C) (fun _ => rfl)
   exact TensorProduct.AlgebraTensorModule.cancelBaseChange_tmul A B C c m b
 
+/-- Moving a scalar on the outer tensor factor through the associativity
+comparison for iterated base change. -/
+lemma cancelBaseChange_tmul_left {R A B M : Type*} [CommRing R] [CommRing A]
+    [CommRing B] [Algebra R A] [Algebra A B] [Algebra R B]
+    [IsScalarTower R A B] [AddCommGroup M] [Module R M]
+    (b : B) (x : A ⊗[R] M) :
+    (TensorProduct.AlgebraTensorModule.cancelBaseChange R A B B M)
+      (b ⊗ₜ[A] x) =
+    b • (TensorProduct.AlgebraTensorModule.cancelBaseChange R A B B M)
+      ((1 : B) ⊗ₜ[A] x) := by
+  have h : (b ⊗ₜ[A] x : B ⊗[A] (A ⊗[R] M)) =
+      b • ((1 : B) ⊗ₜ[A] x) := by
+    rw [TensorProduct.smul_tmul']
+    simp
+  rw [h]
+  rw [map_smul]
+
 /-- Pure-tensor formula for `baseChange_assoc.symm`. -/
 @[simp]
 theorem baseChange_assoc_symm_tmul (f : A →+* B) (g : B →+* C)
@@ -148,6 +165,158 @@ theorem baseChange_assoc_naturality (f : A →+* B) (g : B →+* C)
   · intro x y hx hy
     simp only [TensorProduct.tmul_add, map_add, LinearMap.comp_apply] at hx hy ⊢
     rw [hx, hy]
+
+section RingHomCongr
+
+variable {R S : Type*} [CommRing R] [CommRing S]
+variable {f g : R →+* S}
+
+/-- Base-change modules along propositionally equal ring homomorphisms are
+canonically linearly equivalent. -/
+noncomputable def baseChangeCongrRingHom (h : f = g)
+    (M : Type*) [AddCommGroup M] [Module R M] :
+    baseChange_along f M ≃ₗ[S] baseChange_along g M := by
+  subst h
+  exact LinearEquiv.refl S _
+
+@[simp]
+lemma baseChangeCongrRingHom_refl
+    (M : Type*) [AddCommGroup M] [Module R M] :
+    baseChangeCongrRingHom (f := f) (g := f) rfl M =
+      LinearEquiv.refl S (baseChange_along f M) := rfl
+
+@[simp]
+lemma baseChangeCongrRingHom_tmul (h : f = g)
+    (M : Type*) [AddCommGroup M] [Module R M] (s : S) (m : M) :
+    baseChangeCongrRingHom (f := f) (g := g) h M
+      ((letI : Algebra R S := f.toAlgebra; s ⊗ₜ[R] m)) =
+      (letI : Algebra R S := g.toAlgebra; s ⊗ₜ[R] m) := by
+  subst h
+  rfl
+
+/-- `baseChange_assoc_eq` is `baseChange_assoc` followed by the canonical
+congruence for the propositionally equal composite ring homomorphisms. -/
+lemma baseChange_assoc_eq_apply_eq_congr
+    {R₀ R₁ R₂ : Type*} [CommRing R₀] [CommRing R₁] [CommRing R₂]
+    (π₀ : R₀ →+* R₁) (π : R₁ →+* R₂)
+    {ρ : R₀ →+* R₂} (h : π.comp π₀ = ρ)
+    (M : Type*) [AddCommGroup M] [Module R₀ M]
+    (z : letI : Algebra R₀ R₁ := π₀.toAlgebra; letI : Algebra R₁ R₂ := π.toAlgebra;
+      R₂ ⊗[R₁] (R₁ ⊗[R₀] M)) :
+    letI : Algebra R₀ R₁ := π₀.toAlgebra
+    letI : Algebra R₁ R₂ := π.toAlgebra
+    letI : Algebra R₀ R₂ := ρ.toAlgebra
+    (baseChange_assoc_eq π₀ π h M) z =
+      (baseChangeCongrRingHom h M) ((baseChange_assoc π₀ π M) z) := by
+  subst h
+  rfl
+
+/-- Naturality of `baseChangeCongrRingHom`: it commutes with base-changed maps. -/
+lemma baseChangeCongrRingHom_naturality {R S : Type*} [CommRing R] [CommRing S]
+    {f g : R →+* S} (h : f = g)
+    {M N : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+    (φ : M →ₗ[R] N) :
+    (baseChangeCongrRingHom h N).toLinearMap ∘ₗ baseChangeMap f φ =
+      baseChangeMap g φ ∘ₗ (baseChangeCongrRingHom h M).toLinearMap := by
+  subst h
+  rfl
+
+end RingHomCongr
+
+/-- Naturality of `baseChange_assoc` in `baseChangeMap` form. -/
+lemma baseChange_assoc_baseChangeMap_naturality (f : A →+* B) (g : B →+* C)
+    {M N : Type*} [AddCommGroup M] [Module A M] [AddCommGroup N] [Module A N]
+    (φ : M →ₗ[A] N) :
+    (baseChange_assoc f g N).toLinearMap ∘ₗ baseChangeMap g (baseChangeMap f φ) =
+      baseChangeMap (g.comp f) φ ∘ₗ (baseChange_assoc f g M).toLinearMap :=
+  (baseChange_assoc_naturality f g φ).symm
+
+/-- Compare two ways of extending scalars around a commutative square of ring
+homomorphisms. -/
+noncomputable def baseChangeSquare (f : A →+* B) (f' : A →+* C)
+    (g : B →+* D) (g' : C →+* D) (h : g.comp f = g'.comp f')
+    (M : Type*) [AddCommGroup M] [Module A M] :
+    baseChange_along g (baseChange_along f M) ≃ₗ[D]
+      letI : Algebra C D := g'.toAlgebra
+      D ⊗[C] baseChange_along f' M := by
+  let e1 : baseChange_along g (baseChange_along f M) ≃ₗ[D]
+      baseChange_along (g.comp f) M :=
+    baseChange_assoc f g M
+  let e2 : baseChange_along (g.comp f) M ≃ₗ[D]
+      baseChange_along (g'.comp f') M :=
+    baseChangeCongrRingHom h M
+  let e3 : (letI : Algebra C D := g'.toAlgebra
+      D ⊗[C] baseChange_along f' M) ≃ₗ[D]
+      baseChange_along (g'.comp f') M :=
+    baseChange_assoc f' g' M
+  exact e1.trans (e2.trans e3.symm)
+
+/-- Pure-tensor formula for `baseChangeSquare`. -/
+@[simp]
+theorem baseChangeSquare_tmul (f : A →+* B) (f' : A →+* C)
+    (g : B →+* D) (g' : C →+* D) (h : g.comp f = g'.comp f')
+    {M : Type*} [AddCommGroup M] [Module A M] (d : D) (b : B) (m : M) :
+    baseChangeSquare f f' g g' h M
+      ((letI : Algebra B D := g.toAlgebra
+        letI : Algebra A B := f.toAlgebra
+        d ⊗ₜ[B] (b ⊗ₜ[A] m))) =
+      (letI : Algebra C D := g'.toAlgebra
+       letI : Algebra A C := f'.toAlgebra
+       letI : Algebra B D := g.toAlgebra
+       (b • d) ⊗ₜ[C] ((1 : C) ⊗ₜ[A] m)) := by
+  simp [baseChangeSquare]
+
+/-- Pure-tensor formula for `baseChangeSquare.symm`. -/
+@[simp]
+theorem baseChangeSquare_symm_tmul (f : A →+* B) (f' : A →+* C)
+    (g : B →+* D) (g' : C →+* D) (h : g.comp f = g'.comp f')
+    {M : Type*} [AddCommGroup M] [Module A M] (d : D) (c : C) (m : M) :
+    (baseChangeSquare f f' g g' h M).symm
+      ((letI : Algebra C D := g'.toAlgebra
+        letI : Algebra A C := f'.toAlgebra
+        d ⊗ₜ[C] (c ⊗ₜ[A] m))) =
+      (letI : Algebra C D := g'.toAlgebra
+       letI : Algebra B D := g.toAlgebra
+       letI : Algebra A B := f.toAlgebra
+       (c • d) ⊗ₜ[B] ((1 : B) ⊗ₜ[A] m)) := by
+  letI : Algebra C D := g'.toAlgebra
+  letI : Algebra A C := f'.toAlgebra
+  rw [show d ⊗ₜ[C] (c ⊗ₜ[A] m) = (c • d) ⊗ₜ[C] ((1 : C) ⊗ₜ[A] m) from by
+    rw [smul_tmul, smul_tmul', smul_eq_mul, mul_one]]
+  apply (baseChangeSquare f f' g g' h M).injective
+  rw [LinearEquiv.apply_symm_apply, baseChangeSquare_tmul]
+  letI : Algebra B D := g.toAlgebra
+  simp
+
+/-- Naturality of `baseChangeSquare` with respect to maps of modules. -/
+lemma baseChangeSquare_naturality (f : A →+* B) (f' : A →+* C)
+    (g : B →+* D) (g' : C →+* D) (h : g.comp f = g'.comp f')
+    {M N : Type*} [AddCommGroup M] [Module A M] [AddCommGroup N] [Module A N]
+    (φ : M →ₗ[A] N) :
+    (baseChangeSquare f f' g g' h N).toLinearMap ∘ₗ baseChangeMap g (baseChangeMap f φ) =
+      baseChangeMap g' (baseChangeMap f' φ) ∘ₗ
+        (baseChangeSquare f f' g g' h M).toLinearMap := by
+  have nat1 := baseChange_assoc_baseChangeMap_naturality f g φ
+  have nat3 := baseChange_assoc_baseChangeMap_naturality f' g' φ
+  have nat2 := baseChangeCongrRingHom_naturality h φ
+  have nat3' : (baseChange_assoc f' g' N).symm.toLinearMap ∘ₗ
+        baseChangeMap (g'.comp f') φ =
+      baseChangeMap g' (baseChangeMap f' φ) ∘ₗ
+        (baseChange_assoc f' g' M).symm.toLinearMap := by
+    apply LinearMap.ext; intro x
+    simp only [LinearMap.comp_apply, LinearEquiv.coe_coe]
+    rw [LinearEquiv.symm_apply_eq]
+    have hn := LinearMap.congr_fun nat3 ((baseChange_assoc f' g' M).symm x)
+    simp only [LinearMap.comp_apply, LinearEquiv.coe_coe, LinearEquiv.apply_symm_apply] at hn
+    exact hn.symm
+  apply LinearMap.ext; intro x
+  have h1 := LinearMap.congr_fun nat1 x
+  have h2 := LinearMap.congr_fun nat2 ((baseChange_assoc f g M) x)
+  have h3 := LinearMap.congr_fun nat3'
+    ((baseChangeCongrRingHom h M) ((baseChange_assoc f g M) x))
+  simp only [LinearMap.comp_apply, LinearEquiv.coe_coe] at h1 h2 h3 ⊢
+  simp only [baseChangeSquare, LinearEquiv.trans_apply]
+  rw [h1, h2, h3]
 
 /-- Tetrahedron coherence: three levels of base change assoc compose consistently.
 
