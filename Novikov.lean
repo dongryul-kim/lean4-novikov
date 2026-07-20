@@ -32,3 +32,4 @@ import Novikov.Descent.RecoverDDFromIsoc
 import Novikov.Descent.FullFaithful
 import Novikov.Descent.AlgClosed
 import Novikov.Descent.ProdAlgClosed
+import Novikov.Descent.Reduced

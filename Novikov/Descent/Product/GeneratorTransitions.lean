@@ -281,9 +281,7 @@ private lemma fiber_baseChangePhi_symm_tmul
           (fiberRealCHom K i).f₁.toAlgebra
         r ⊗ₜ[(realC (K i)).R₁]
           (s ⊗ₜ[(realC (∀ i, K i)).R₁] m))) = _
-  dsimp [CosimplicialRingHom.baseChangePhi]
-  rw [CosimplicialRingHom.pullbackBaseChangeπ₂_tmul]
-  rw [LinearEquiv.baseChange_symm_tmul]
+  exact (fiberRealCHom K i).baseChangePhi_symm_tmul M r s m
 
 omit [∀ i, IsAlgClosed (K i)] in
 /-- Compatibility of the `π₁` base-change comparison with a scalar multiple of a

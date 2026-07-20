@@ -34,6 +34,18 @@ namespace CosimplicialRingHom
 
 variable {C D E : CosimplicialRing}
 
+/-- Two cosimplicial-ring homomorphisms are equal when their three level maps
+are equal. -/
+@[ext]
+lemma ext {F G : CosimplicialRingHom C D}
+    (h₁ : F.f₁ = G.f₁) (h₂ : F.f₂ = G.f₂) (h₃ : F.f₃ = G.f₃) : F = G := by
+  cases F
+  cases G
+  cases h₁
+  cases h₂
+  cases h₃
+  rfl
+
 @[simp] lemma map_π₁_apply (F : CosimplicialRingHom C D) (x : C.R₁) :
     F.f₂ (C.π₁ x) = D.π₁ (F.f₁ x) := RingHom.congr_fun F.comm_π₁ x
 
@@ -279,6 +291,24 @@ lemma baseChangePhi_tmul (M : DescentDatum C)
               (1 : C.R₂) ⊗ₜ[C.R₁] m))))) := by
   simp only [baseChangePhi, LinearEquiv.trans_apply]
   rw [pullbackBaseChangeπ₁_tmul, LinearEquiv.baseChange_tmul]
+
+/-- Pure-tensor formula for the inverse of the base-changed descent
+isomorphism. -/
+lemma baseChangePhi_symm_tmul (M : DescentDatum C)
+    (r : D.R₂) (s : D.R₁) (m : M.M) :
+    (F.baseChangePhi M).symm
+      ((letI : Algebra D.R₁ D.R₂ := D.π₂.toAlgebra
+        letI : Algebra C.R₁ D.R₁ := F.f₁.toAlgebra
+        r ⊗ₜ[D.R₁] (s ⊗ₜ[C.R₁] m))) =
+      (F.pullbackBaseChangeπ₁ M.M).symm
+        ((letI : Algebra C.R₂ D.R₂ := F.f₂.toAlgebra
+          letI : Algebra D.R₁ D.R₂ := D.π₂.toAlgebra
+          (s • r) ⊗ₜ[C.R₂]
+            (M.φ.symm ((letI : Algebra C.R₁ C.R₂ := C.π₂.toAlgebra;
+              (1 : C.R₂) ⊗ₜ[C.R₁] m))))) := by
+  dsimp [baseChangePhi]
+  rw [pullbackBaseChangeπ₂_tmul]
+  rw [LinearEquiv.baseChange_symm_tmul]
 
 /-- Compare pulling back the base-changed module along `D.π₁` directly with
 extension of scalars along the composite `D.π₁.comp F.f₁`. -/

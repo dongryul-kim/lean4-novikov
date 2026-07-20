@@ -1,0 +1,72 @@
+\section{The case of a reduced ring}
+
+We finish the reduced case by combining product-field descent with injectivity
+for Novikov isocrystals.
+
+\begin{lemma}[Compatibility with coefficient extension]
+  \label{lem:descent_isocrystal_base_change}
+  \lean{Novikov.Descent.realCCoeffHom,
+    Novikov.Descent.descentFrobenius_baseChange,
+    Novikov.Descent.descentToIsocrystal_baseChangeIso}
+  \leanok
+  \uses{def:novikov_descent_datum, thm:descent_to_isocrystal,
+    thm:novikov_base_change}
+  Let $f\colon A\to B$ be a ring homomorphism and let $M$ be a real Novikov
+  descent datum over $A$. If $M_B$ denotes coefficientwise base change, then
+  there is a canonical isomorphism
+  \[
+    \operatorname{Isoc}_A(M)\otimes_{A((t^{\mathbb R}))}B((t^{\mathbb R}))
+      \cong \operatorname{Isoc}_B(M_B).
+  \]
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Coefficient extension commutes with the face maps and with the Frobenius
+  scaling the second variable. After the standard tensor-product
+  identifications, the two descended Frobenii therefore agree on pure tensors,
+  hence everywhere. The identity on the common underlying module gives the
+  claimed isomorphism.
+\end{proof}
+
+\begin{theorem}[Proposition~4.5]
+  \label{thm:novikov_descent_equivalence_reduced}
+  \lean{Novikov.Descent.algClosedResidueField,
+    Novikov.Descent.reducedEmbedding,
+    Novikov.Descent.reducedEmbedding_injective,
+    Novikov.Descent.descentToIsocrystal_obj_is_const_of_reduced,
+    Novikov.Descent.vectToNovikovDescent_isEquivalence_reduced,
+    Novikov.Descent.vectToNovikovDescent_equivalence_reduced}
+  \leanok
+  \uses{prop:vect_to_novikov_descent_fully_faithful,
+    prop:descent_isoc_constant_compat,
+    prop:descent_to_isoc_fully_faithful,
+    prop:nov_isoc_injective,
+    thm:novikov_descent_equivalence_prod_algclosed,
+    lem:descent_isocrystal_base_change}
+  If $A$ is a reduced commutative ring, then the constant-descent functor
+  \[
+    \mathsf{Vect}(A)\longrightarrow\mathsf{NovDD}(A,\mathbb R)
+  \]
+  is an equivalence of categories.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  For each $\mathfrak p\in\operatorname{Spec}(A)$, let
+  $K_{\mathfrak p}=\overline{\kappa(\mathfrak p)}$ and set
+  $B=\prod_{\mathfrak p}K_{\mathfrak p}$. The canonical map $A\to B$ is
+  injective: its kernel is the intersection of all prime ideals, hence the
+  nilradical, which vanishes because $A$ is reduced.
+
+  Let $M$ be a real Novikov descent datum over $A$. Its base change $M_B$ is
+  constant by Theorem~\ref{thm:novikov_descent_equivalence_prod_algclosed}.
+  Taking $\lambda=2$, Lemma~\ref{lem:descent_isocrystal_base_change} and
+  Proposition~\ref{prop:descent_isoc_constant_compat} show that the base change
+  of $\operatorname{Isoc}_A(M)$ is constant. Proposition~\ref{prop:nov_isoc_injective}
+  descends this constancy to $A$. Full faithfulness of the descent-to-isocrystal
+  functor then lifts the resulting isocrystal isomorphism to an isomorphism from
+  a constant descent datum to $M$. Thus constant descent is essentially
+  surjective; it is already fully faithful by
+  Proposition~\ref{prop:vect_to_novikov_descent_fully_faithful}.
+\end{proof}

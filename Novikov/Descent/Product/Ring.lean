@@ -1,6 +1,4 @@
-import Novikov.Descent.Abstract.BaseChange
-import Novikov.Descent.Isocrystal
-import Novikov.Series.Product
+import Novikov.Descent.CoefficientMap
 
 /-!
 # Product cosimplicial rings for products of coefficient rings
@@ -87,28 +85,23 @@ noncomputable def coeffwiseRealCHom {I : Type u} (K : I → Type v)
   comm_π₁ := by
     ext x
     funext i
-    simpa [realC] using coeffwiseEvalRingHom_substituteRingHom
-      (Γ := (⊤ : AddSubgroup ℝ)) K i (fun _ : Unit => (0 : Fin 2)) x
+    exact (realCCoeffHom (Pi.evalRingHom K i)).map_π₁_apply x
   comm_π₂ := by
     ext x
     funext i
-    simpa [realC] using coeffwiseEvalRingHom_substituteRingHom
-      (Γ := (⊤ : AddSubgroup ℝ)) K i (fun _ : Unit => (1 : Fin 2)) x
+    exact (realCCoeffHom (Pi.evalRingHom K i)).map_π₂_apply x
   comm_π₁₂ := by
     ext x
     funext i
-    simpa [realC] using coeffwiseEvalRingHom_substituteRingHom
-      (Γ := (⊤ : AddSubgroup ℝ)) K i Fin.castSucc x
+    exact (realCCoeffHom (Pi.evalRingHom K i)).map_π₁₂_apply x
   comm_π₁₃ := by
     ext x
     funext i
-    simpa [realC] using coeffwiseEvalRingHom_substituteRingHom
-      (Γ := (⊤ : AddSubgroup ℝ)) K i (Fin.succAbove 1) x
+    exact (realCCoeffHom (Pi.evalRingHom K i)).map_π₁₃_apply x
   comm_π₂₃ := by
     ext x
     funext i
-    simpa [realC] using coeffwiseEvalRingHom_substituteRingHom
-      (Γ := (⊤ : AddSubgroup ℝ)) K i Fin.succ x
+    exact (realCCoeffHom (Pi.evalRingHom K i)).map_π₂₃_apply x
 
 /-- Evaluation at one factor of the product cosimplicial ring. -/
 noncomputable def evalProdRealCHom {I : Type u} (K : I → Type v)
@@ -122,6 +115,17 @@ noncomputable def evalProdRealCHom {I : Type u} (K : I → Type v)
   comm_π₁₂ := by ext x; rfl
   comm_π₁₃ := by ext x; rfl
   comm_π₂₃ := by ext x; rfl
+
+/-- Evaluating the coefficientwise product map at one factor recovers the
+generic real Novikov coefficient map induced by evaluation. -/
+lemma eval_comp_coeffwiseRealCHom {I : Type u} (K : I → Type v)
+    [∀ i, CommRing (K i)] (i : I) :
+    (evalProdRealCHom K i).comp (coeffwiseRealCHom K) =
+      realCCoeffHom (Pi.evalRingHom K i) := by
+  apply CosimplicialRingHom.ext
+  · rfl
+  · rfl
+  · rfl
 
 @[simp]
 lemma coeffwiseRealCHom_f₁_apply {I : Type u} (K : I → Type v)

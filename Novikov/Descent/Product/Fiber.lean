@@ -29,6 +29,37 @@ noncomputable def fiberRealCHom (i : I) :
     CosimplicialRingHom (realC (∀ i, K i)) (realC (K i)) :=
   (evalProdRealCHom K i).comp (coeffwiseRealCHom K)
 
+omit [∀ i, IsAlgClosed (K i)] in
+/-- The fiber map is the generic real Novikov coefficient map induced by
+evaluation at the chosen factor. -/
+lemma fiberRealCHom_eq_realCCoeffHom (i : I) :
+    fiberRealCHom K i = realCCoeffHom (Pi.evalRingHom K i) := by
+  exact eval_comp_coeffwiseRealCHom K i
+
+omit [∀ i, IsAlgClosed (K i)] in
+/-- The level-one map of `fiberRealCHom` is the generic coefficient map induced
+by evaluation at the chosen factor. -/
+lemma fiberRealCHom_f₁_eq_realCCoeffHom (i : I) :
+    (fiberRealCHom K i).f₁ =
+      (realCCoeffHom (Pi.evalRingHom K i)).f₁ := by
+  exact congrArg CosimplicialRingHom.f₁ (fiberRealCHom_eq_realCCoeffHom K i)
+
+omit [∀ i, IsAlgClosed (K i)] in
+/-- The level-two map of `fiberRealCHom` is the generic coefficient map induced
+by evaluation at the chosen factor. -/
+lemma fiberRealCHom_f₂_eq_realCCoeffHom (i : I) :
+    (fiberRealCHom K i).f₂ =
+      (realCCoeffHom (Pi.evalRingHom K i)).f₂ := by
+  exact congrArg CosimplicialRingHom.f₂ (fiberRealCHom_eq_realCCoeffHom K i)
+
+omit [∀ i, IsAlgClosed (K i)] in
+/-- The level-three map of `fiberRealCHom` is the generic coefficient map
+induced by evaluation at the chosen factor. -/
+lemma fiberRealCHom_f₃_eq_realCCoeffHom (i : I) :
+    (fiberRealCHom K i).f₃ =
+      (realCCoeffHom (Pi.evalRingHom K i)).f₃ := by
+  exact congrArg CosimplicialRingHom.f₃ (fiberRealCHom_eq_realCCoeffHom K i)
+
 /-- The `i`-th fiber of a descent datum over a product of fields. -/
 noncomputable def fiberDescentDatum
     (M : NovikovDescentDatum.{0, u, u} (⊤ : AddSubgroup ℝ) (∀ i, K i))
