@@ -7,7 +7,7 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
 
 \subsection{Novikov isocrystals}
 
-\begin{definition}
+\begin{definition}[Coordinate Frobenius]
   \label{def:coordinate_frobenius}
   \lean{Novikov.coordinateFrobeniusRingHom}
   \leanok
@@ -22,7 +22,7 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
   $1/\lambda$.
 \end{definition}
 
-\begin{definition}
+\begin{definition}[Single-variable Frobenius]
   \label{def:frobenius}
   \lean{Novikov.frobenius}
   \leanok
@@ -48,7 +48,7 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
   neighborhood bases.
 \end{proof}
 
-\begin{definition}[Definition~3.1]
+\begin{definition}[Definition~3.1: Novikov isocrystals]
   \label{def:novikov_isocrystal}
   \lean{Novikov.NovikovIsocrystal}
   \leanok
@@ -74,7 +74,7 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
   inherits a Frobenius action from those on $M$ and $N$.
 \end{proof}
 
-\begin{theorem}[Proposition~3.3]
+\begin{theorem}[Proposition~3.3: full faithfulness of constant isocrystals]
   \label{thm:vect_to_isoc_full_faith}
   \lean{Novikov.NovikovIsocrystal.vectToNovIsoc_fullyFaithful}
   \leanok
@@ -132,7 +132,7 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
 \end{proof}
 
 
-\begin{lemma}[Lemma~3.6]
+\begin{lemma}[Lemma~3.6: Frobenius-stable submodules are coefficientwise]
   \label{lem:frobenius_limit}
   \lean{Novikov.frobenius_limit}
   \leanok
@@ -153,7 +153,7 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
   shift-stability, and the limit is in $S$ by closedness.
 \end{proof}
 
-\begin{theorem}[Proposition~3.7]
+\begin{theorem}[Proposition~3.7: constancy descends along injective coefficient maps]
   \label{prop:nov_isoc_injective}
   \lean{Novikov.nov_isoc_injective}
   \leanok

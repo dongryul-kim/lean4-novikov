@@ -1,0 +1,298 @@
+\section{Square-zero deformation}
+\label{sec:square_zero_deformation}
+
+Let $A$ be a commutative ring, let $I\subseteq A$ be an ideal with
+$I^2=0$, and put $B=A/I$.  In this section we prove that a real Novikov
+descent datum over $A$ is constant whenever its reduction to $B$ is constant.
+The argument has two inputs: deformation theory for finite projective modules
+and an additive \v{C}ech calculation for Novikov series.
+
+\subsection{Square-zero algebra for finite projective modules}
+
+\begin{lemma}[Maps vanishing after square-zero base change]
+  \label{lem:square_zero_base_change}
+  \lean{Novikov.Miscellany.reductionMap,
+    Novikov.Miscellany.reductionMap_surjective,
+    Novikov.Miscellany.reductionMap_ker,
+    Novikov.Miscellany.comp_eq_zero_of_baseChangeMap_eq_zero}
+  \leanok
+  Let $q\colon A\twoheadrightarrow B$ be a surjective homomorphism with
+  $K=\ker(q)$ and $K^2=0$.  For every $A$-module $M$, the reduction map
+  \[
+    M\longrightarrow B\otimes_A M,\qquad m\longmapsto 1\otimes m,
+  \]
+  is surjective and has kernel $KM$.  Consequently, if composable
+  $A$-linear maps $v\colon L\to M$ and $u\colon M\to N$ both become zero
+  after base change to $B$, then $u\circ v=0$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Surjectivity follows by writing a pure tensor $b\otimes m$ as
+  $1\otimes am$ after choosing $a\in A$ with $q(a)=b$.  The kernel statement
+  is obtained by factoring $q$ through $A/K$ and using the canonical
+  identification
+  \[
+    (A/K)\otimes_A M\cong M/KM.
+  \]
+  If $u$ becomes zero, its image is contained in $KN$; similarly, the image
+  of $v$ is contained in $KM$.  Hence the image of $u\circ v$ is contained in
+  $K^2N=0$.
+\end{proof}
+
+\begin{lemma}[Lemma~4.6: finite projectives over a square-zero thickening]
+  \label{lem:vect_square_zero_deform}
+  \lean{Novikov.Miscellany.exists_linearEquiv_lift_of_surjective_of_ker_sq,
+    Novikov.Miscellany.FiniteProjectiveModule.exists_lift_of_surjective_of_ker_sq,
+    Novikov.Miscellany.exists_linearEquiv_lift_of_quotient_sq,
+    Novikov.Miscellany.FiniteProjectiveModule.exists_lift_of_quotient_sq}
+  \leanok
+  \uses{lem:square_zero_base_change}
+  Let $I\subseteq A$ satisfy $I^2=0$.
+  \begin{enumerate}
+    \item If $M$ and $N$ are finite projective $A$-modules, every
+      $A/I$-linear isomorphism
+      \[
+        (A/I)\otimes_A M\xrightarrow{\sim}(A/I)\otimes_A N
+      \]
+      lifts to an $A$-linear isomorphism $M\xrightarrow{\sim}N$ whose base
+      change is the given map.
+    \item Every finite projective $A/I$-module $\overline M$ is isomorphic to
+      $(A/I)\otimes_A M$ for some finite projective $A$-module $M$.
+  \end{enumerate}
+  More generally, both assertions hold for any surjection $A\twoheadrightarrow
+  B$ with square-zero kernel.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  For (1), projectivity lifts the given map and its inverse to maps
+  $f\colon M\to N$ and $g\colon N\to M$.  Set
+  \[
+    a=gf-1_M,\qquad b=fg-1_N.
+  \]
+  Both $a$ and $b$ vanish after base change.  By
+  Lemma~\ref{lem:square_zero_base_change}, $a^2=b^2=0$.  Moreover
+  $fa=bf$.  Replacing $g$ by
+  \[
+    g'=(1_M-a)g
+  \]
+  gives $g'f=1_M$ and $fg'=1_N$, so $f$ is the required lift.
+
+  For (2), present $\overline M$ as the image of an idempotent matrix over
+  $A/I$.  The entrywise map on matrix rings is surjective and its kernel is
+  nilpotent, so the idempotent lifts to an idempotent matrix over $A$.  The
+  image of the corresponding endomorphism of a finite free $A$-module is
+  finite projective, and its reduction is $\overline M$.
+\end{proof}
+
+\subsection{Additive Novikov \v{C}ech cocycles}
+
+\begin{lemma}[Square-zero coefficient maps for Novikov rings]
+  \label{lem:novikov_square_zero_coefficients}
+  \lean{Novikov.mapRingHom_surjective, Novikov.mapRingHom_ker_sq}
+  \leanok
+  \uses{def:novikov_series, thm:novikov_ring}
+  Let $q\colon A\twoheadrightarrow B$ be surjective with square-zero kernel.
+  For every finite set of variables, the coefficientwise homomorphism
+  \[
+    A((t_1^{\mathbb R},\ldots,t_r^{\mathbb R}))
+      \longrightarrow
+    B((t_1^{\mathbb R},\ldots,t_r^{\mathbb R}))
+  \]
+  is surjective and has square-zero kernel.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Lift each nonzero coefficient of a series over $B$ to $A$; using zero away
+  from the original support preserves the Novikov finiteness condition.  Thus
+  the coefficientwise map is surjective.  A series in its kernel has every
+  coefficient in $\ker(q)$.  Every coefficient of a product of two such
+  series is a finite sum of products of elements of $\ker(q)$, and therefore
+  vanishes.
+\end{proof}
+
+\begin{lemma}[Additive Novikov \v{C}ech cocycles are coboundaries]
+  \label{lem:additive_novikov_cech_coboundary}
+  \lean{Novikov.Descent.firstAxis,
+    Novikov.Descent.firstAxis_apply,
+    Novikov.Descent.additive_cocycle_eq_coboundary}
+  \leanok
+  \uses{def:novikov_substitute, thm:novikov_substitute_functorial}
+  Let $H$ be an abelian group and let
+  $x\in H((t^{\mathbb R},u^{\mathbb R}))$ satisfy
+  \[
+    \pi_{13}^*x=\pi_{23}^*x+\pi_{12}^*x.
+  \]
+  Define the first-axis restriction $y\in H((t^{\mathbb R}))$ by
+  $y_d=x_{(d,0)}$.  Then
+  \[
+    x=\pi_1^*y-\pi_2^*y.
+  \]
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Evaluate the cocycle equation coefficientwise.  At an exponent $(a,0,b)$
+  with $a,b\neq0$, it shows that the coefficient $x_{(a,b)}$ vanishes.  At
+  the origin it gives $x_{(0,0)}=x_{(0,0)}+x_{(0,0)}$, hence
+  $x_{(0,0)}=0$ without any assumption on the characteristic.  Finally,
+  evaluating at $(0,d,0)$ shows
+  $x_{(0,d)}=-x_{(d,0)}$ for $d\neq0$.  These three calculations are exactly
+  the displayed coboundary formula.
+\end{proof}
+
+\begin{lemma}[Endomorphism-valued additive cocycles]
+  \label{lem:endomorphism_novikov_cech_coboundary}
+  \lean{Novikov.Descent.exists_end_eq_sub_of_is_add_cocycle,
+    Novikov.Descent.exists_end_eq_sub_of_is_add_cocycle_of_map_eq_zero}
+  \leanok
+  \uses{lem:additive_novikov_cech_coboundary, thm:novikov_base_change}
+  Let $P$ be a finite projective $A$-module and let $C_r(P)$ denote its scalar
+  extension to the $r$-variable real Novikov ring.  If
+  \[
+    \delta\in\operatorname{End}(C_2(P)),\qquad
+    \pi_{13}^*\delta=\pi_{23}^*\delta+\pi_{12}^*\delta,
+  \]
+  then there exists $\eta\in\operatorname{End}(C_1(P))$ such that
+  \[
+    \delta=\pi_1^*\eta-\pi_2^*\eta.
+  \]
+  If coefficient extension along $q\colon A\to B$ sends $\delta$ to zero,
+  then $\eta$ may be chosen to become zero after the same coefficient
+  extension.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Finite projectivity gives compatible identifications
+  \[
+    \operatorname{End}_{R_r}(R_r\otimes_A P)
+      \cong R_r\otimes_A\operatorname{End}_A(P)
+      \cong \operatorname{End}_A(P)((t_1^{\mathbb R},\ldots,t_r^{\mathbb R})).
+  \]
+  Under these identifications, normalized pullback along a face is the
+  corresponding substitution.  Apply
+  Lemma~\ref{lem:additive_novikov_cech_coboundary} with
+  $H=\operatorname{End}_A(P)$ to obtain $\eta$.  The construction
+  is first-axis restriction, which commutes with coefficient maps; hence if
+  $\delta$ becomes zero, the chosen $\eta$ does as well.
+\end{proof}
+
+\subsection{Lifting a constant descent datum}
+
+\begin{lemma}[Normalization of a constant underlying module]
+  \label{lem:normalized_constant_descent}
+  \lean{Novikov.Descent.normalizedPhi,
+    Novikov.Descent.normalizedPhi_constant,
+    Novikov.Descent.normalizedPhi_cocycle,
+    Novikov.Descent.vectToNovikovDescent_baseChangeIso}
+  \leanok
+  \uses{def:novikov_descent_datum, def:constant_descent_functor,
+    thm:novikov_base_change}
+  Let $P$ be a finite projective $A$-module.  The two pullbacks of the
+  underlying module of $\operatorname{Const}(P)$ admit canonical
+  identifications with
+  \[
+    C_2(P)=A((t^{\mathbb R},u^{\mathbb R}))\otimes_A P.
+  \]
+  Under these identifications, a descent isomorphism becomes an endomorphism
+  $\psi$ of $C_2(P)$; the constant descent isomorphism becomes the identity,
+  and the multiplicative cocycle condition becomes
+  \[
+    \pi_{23}^*\psi\circ\pi_{12}^*\psi=\pi_{13}^*\psi.
+  \]
+  These identifications are compatible with extension of the coefficient ring.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  The identifications are the associativity and cancellation isomorphisms for
+  the iterated tensor products defining constant descent.  Conjugating by
+  them sends the constant descent map to the identity.  Their level-three
+  associativity tetrahedra identify all three pullbacks coherently, so
+  conjugation transports the original cocycle equation to the displayed
+  equation.  The same tensor associativity maps commute with coefficient
+  extension, which gives the final assertion.
+\end{proof}
+
+\begin{lemma}[Lemma~4.7: square-zero deformation of Novikov descent]
+  \label{lem:novikov_descent_square_zero}
+  \lean{Novikov.Descent.novikovDescent_squareZero}
+  \leanok
+  \uses{lem:vect_square_zero_deform,
+    lem:square_zero_base_change,
+    lem:novikov_square_zero_coefficients,
+    lem:endomorphism_novikov_cech_coboundary,
+    lem:normalized_constant_descent}
+  Let $A$ be a commutative ring and let $I\subseteq A$ satisfy $I^2=0$.
+  Let $M$ be a real Novikov descent datum over $A$.  If its base change to
+  $A/I$ is isomorphic to a constant descent datum, then $M$ is itself
+  isomorphic to a constant descent datum over $A$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Put $B=A/I$.  By hypothesis there are a finite projective $B$-module
+  $\overline P$ and an isomorphism
+  \[
+    \operatorname{Const}(\overline P)\xrightarrow{\sim}M_B.
+  \]
+  Lemma~\ref{lem:vect_square_zero_deform} lifts $\overline P$ to a finite
+  projective $A$-module $P$.  Compatibility of constant descent with
+  coefficient extension then gives an isomorphism
+  \[
+    M_B\xrightarrow{\sim}\operatorname{Const}(P)_B.
+  \]
+
+  At level one, Lemma~\ref{lem:novikov_square_zero_coefficients} says that the
+  map of Novikov rings is again a surjective square-zero extension.  Applying
+  Lemma~\ref{lem:vect_square_zero_deform} lifts the underlying linear
+  isomorphism to
+  \[
+    \theta\colon M\xrightarrow{\sim}\operatorname{Const}(P)
+  \]
+  on the underlying modules.  Transport the descent datum along $\theta$ and
+  normalize its descent isomorphism as in
+  Lemma~\ref{lem:normalized_constant_descent}; call the resulting
+  endomorphism $\psi$.  Its reduction is the identity.  Set
+  $\delta=\psi-1$.
+
+  The normalized multiplicative cocycle reads
+  \[
+    (1+\pi_{23}^*\delta)(1+\pi_{12}^*\delta)
+      =1+\pi_{13}^*\delta.
+  \]
+  Both face pullbacks of $\delta$ become zero over $B$.  Their composite is
+  therefore zero by Lemma~\ref{lem:square_zero_base_change}, now at level
+  three.  Expanding the preceding equation gives the additive cocycle
+  \[
+    \pi_{13}^*\delta
+      =\pi_{23}^*\delta+\pi_{12}^*\delta.
+  \]
+  Lemma~\ref{lem:endomorphism_novikov_cech_coboundary} supplies
+  $\eta\in\operatorname{End}(C_1(P))$, still zero after reduction, with
+  \[
+    \delta=\pi_1^*\eta-\pi_2^*\eta.
+  \]
+
+  Again by Lemma~\ref{lem:square_zero_base_change}, $\eta^2=0$ and
+  $\pi_2^*\eta\circ\pi_1^*\eta=0$.  Thus
+  \[
+    \xi=1+\eta,
+    \qquad
+    \xi^{-1}=1-\eta,
+  \]
+  and
+  \[
+    \psi
+      =1+\pi_1^*\eta-\pi_2^*\eta
+      =(1-\pi_2^*\eta)(1+\pi_1^*\eta)
+      =\pi_2^*(\xi^{-1})\circ\pi_1^*(\xi).
+  \]
+  Undoing the normalized tensor identifications says precisely that $\xi$ is
+  an isomorphism from the transported datum to $\operatorname{Const}(P)$.
+  Composing it with the transport isomorphism and taking the inverse yields
+  $\operatorname{Const}(P)\xrightarrow{\sim}M$.
+\end{proof}

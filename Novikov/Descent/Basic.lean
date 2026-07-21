@@ -235,6 +235,15 @@ lemma novikovCosimplicialRing_π₂_apply (f : (novikovCosimplicialRing Γ A).R�
       · exact (hj rfl).elim
   simp only [hcond]
 
+/-- Coefficient formula for `π₁₂ : R₂ → R₃`: it keeps the first two
+coordinates and forces the third coordinate to vanish. -/
+lemma novikovCosimplicialRing_π₁₂_apply
+    (f : (novikovCosimplicialRing Γ A).R₂) (d : Fin 3 → Γ) :
+    ((novikovCosimplicialRing Γ A).π₁₂ f).val d =
+      if d 2 = 0 then f.val (fun i : Fin 2 => d (Fin.castSucc i)) else 0 := by
+  change (substitute Fin.castSucc f).val d = _
+  rw [substitute_apply_singleton_compl (Fin.castSucc_injective 2) 2 (by decide) f d]
+
 /-- Coefficient formula for `π₁₃ : R₂ → R₃`. -/
 lemma novikovCosimplicialRing_π₁₃_apply (f : (novikovCosimplicialRing Γ A).R₂)
     (d : Fin 3 → Γ) :

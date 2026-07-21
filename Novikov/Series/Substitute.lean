@@ -182,6 +182,87 @@ lemma substitute_comp {ι'' : Type*} [Fintype ι''] (f : ι → ι') (g : ι' �
   convert h1.trans h2.symm
   simp [pushExponent_comp]
 
+/-- Substitution is additive for series with coefficients in an additive
+commutative group. -/
+lemma substitute_add {A : Type*} [AddCommGroup A] (f : ι → ι')
+    (s₁ s₂ : NovikovSeries Γ ι A) :
+    substitute f (s₁ + s₂) = substitute f s₁ + substitute f s₂ := by
+  ext g'
+  simp only [substitute, substituteFun, AddSubgroup.coe_add, Pi.add_apply, Subtype.coe_mk]
+  let S₁ := (finite_substitution_support f s₁ g').toFinset
+  let S₂ := (finite_substitution_support f s₂ g').toFinset
+  let S₁₂ := (finite_substitution_support f (s₁ + s₂) g').toFinset
+  have h_push : ∀ x ∈ S₁ ∪ S₂, pushExponents f x = g' := by
+    intro x hx
+    simp only [S₁, S₂, Finset.mem_union, Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hx
+    rcases hx with h | h <;> exact h.1
+  have h₁₂ : ∑ g ∈ S₁₂, (s₁.val g + s₂.val g) =
+      ∑ g ∈ S₁ ∪ S₂, (s₁.val g + s₂.val g) := by
+    apply Finset.sum_subset
+    · intro x hx
+      simp only [S₁₂, S₁, S₂, Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hx ⊢
+      simp only [Finset.mem_union, Set.Finite.mem_toFinset, Set.mem_setOf_eq]
+      by_cases hs₁ : s₁.val x = 0
+      · right
+        refine ⟨hx.1, ?_⟩
+        by_contra hs₂
+        apply hx.2
+        simp [hs₁, hs₂]
+      · left
+        exact ⟨hx.1, hs₁⟩
+    · intro x hx hnx
+      simp only [S₁₂, Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hnx
+      by_contra h_nz
+      exact hnx ⟨h_push x hx, h_nz⟩
+  have h₁ : ∑ g ∈ S₁, s₁.val g = ∑ g ∈ S₁ ∪ S₂, s₁.val g := by
+    apply Finset.sum_subset Finset.subset_union_left
+    intro x hx hnx
+    simp only [S₁, Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hnx
+    by_contra h_nz
+    exact hnx ⟨h_push x hx, h_nz⟩
+  have h₂ : ∑ g ∈ S₂, s₂.val g = ∑ g ∈ S₁ ∪ S₂, s₂.val g := by
+    apply Finset.sum_subset Finset.subset_union_right
+    intro x hx hnx
+    simp only [S₂, Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hnx
+    by_contra h_nz
+    exact hnx ⟨h_push x hx, h_nz⟩
+  rw [h₁₂, h₁, h₂, ← Finset.sum_add_distrib]
+
+/-- Substitution preserves zero for series with coefficients in an additive
+commutative group. -/
+lemma substitute_zero {A : Type*} [AddCommGroup A] (f : ι → ι') :
+    substitute f (0 : NovikovSeries Γ ι A) = 0 := by
+  ext d'
+  simp only [substitute, substituteFun, AddSubgroup.coe_zero, Pi.zero_apply]
+  apply Finset.sum_eq_zero
+  intro g hg
+  simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq,
+    not_true_eq_false, and_false] at hg
+
+/-- Applying an additive map coefficientwise commutes with substitution. -/
+lemma map_substitute {A B : Type*} [AddCommGroup A] [AddCommGroup B]
+    (g : A →+ B) (f : ι → ι') (x : NovikovSeries Γ ι A) :
+    Novikov.map g (substitute f x) = substitute f (Novikov.map g x) := by
+  ext d
+  rw [Novikov.map_apply]
+  show g ((substitute f x).val d) = (substitute f (Novikov.map g x)).val d
+  simp only [substitute, substituteFun]
+  rw [map_sum]
+  symm
+  apply Finset.sum_subset
+  · intro e he
+    rw [mem_finite_substitution_support] at he ⊢
+    refine ⟨he.1, ?_⟩
+    intro hxe
+    apply he.2
+    rw [Novikov.map_apply, hxe, map_zero]
+  · intro e he hne
+    rw [mem_finite_substitution_support] at he
+    rw [mem_finite_substitution_support, not_and] at hne
+    have h := hne he.1
+    rw [not_not] at h
+    exact h
+
 end Basic
 
 section Ring
@@ -221,43 +302,6 @@ lemma substitute_one (f : ι → ι') :
     subst hg0
     simp [h_p0] at hg
     simp_all only [not_true_eq_false]
-
-lemma substitute_add (f : ι → ι') (s1 s2 : NovikovSeries Γ ι A) :
-    substitute f (s1 + s2) = substitute f s1 + substitute f s2 := by
-  ext g'
-  simp only [substitute, substituteFun, AddSubgroup.coe_add, Pi.add_apply, Subtype.coe_mk]
-  let S1 := (finite_substitution_support f s1 g').toFinset
-  let S2 := (finite_substitution_support f s2 g').toFinset
-  let S12 := (finite_substitution_support f (s1 + s2) g').toFinset
-  have h_push : ∀ x ∈ S1 ∪ S2, pushExponents f x = g' := by
-    intro x hx
-    simp only [S1, S2, Finset.mem_union, Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hx
-    rcases hx with h | h <;> exact h.1
-  have eq12 : ∑ g ∈ S12, (s1.val g + s2.val g) = ∑ g ∈ S1 ∪ S2, (s1.val g + s2.val g) := by
-    apply Finset.sum_subset
-    · intro x hx
-      simp only [S12, S1, S2, Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hx ⊢
-      simp only [Finset.mem_union, Set.Finite.mem_toFinset, Set.mem_setOf_eq]
-      by_cases hs1 : s1.val x = 0
-      · right; refine ⟨hx.1, ?_⟩; by_contra h; apply hx.2; simp [hs1, h]
-      · left; exact ⟨hx.1, hs1⟩
-    · intro x hx hnx
-      simp only [S12, Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hnx
-      by_contra h_nz
-      exact hnx ⟨h_push x hx, h_nz⟩
-  have eq1 : ∑ g ∈ S1, s1.val g = ∑ g ∈ S1 ∪ S2, s1.val g := by
-    apply Finset.sum_subset Finset.subset_union_left
-    intro x hx hnx
-    simp only [S1, Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hnx
-    by_contra h_nz
-    exact hnx ⟨h_push x hx, h_nz⟩
-  have eq2 : ∑ g ∈ S2, s2.val g = ∑ g ∈ S1 ∪ S2, s2.val g := by
-    apply Finset.sum_subset Finset.subset_union_right
-    intro x hx hnx
-    simp only [S2, Set.Finite.mem_toFinset, Set.mem_setOf_eq] at hnx
-    by_contra h_nz
-    exact hnx ⟨h_push x hx, h_nz⟩
-  rw [eq12, eq1, eq2, ← Finset.sum_add_distrib]
 
 omit [Fintype ι'] in lemma pushExponents_add (f : ι → ι') (g1 g2 : ι → Γ) :
     pushExponents f (g1 + g2) = pushExponents f g1 + pushExponents f g2 := by
@@ -429,15 +473,6 @@ lemma substitute_mul (f : ι → ι') (s1 s2 : NovikovSeries Γ ι A) :
     substitute f (s1 * s2) = substitute f s1 * substitute f s2 := by
   ext g'
   rw [substitute_mul_LHS, substitute_mul_RHS]
-
-lemma substitute_zero (f : ι → ι') :
-    substitute f (0 : NovikovSeries Γ ι A) = 0 := by
-  ext d'
-  simp only [substitute, substituteFun, AddSubgroup.coe_zero, Pi.zero_apply]
-  apply sum_eq_zero
-  intro g hg
-  simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, ne_eq,
-    not_true_eq_false, and_false] at hg
 
 lemma substitute_algebraMap (f : ι → ι') (a : A) :
     substitute f (algebraMapNovikov a : NovikovSeries Γ ι A) =

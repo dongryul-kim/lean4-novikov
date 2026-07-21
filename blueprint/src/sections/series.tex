@@ -6,7 +6,7 @@ basic facts about them.
 
 \subsection{Multi-variable Novikov series}
 
-\begin{definition}[Definition~2.4]
+\begin{definition}[Definition~2.4: multivariable Novikov series]
   \label{def:novikov_series}
   \lean{Novikov.NovikovSeries}
   \leanok
@@ -19,7 +19,7 @@ basic facts about them.
   \}$ is finite.
 \end{definition}
 
-\begin{lemma}[Lemma~2.8]
+\begin{lemma}[Lemma~2.8: exactness of Novikov series]
   \label{lem:novikov_exact}
   \lean{Novikov.map_exact}
   \leanok
@@ -44,7 +44,7 @@ basic facts about them.
   coefficient independently.
 \end{proof}
 
-\begin{definition}
+\begin{definition}[Convolution of Novikov series]
   \label{def:novikov_multiplication}
   \lean{Novikov.novikovSeriesMul}
   \leanok
@@ -117,7 +117,7 @@ basic facts about them.
   By the five lemma (specifically the four lemma variant for right exactness), the map for $M$ is also an isomorphism.
 \end{proof}
 
-\begin{definition}
+\begin{definition}[Substitution of variables]
   \label{def:novikov_substitute}
   \lean{Novikov.substitute}
   \leanok
@@ -150,7 +150,7 @@ basic facts about them.
 
 When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
 
-\begin{definition}
+\begin{definition}[The Novikov filtration]
   \label{def:novikov_filtration}
   \lean{Novikov.filtration}
   \leanok
@@ -160,7 +160,7 @@ When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
   all $d < D$.
 \end{definition}
 
-\begin{theorem}[Definition~2.15]
+\begin{theorem}[Definition~2.15: the Novikov topology]
   \label{thm:novikov_topology}
   \lean{Novikov.is_topological_add_group, Novikov.is_topological_ring}
   \leanok
@@ -201,7 +201,7 @@ When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
 
 \subsection{Canonical module topology}
 
-\begin{definition}
+\begin{definition}[Canonical module topology]
   \label{def:canonical_topology}
   \lean{Novikov.Miscellany.canonicalTopology}
   \leanok
@@ -281,7 +281,7 @@ When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
   of $M$.
 \end{proof}
 
-\begin{theorem}[Lemma~2.16]
+\begin{theorem}[Lemma~2.16: finite projectivity descends from Novikov series]
   \label{thm:projective_novikov_series}
   \lean{Novikov.projective_of_realNovikovSeries}
   \leanok

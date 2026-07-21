@@ -245,8 +245,7 @@ vanish. -/
 lemma realC_π₁₂_apply (f : (realC A).R₂) (d : Fin 3 → ↥(⊤ : AddSubgroup ℝ)) :
     ((realC A).π₁₂ f).val d =
       if d 2 = 0 then f.val (fun i : Fin 2 => d (Fin.castSucc i)) else 0 := by
-  change (substitute Fin.castSucc f).val d = _
-  rw [substitute_apply_singleton_compl (Fin.castSucc_injective 2) 2 (by decide) f d]
+  exact novikovCosimplicialRing_π₁₂_apply (⊤ : AddSubgroup ℝ) f d
 
 /-- Ring-level fixed-point equalizer for the bottom row: a Frobenius-fixed
 (`F3`) element of `R₃` lies in the image of `π₁₂`.  The proof mirrors

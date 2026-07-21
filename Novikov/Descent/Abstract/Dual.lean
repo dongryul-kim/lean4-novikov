@@ -1422,47 +1422,6 @@ noncomputable def doubleDualHom {C : CosimplicialRing} (M : DescentDatum C) :
 lemma doubleDualHom_toLinearMap_apply {C : CosimplicialRing} (M : DescentDatum C) (x : M.M) :
     (doubleDualHom M).toLinearMap x = (Module.evalEquiv C.R₁ M.M) x := rfl
 
-private lemma linearMap_comp_symm_of_comp {R : Type*} [CommSemiring R]
-    {M₁ M₂ N₁ N₂ : Type*}
-    [AddCommMonoid M₁] [Module R M₁] [AddCommMonoid M₂] [Module R M₂]
-    [AddCommMonoid N₁] [Module R N₁] [AddCommMonoid N₂] [Module R N₂]
-    {Φ : M₂ →ₗ[R] N₂} {Ψ : M₁ →ₗ[R] N₁}
-    {B : M₁ ≃ₗ[R] M₂} {D : N₁ ≃ₗ[R] N₂}
-    (h : Φ ∘ₗ B.toLinearMap = D.toLinearMap ∘ₗ Ψ) :
-    Ψ ∘ₗ B.symm.toLinearMap = D.symm.toLinearMap ∘ₗ Φ := by
-  ext x
-  have hx := LinearMap.congr_fun h (B.symm x)
-  simp only [LinearMap.comp_apply, LinearEquiv.coe_coe, B.apply_symm_apply] at hx
-  simp only [LinearMap.comp_apply, LinearEquiv.coe_coe]
-  rw [hx, D.symm_apply_apply]
-
-/-- A morphism of descent data whose underlying linear map is an equivalence
-induces an isomorphism of descent data. -/
-noncomputable def isoOfLinearEquiv {C : CosimplicialRing}
-    {M N : DescentDatum C} (f : M ⟶ N) (e : M.M ≃ₗ[C.R₁] N.M)
-    (h : f.toLinearMap = e.toLinearMap) : M ≅ N where
-  hom := f
-  inv :=
-    { toLinearMap := e.symm.toLinearMap
-      commute_φ := by
-        let B := letI : Algebra C.R₁ C.R₂ := C.π₁.toAlgebra
-          LinearEquiv.baseChange C.R₁ C.R₂ _ _ e
-        let D := letI : Algebra C.R₁ C.R₂ := C.π₂.toAlgebra
-          LinearEquiv.baseChange C.R₁ C.R₂ _ _ e
-        have hf := f.commute_φ
-        rw [h] at hf
-        exact linearMap_comp_symm_of_comp (B := B) (D := D) hf }
-  hom_inv_id := by
-    apply DescentDatum.hom_ext
-    change e.symm.toLinearMap ∘ₗ f.toLinearMap = LinearMap.id
-    rw [h]
-    exact e.symm_comp
-  inv_hom_id := by
-    apply DescentDatum.hom_ext
-    change f.toLinearMap ∘ₗ e.symm.toLinearMap = LinearMap.id
-    rw [h]
-    exact e.comp_symm
-
 /-- Canonical double-dual reflexivity for a finite-projective descent datum. -/
 noncomputable def doubleDualIso {C : CosimplicialRing} (M : DescentDatum C) :=
   isoOfLinearEquiv (doubleDualHom M) (Module.evalEquiv C.R₁ M.M) rfl

@@ -6,7 +6,7 @@ modules.
 
 \subsection{Abstract descent data}
 
-\begin{definition}
+\begin{definition}[Cosimplicial rings]
   \label{def:cosimplicial_ring}
   \lean{Novikov.Descent.Abstract.CosimplicialRing}
   \leanok
@@ -20,7 +20,7 @@ modules.
   $\pi^\ast M = S \otimes_{R, \pi^\ast} M$ for the base change of an $R$-module $M$.
 \end{definition}
 
-\begin{definition}
+\begin{definition}[Abstract descent data]
   \label{def:descent_datum}
   \lean{Novikov.Descent.Abstract.DescentDatum}
   \leanok
@@ -34,7 +34,7 @@ modules.
   they form a category with an internal Hom.
 \end{definition}
 
-\begin{definition}
+\begin{definition}[Extended cosimplicial rings]
   \label{def:extended_cosimplicial_ring}
   \lean{Novikov.Descent.Abstract.ExtendedCosimplicialRing}
   \leanok
@@ -44,7 +44,7 @@ modules.
   $\pi_1^\ast\pi_0^\ast = \pi_2^\ast\pi_0^\ast$.
 \end{definition}
 
-\begin{definition}
+\begin{definition}[Constant descent data]
   \label{def:constant_descent_datum}
   \lean{Novikov.Descent.Abstract.constantDescentDatum}
   \leanok
@@ -57,7 +57,7 @@ modules.
   via $\pi_1^\ast\pi_0^\ast = \pi_2^\ast\pi_0^\ast$.
 \end{definition}
 
-\begin{definition}
+\begin{definition}[The constant descent functor]
   \label{def:constant_descent_functor}
   \lean{Novikov.Descent.Abstract.constantDescentDatumFunctor}
   \leanok
@@ -95,7 +95,7 @@ modules.
 
 \subsection{Novikov descent data}
 
-\begin{definition}[Definition~2.9]
+\begin{definition}[Definition~2.9: Novikov descent data]
   \label{def:novikov_descent_datum}
   \lean{Novikov.Descent.novikovCosimplicialRing}
   \leanok
@@ -137,7 +137,7 @@ modules.
   $f \in A$.
 \end{proof}
 
-\begin{proposition}[Proposition~2.12]
+\begin{proposition}[Proposition~2.12: full faithfulness of constant Novikov descent]
   \label{prop:vect_to_novikov_descent_fully_faithful}
   \lean{Novikov.Descent.vectToNovikovDescent_fullyFaithful}
   \leanok
@@ -182,7 +182,7 @@ We construct a functor $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$.
   Lemma~\ref{lem:novikov_equalizer}).
 \end{proof}
 
-\begin{definition}
+\begin{definition}[Face Frobenius maps]
   \label{def:face_frobenius}
   \lean{Novikov.Descent.F2, Novikov.Descent.F3}
   \leanok
@@ -195,7 +195,7 @@ We construct a functor $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$.
   A((t^{\mathbb{R}}, u^{\mathbb{R}}, v^{\mathbb{R}}))$, fixing $t, u$ and $v \mapsto v^\lambda$.
 \end{definition}
 
-\begin{definition}
+\begin{definition}[Frobenius actions on face pullbacks]
   \label{def:face_frobenius_action}
   \lean{Novikov.Descent.FM2, Novikov.Descent.FM3}
   \leanok
@@ -286,7 +286,7 @@ We construct a functor $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$.
 
 \subsection{Full faithfulness of the descent-to-isocrystal functor}
 
-\begin{lemma}[Lemma~4.1]
+\begin{lemma}[Lemma~4.1: recovering descent data from Frobenius]
   \label{lem:recover_dd_from_isoc}
   \lean{Novikov.Descent.recoverDDFromIsoc_equalizerLemma,
     Novikov.Descent.RecoverDDFromIsocData}
@@ -346,7 +346,7 @@ We construct a functor $\mathsf{NovDD}(A) \to \mathsf{NovIsoc}(A)$.
   face yields $\pi_2^\ast f \circ \varphi_M = \varphi_N \circ \pi_1^\ast f$.
 \end{proof}
 
-\begin{proposition}[Proposition~4.2]
+\begin{proposition}[Proposition~4.2: full faithfulness of descent to isocrystals]
   \label{prop:descent_to_isoc_fully_faithful}
   \lean{Novikov.Descent.descentToIsocrystal_fullyFaithful}
   \leanok
