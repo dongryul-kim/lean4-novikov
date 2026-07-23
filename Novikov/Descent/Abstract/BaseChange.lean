@@ -779,4 +779,175 @@ noncomputable def baseChangeFunctor {C D : CosimplicialRing} (F : CosimplicialRi
       LinearMap.baseChange D.R₁ g.toLinearMap ∘ₗ LinearMap.baseChange D.R₁ f.toLinearMap
     exact LinearMap.baseChange_comp _ _
 
+/-! ### Composition of base change -/
+
+section BaseChangeComp
+
+open CategoryTheory
+
+universe u
+
+variable {C D E : CosimplicialRing.{u, u, u}}
+
+private lemma pullbackBaseChangeπ₂_comp
+    (F : CosimplicialRingHom C D) (G : CosimplicialRingHom D E)
+    (M : DescentDatum.{u, u, u, u} C)
+    (r : E.R₂) (s : E.R₁) (t : D.R₁) (y : π₂s C M.M) :
+    let H := G.comp F
+    let e := baseChange_assoc F.f₁ G.f₁ M.M
+    let aD : D.R₂ := D.π₁ t
+    let aE : E.R₂ := E.π₁ s * r
+    let rH : E.R₂ := E.π₁ (G.f₁ t * s) * r
+    H.pullbackBaseChangeπ₂ M.M |>.symm
+        (letI : Algebra C.R₂ E.R₂ := H.f₂.toAlgebra
+         rH ⊗ₜ[C.R₂] y) =
+      (baseChangeMap E.π₂ e.toLinearMap)
+        (G.pullbackBaseChangeπ₂ (M.baseChange F).M |>.symm
+          (letI : Algebra D.R₂ E.R₂ := G.f₂.toAlgebra
+           aE ⊗ₜ[D.R₂]
+            (F.pullbackBaseChangeπ₂ M.M |>.symm
+              (letI : Algebra C.R₂ D.R₂ := F.f₂.toAlgebra
+               aD ⊗ₜ[C.R₂] y)))) := by
+  dsimp only
+  let H := G.comp F
+  let e := baseChange_assoc F.f₁ G.f₁ M.M
+  let aD : D.R₂ := D.π₁ t
+  let aE : E.R₂ := E.π₁ s * r
+  let rH : E.R₂ := E.π₁ (G.f₁ t * s) * r
+  let mkH :=
+    letI : Algebra C.R₂ E.R₂ := H.f₂.toAlgebra
+    TensorProduct.mk C.R₂ E.R₂ (π₂s C M.M) rH
+  let lhs : π₂s C M.M →+ π₂s E (M.baseChange H).M :=
+    (H.pullbackBaseChangeπ₂ M.M).symm.toLinearMap.toAddMonoidHom.comp
+      mkH.toAddMonoidHom
+  let mkF :=
+    letI : Algebra C.R₂ D.R₂ := F.f₂.toAlgebra
+    TensorProduct.mk C.R₂ D.R₂ (π₂s C M.M) aD
+  let fMap : π₂s C M.M →+ π₂s D (M.baseChange F).M :=
+    (F.pullbackBaseChangeπ₂ M.M).symm.toLinearMap.toAddMonoidHom.comp
+      mkF.toAddMonoidHom
+  let mkG :=
+    letI : Algebra D.R₂ E.R₂ := G.f₂.toAlgebra
+    TensorProduct.mk D.R₂ E.R₂ (π₂s D (M.baseChange F).M) aE
+  let gMap : π₂s D (M.baseChange F).M →+
+      π₂s E ((M.baseChange F).baseChange G).M :=
+    (G.pullbackBaseChangeπ₂ (M.baseChange F).M).symm.toLinearMap.toAddMonoidHom.comp
+      mkG.toAddMonoidHom
+  let bcMap := (baseChangeMap E.π₂ e.toLinearMap).toAddMonoidHom
+  let rhs : π₂s C M.M →+ π₂s E (M.baseChange H).M :=
+    bcMap.comp (gMap.comp fMap)
+  change lhs y = rhs y
+  induction y using TensorProduct.induction_on with
+  | zero => simp only [map_zero]
+  | add y z hy hz => simp only [map_add, hy, hz]
+  | tmul c m =>
+      simp only [lhs, rhs, bcMap, gMap, mkG, fMap, mkF, mkH]
+      change (H.pullbackBaseChangeπ₂ M.M).symm
+          (letI : Algebra C.R₂ E.R₂ := H.f₂.toAlgebra
+           rH ⊗ₜ[C.R₂]
+            (letI : Algebra C.R₁ C.R₂ := C.π₂.toAlgebra
+             c ⊗ₜ[C.R₁] m)) =
+        (baseChangeMap E.π₂ e.toLinearMap)
+          ((G.pullbackBaseChangeπ₂ (M.baseChange F).M).symm
+            (letI : Algebra D.R₂ E.R₂ := G.f₂.toAlgebra
+             aE ⊗ₜ[D.R₂]
+              ((F.pullbackBaseChangeπ₂ M.M).symm
+                (letI : Algebra C.R₂ D.R₂ := F.f₂.toAlgebra
+                 aD ⊗ₜ[C.R₂]
+                  (letI : Algebra C.R₁ C.R₂ := C.π₂.toAlgebra
+                   c ⊗ₜ[C.R₁] m)))))
+      have hF := F.pullbackBaseChangeπ₂_symm_tmul' M.M (D.π₁ t) c m
+      with_reducible erw [hF]
+      let mD : (M.baseChange F).M :=
+        letI : Algebra C.R₁ D.R₁ := F.f₁.toAlgebra
+        (1 : D.R₁) ⊗ₜ[C.R₁] m
+      let cD : D.R₂ := F.f₂ c * D.π₁ t
+      have hG := G.pullbackBaseChangeπ₂_symm_tmul'
+        (M.baseChange F).M (E.π₁ s * r) cD mD
+      dsimp only [cD, mD] at hG
+      with_reducible erw [hG]
+      let H := G.comp F
+      have hH := H.pullbackBaseChangeπ₂_symm_tmul' M.M
+        (E.π₁ (G.f₁ t * s) * r) c m
+      dsimp only [H] at hH
+      with_reducible erw [hH]
+      erw [baseChangeMap_tmul]
+      have ha := baseChange_assoc_tmul F.f₁ G.f₁
+        (1 : E.R₁) (1 : D.R₁) m
+      with_reducible erw [ha]
+      with_reducible
+        simp only [Algebra.smul_def, RingHom.algebraMap_toAlgebra,
+          map_one, one_mul]
+      congr 1
+      change G.f₂ (F.f₂ c) * (E.π₁ (G.f₁ t * s) * r) =
+        G.f₂ (F.f₂ c * D.π₁ t) * (E.π₁ s * r)
+      rw [map_mul, map_mul, G.map_π₁_apply]
+      ring
+
+/-- Iterated base change of a descent datum agrees with base change along the
+composite cosimplicial ring homomorphism. -/
+noncomputable def DescentDatum.baseChangeCompIso
+    (F : CosimplicialRingHom C D) (G : CosimplicialRingHom D E)
+    (M : DescentDatum.{u, u, u, u} C) :
+    (M.baseChange F).baseChange G ≅ M.baseChange (G.comp F) := by
+  let e := baseChange_assoc F.f₁ G.f₁ M.M
+  let f : (M.baseChange F).baseChange G ⟶ M.baseChange (G.comp F) :=
+    { toLinearMap := e.toLinearMap
+      commute_φ := by
+        change (M.baseChange (G.comp F)).φ.toLinearMap ∘ₗ
+            baseChangeMap E.π₁ e.toLinearMap =
+          baseChangeMap E.π₂ e.toLinearMap ∘ₗ
+            ((M.baseChange F).baseChange G).φ.toLinearMap
+        apply LinearMap.ext
+        intro x
+        induction x using TensorProduct.induction_on with
+        | zero => simp only [map_zero]
+        | add x y hx hy =>
+            simpa only [map_add, LinearMap.comp_apply] using
+              congrArg₂ HAdd.hAdd hx hy
+        | tmul r y =>
+            induction y using TensorProduct.induction_on with
+            | zero =>
+                simp only [TensorProduct.tmul_zero, map_zero]
+            | add y z hy hz =>
+                simpa only [TensorProduct.tmul_add, map_add,
+                  LinearMap.comp_apply] using congrArg₂ HAdd.hAdd hy hz
+            | tmul s z =>
+                induction z using TensorProduct.induction_on with
+                | zero =>
+                    simp only [TensorProduct.tmul_zero, map_zero]
+                | add z w hz hw =>
+                    simpa only [TensorProduct.tmul_add, map_add,
+                      LinearMap.comp_apply] using congrArg₂ HAdd.hAdd hz hw
+                | tmul t m =>
+                    simp only [LinearMap.comp_apply]
+                    dsimp only [e]
+                    rw [baseChangeMap_tmul]
+                    have he := baseChange_assoc_tmul F.f₁ G.f₁ s t m
+                    with_reducible erw [he]
+                    change (G.comp F).baseChangePhi M _ =
+                      baseChangeMap E.π₂
+                        (baseChange_assoc F.f₁ G.f₁ M.M).toLinearMap
+                        (G.baseChangePhi (M.baseChange F) _)
+                    have hH := (G.comp F).baseChangePhi_tmul M r
+                      (G.f₁ t * s) m
+                    with_reducible erw [hH]
+                    have hG := G.baseChangePhi_tmul (M.baseChange F) r s
+                      (letI : Algebra C.R₁ D.R₁ := F.f₁.toAlgebra
+                       t ⊗ₜ[C.R₁] m)
+                    with_reducible erw [hG]
+                    have hF := F.baseChangePhi_tmul M (1 : D.R₂) t m
+                    with_reducible erw [hF]
+                    let y : π₂s C M.M := M.φ
+                      (letI : Algebra C.R₁ C.R₂ := C.π₁.toAlgebra
+                       (1 : C.R₂) ⊗ₜ[C.R₁] m)
+                    have hcomp := pullbackBaseChangeπ₂_comp F G M r s t y
+                    dsimp only at hcomp
+                    with_reducible
+                      simpa only [y, Algebra.smul_def,
+                        RingHom.algebraMap_toAlgebra, mul_one] using hcomp }
+  exact DescentDatum.isoOfLinearEquiv f e rfl
+
+end BaseChangeComp
+
 end Novikov.Descent.Abstract

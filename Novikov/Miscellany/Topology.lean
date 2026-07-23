@@ -33,6 +33,13 @@ lemma canonicalTopology.continuous_linearMap (φ : M →ₗ[A] N) :
   rw [← continuous_iff_le_induced] at h
   simpa using h
 
+/-- Negation is continuous for the canonical topology on a module. -/
+lemma canonicalTopology.continuousNeg :
+    @ContinuousNeg M (canonicalTopology A M) _ := by
+  letI : TopologicalSpace M := canonicalTopology A M
+  refine ⟨?_⟩
+  simpa using canonicalTopology.continuous_linearMap A M M (-LinearMap.id)
+
 section WithTopologicalRing
 variable [IsTopologicalRing A]
 
@@ -80,6 +87,38 @@ lemma canonicalTopology.continuousAdd : @ContinuousAdd M (canonicalTopology A M)
     exact h_fst.add h_snd
   refine @ContinuousAdd.mk M (canonicalTopology A M) _ ?_
   simpa using h
+
+/-- The canonical topology makes a module into a topological additive group. -/
+lemma canonicalTopology.isTopologicalAddGroup :
+    @IsTopologicalAddGroup M (canonicalTopology A M) _ := by
+  letI : TopologicalSpace M := canonicalTopology A M
+  letI : ContinuousAdd M := canonicalTopology.continuousAdd A M
+  letI : ContinuousNeg M := canonicalTopology.continuousNeg A M
+  exact IsTopologicalAddGroup.mk
+
+/-- A surjective linear map onto a projective module is open when both modules
+carry their canonical topologies. -/
+lemma canonicalTopology.isOpenMap_of_surjective_of_projective
+    [Module.Projective A N] (q : M →ₗ[A] N) (hq : Function.Surjective q) :
+    @IsOpenMap M N (canonicalTopology A M) (canonicalTopology A N) q := by
+  letI : TopologicalSpace M := canonicalTopology A M
+  letI : TopologicalSpace N := canonicalTopology A N
+  letI : IsTopologicalAddGroup M := canonicalTopology.isTopologicalAddGroup A M
+  letI : IsTopologicalAddGroup N := canonicalTopology.isTopologicalAddGroup A N
+  obtain ⟨s, hs⟩ := Module.projective_lifting_property q LinearMap.id hq
+  have hs_cont : Continuous s :=
+    canonicalTopology.continuous_linearMap A N M s
+  apply IsOpenMap.of_sections
+  intro x
+  let g : N → M := fun y => x + s (y - q x)
+  refine ⟨g, ?_, ?_, ?_⟩
+  · exact (continuous_const.add
+      (hs_cont.comp (continuous_id.sub continuous_const))).continuousAt
+  · simp [g]
+  · intro y
+    dsimp [g]
+    rw [map_add, ← LinearMap.comp_apply, hs, LinearMap.id_apply]
+    abel
 
 lemma canonicalTopology.continuousSMul : @ContinuousSMul A M _ ‹TopologicalSpace A› (canonicalTopology A M) := by
   letI : TopologicalSpace M := canonicalTopology A M

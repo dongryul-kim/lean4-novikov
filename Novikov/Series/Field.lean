@@ -15,8 +15,11 @@ open Finset Topology Pointwise
 
 namespace Novikov
 
-variable {A : Type*} [Field A]
 variable {S : Type*} [SetLike S ℝ] [AddSubgroupClass S ℝ] {Γ : S}
+
+section CommRing
+
+variable {A : Type*} [CommRing A]
 
 /-- The support of a one-variable Novikov series. -/
 def support (f : OneVarNovikovSeries Γ A) : Set (Unit → Γ) :=
@@ -203,6 +206,12 @@ lemma geometricSeries_mul_inv (g : OneVarNovikovSeries Γ A) (hg : IsPositive g)
   change (1 - g) * (∑' n : ℕ, g ^ n) = 1
   exact (geometric_summable g hg).one_sub_mul_tsum_pow
 
+end CommRing
+
+section Field
+
+variable {A : Type*} [Field A]
+
 lemma isPositive_one_sub_norm (f : OneVarNovikovSeries Γ A) (hf : f ≠ 0) :
     let d := minDegree f
     let a := leadingCoeff f
@@ -273,5 +282,7 @@ noncomputable instance novikovField : Field (OneVarNovikovSeries Γ A) :=
         dsimp [f_inv]
         rw [← mul_assoc, mul_comm f, ← hg, h_inv]]
   }
+
+end Field
 
 end Novikov

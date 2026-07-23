@@ -181,3 +181,53 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
   $M_0$ is finite projective over $A$, and $M \cong M_0((t^{\mathbb{R}}))$.
 \end{proof}
 
+\begin{theorem}[Proposition~3.8: a contracting lattice makes an isocrystal constant]
+  \label{prop:lattice_isocrystal}
+  \lean{Novikov.lattice_isocrystal}
+  \leanok
+  \uses{def:novikov_isocrystal, lem:frobenius_limit, def:novikov_filtration,
+    thm:novikov_topology, def:canonical_topology,
+    thm:canonical_topology_properties, thm:projective_novikov_series,
+    lem:split_base_change_descent, thm:novikov_base_change,
+    def:frobenius, thm:frobenius_properties, thm:novikov_ring,
+    thm:novikov_module}
+  Let $P \subseteq A((t^{\mathbb{R}}))$ be the filtration-zero subring and let
+  $M$ be a Novikov isocrystal over a commutative ring $A$. Suppose that
+  $L \subseteq M$ is a finite $P$-submodule whose
+  $A((t^{\mathbb{R}}))$-span is $M$. If for every $m \in L$ there is some
+  $\varepsilon>0$ such that
+  \[
+    F_M(m)-m \in t^\varepsilon L,
+  \]
+  then $M$ is isomorphic to a constant Novikov isocrystal.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  A split finite-free presentation of $M$ shows that the shifts
+  $t^dL$, $d\in\mathbb{R}$, form a neighborhood basis of zero for the
+  canonical topology. Frobenius sends differences in $t^dL$ into
+  $t^{\lambda d}L$. Consequently, the Frobenius orbit of every lattice
+  element converges to a fixed element congruent to it modulo the ideal of
+  positive-degree power series. This ideal lies in the Jacobson radical of
+  $P$, so Nakayama's lemma corrects a finite generating family of $L$ to a
+  finite Frobenius-fixed generating family.
+
+  The corrected generators define a Frobenius-compatible surjection
+  $(A^n)((t^{\mathbb{R}}))\twoheadrightarrow M$. Its kernel is closed and
+  stable under Frobenius and every monomial shift, so
+  Lemma~\ref{lem:frobenius_limit} identifies it with
+  $K_0((t^{\mathbb{R}}))$ for an $A$-submodule $K_0\subseteq A^n$.
+  The splitting of the surjection and the induced topology show, via
+  Theorem~\ref{thm:projective_novikov_series}, that $K_0$ is finite
+  projective.
+
+  Set $N_0=A^n/K_0$. Exactness of the Novikov-series functor identifies
+  $N_0((t^{\mathbb{R}}))$ with $M$, compatibly with Frobenius. The module
+  $N_0$ is finitely presented, and split base-change descent along the
+  constant-term retraction
+  $A((t^{\mathbb{R}}))\to A$ makes it finite projective. Hence the preceding
+  identification is an isomorphism from the constant isocrystal attached to
+  $N_0$ to $M$.
+\end{proof}
+

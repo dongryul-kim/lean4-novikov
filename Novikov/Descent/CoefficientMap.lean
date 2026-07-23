@@ -25,6 +25,16 @@ lemma mapRingHom_comp_algebraMapNovikov (q : A →+* B) :
     simp [algebraMapNovikov]
   · simp [algebraMapNovikov, hd]
 
+/-- Applying two coefficient maps successively agrees with applying their
+composite. -/
+lemma mapRingHom_comp {C : Type*} [CommRing C]
+    (f : A →+* B) (g : B →+* C) :
+    mapRingHom (Γ := Γ) (ι := ι) (g.comp f) =
+      (mapRingHom (Γ := Γ) (ι := ι) g).comp
+        (mapRingHom (Γ := Γ) (ι := ι) f) := by
+  ext x d
+  rfl
+
 end Novikov
 
 open Novikov.Descent.Abstract
@@ -116,6 +126,31 @@ lemma realCCoeffHom_f₃ {A : Type u} {B : Type v}
     [CommRing A] [CommRing B] (f : A →+* B) :
     (realCCoeffHom f).f₃ =
       Novikov.mapRingHom (Γ := (⊤ : AddSubgroup ℝ)) (ι := Fin 3) f := rfl
+
+/-- Cosimplicial coefficient maps preserve composition. -/
+lemma realCCoeffHom_comp
+    {A B C : Type u} [CommRing A] [CommRing B] [CommRing C]
+    (f : A →+* B) (g : B →+* C) :
+    realCCoeffHom (g.comp f) =
+      (realCCoeffHom g).comp (realCCoeffHom f) := by
+  apply CosimplicialRingHom.ext <;>
+    simp only [realCCoeffHom_f₁, realCCoeffHom_f₂,
+      realCCoeffHom_f₃, CosimplicialRingHom.comp_f₁,
+      CosimplicialRingHom.comp_f₂, CosimplicialRingHom.comp_f₃]
+  · exact Novikov.mapRingHom_comp f g
+  · exact Novikov.mapRingHom_comp f g
+  · exact Novikov.mapRingHom_comp f g
+
+/-- Iterated coefficient base change of real Novikov descent data agrees with
+base change along the composite coefficient map. -/
+noncomputable def novikovDescent_baseChangeCompIso
+    {A B C : Type u} [CommRing A] [CommRing B] [CommRing C]
+    (f : A →+* B) (g : B →+* C)
+    (M : NovikovDescentDatum.{0, u, u} (⊤ : AddSubgroup ℝ) A) :
+    (M.baseChange (realCCoeffHom f)).baseChange (realCCoeffHom g) ≅
+      M.baseChange (realCCoeffHom (g.comp f)) := by
+  rw [realCCoeffHom_comp f g]
+  exact M.baseChangeCompIso (realCCoeffHom f) (realCCoeffHom g)
 
 /-- Constant real Novikov descent commutes with coefficient base change. -/
 noncomputable def vectToNovikovDescent_baseChangeIso

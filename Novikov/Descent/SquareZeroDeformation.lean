@@ -148,54 +148,53 @@ lemma normalizedPhi_constant
 /-! ## The square-zero deformation argument -/
 
 private theorem exists_lifted_constant_reduction
-    (A : Type u) [CommRing A]
-    (I : Ideal A) (hI : I ^ 2 = ⊥)
+    (A B : Type u) [CommRing A] [CommRing B]
+    (q : A →+* B) (hq : Function.Surjective q)
+    (hq_sq : RingHom.ker q ^ 2 = ⊥)
     (M : NovikovDescentDatum.{0, u, u} (⊤ : AddSubgroup ℝ) A)
-    (hM : ∃ Q : FiniteProjectiveModule.{u, u} (A ⧸ I),
+    (hM : ∃ Q : FiniteProjectiveModule.{u, u} B,
       Nonempty
         ((vectToNovikovDescent.{0, u, u}
-            (⊤ : AddSubgroup ℝ) (A ⧸ I)).obj Q ≅
-          M.baseChange
-            (realCCoeffHom (Ideal.Quotient.mk I)))) :
+            (⊤ : AddSubgroup ℝ) B).obj Q ≅
+          M.baseChange (realCCoeffHom q))) :
     ∃ P : FiniteProjectiveModule.{u, u} A,
       Nonempty
-        (M.baseChange (realCCoeffHom (Ideal.Quotient.mk I)) ≅
+        (M.baseChange (realCCoeffHom q) ≅
           ((vectToNovikovDescent.{0, u, u}
             (⊤ : AddSubgroup ℝ) A).obj P).baseChange
-              (realCCoeffHom (Ideal.Quotient.mk I))) := by
+              (realCCoeffHom q)) := by
   rcases hM with ⟨Q, ⟨eBar⟩⟩
-  rcases FiniteProjectiveModule.exists_lift_of_quotient_sq I hI Q with
+  rcases FiniteProjectiveModule.exists_lift_of_surjective_of_ker_sq
+      q hq hq_sq Q with
     ⟨P, ⟨eQ⟩⟩
   refine ⟨P, ⟨?_⟩⟩
   exact eBar.symm ≪≫
-    (vectToNovikovDescent (⊤ : AddSubgroup ℝ) (A ⧸ I)).mapIso eQ.symm ≪≫
-      (vectToNovikovDescent_baseChangeIso (Ideal.Quotient.mk I) P).symm
+    (vectToNovikovDescent (⊤ : AddSubgroup ℝ) B).mapIso eQ.symm ≪≫
+      (vectToNovikovDescent_baseChangeIso q P).symm
 
 private theorem exists_underlying_linearEquiv_lift
-    (A : Type u) [CommRing A]
-    (I : Ideal A) (hI : I ^ 2 = ⊥)
+    (A B : Type u) [CommRing A] [CommRing B]
+    (q : A →+* B) (hq : Function.Surjective q)
+    (hq_sq : RingHom.ker q ^ 2 = ⊥)
     (M : NovikovDescentDatum.{0, u, u} (⊤ : AddSubgroup ℝ) A)
     (P : FiniteProjectiveModule.{u, u} A)
     (eRed :
-      M.baseChange (realCCoeffHom (Ideal.Quotient.mk I)) ≅
+      M.baseChange (realCCoeffHom q) ≅
         ((vectToNovikovDescent.{0, u, u}
           (⊤ : AddSubgroup ℝ) A).obj P).baseChange
-            (realCCoeffHom (Ideal.Quotient.mk I))) :
+            (realCCoeffHom q)) :
     let C := (vectToNovikovDescent.{0, u, u}
       (⊤ : AddSubgroup ℝ) A).obj P
-    let F := realCCoeffHom (Ideal.Quotient.mk I)
+    let F := realCCoeffHom q
     ∃ θ : M.M ≃ₗ[(realC A).R₁] C.M,
       baseChangeLinearEquiv F.f₁ θ = Abstract.DescentDatum.isoLinearEquiv eRed ∧
         Nonempty (M ≅ M.transport θ) := by
-  let q := Ideal.Quotient.mk I
   let C := (vectToNovikovDescent.{0, u, u}
     (⊤ : AddSubgroup ℝ) A).obj P
   let F := realCCoeffHom q
-  have hq_sq : RingHom.ker q ^ 2 = ⊥ := by
-    simpa only [q, Ideal.mk_ker] using hI
   have hF_surj : Function.Surjective F.f₁ := by
     rw [show F.f₁ = mapRingHom q from realCCoeffHom_f₁ q]
-    exact mapRingHom_surjective q Ideal.Quotient.mk_surjective
+    exact mapRingHom_surjective q hq
   have hF_sq : RingHom.ker F.f₁ ^ 2 = ⊥ := by
     rw [show F.f₁ = mapRingHom q from realCCoeffHom_f₁ q]
     exact mapRingHom_ker_sq q hq_sq
@@ -710,6 +709,43 @@ attribute [local irreducible]
   correctingLinearEquiv
   correctingDescentIso
 
+/-- Real Novikov descent data that become constant after a surjective
+square-zero coefficient map are already constant. -/
+theorem novikovDescent_squareZero_of_surjective
+    (A B : Type u) [CommRing A] [CommRing B]
+    (q : A →+* B) (hq : Function.Surjective q)
+    (hq_sq : RingHom.ker q ^ 2 = ⊥)
+    (M : NovikovDescentDatum.{0, u, u} (⊤ : AddSubgroup ℝ) A)
+    (hM : ∃ Q : FiniteProjectiveModule.{u, u} B,
+      Nonempty
+        ((vectToNovikovDescent.{0, u, u}
+            (⊤ : AddSubgroup ℝ) B).obj Q ≅
+          M.baseChange (realCCoeffHom q))) :
+    ∃ P : FiniteProjectiveModule.{u, u} A,
+      Nonempty
+        (((vectToNovikovDescent.{0, u, u}
+            (⊤ : AddSubgroup ℝ) A).obj P) ≅ M) := by
+  obtain ⟨P, ⟨eRed⟩⟩ :=
+    exists_lifted_constant_reduction A B q hq hq_sq M hM
+  obtain ⟨θ, hθ, ⟨θIso⟩⟩ :=
+    exists_underlying_linearEquiv_lift A B q hq hq_sq M P eRed
+  obtain ⟨η, hδ, hηq⟩ :=
+    exists_normalizedPhi_correcting_end
+      q hq hq_sq P M θ eRed hθ
+  have hη : η ∘ₗ η = 0 :=
+    correcting_end_sq_zero q hq hq_sq P η hηq
+  let ξ := correctingLinearEquiv P η hη
+  have hcomp : π₂End P η ∘ₗ π₁End P η = 0 :=
+    correcting_faces_comp_eq_zero q hq hq_sq P η hηq
+  have hψ0 := normalized_gauge_identity P
+    (normalizedPhi P (M.transport θ).φ) η hδ hcomp
+  have hψ : normalizedPhi P (M.transport θ).φ =
+      π₂End P ξ.symm.toLinearMap ∘ₗ π₁End P ξ.toLinearMap := by
+    simpa only [ξ, correctingLinearEquiv_toLinearMap,
+      correctingLinearEquiv_symm_toLinearMap] using hψ0
+  let ξIso := correctingDescentIso P M θ ξ hψ
+  exact ⟨P, ⟨(θIso ≪≫ ξIso).symm⟩⟩
+
 /-- Real Novikov descent data that become constant modulo a square-zero ideal
 are already constant. -/
 theorem novikovDescent_squareZero
@@ -730,25 +766,7 @@ theorem novikovDescent_squareZero
   have hq : Function.Surjective q := Ideal.Quotient.mk_surjective
   have hq_sq : RingHom.ker q ^ 2 = ⊥ := by
     simpa only [q, Ideal.mk_ker] using hI
-  obtain ⟨P, ⟨eRed⟩⟩ :=
-    exists_lifted_constant_reduction A I hI M hM
-  obtain ⟨θ, hθ, ⟨θIso⟩⟩ :=
-    exists_underlying_linearEquiv_lift A I hI M P eRed
-  obtain ⟨η, hδ, hηq⟩ :=
-    exists_normalizedPhi_correcting_end
-      q hq hq_sq P M θ eRed hθ
-  have hη : η ∘ₗ η = 0 :=
-    correcting_end_sq_zero q hq hq_sq P η hηq
-  let ξ := correctingLinearEquiv P η hη
-  have hcomp : π₂End P η ∘ₗ π₁End P η = 0 :=
-    correcting_faces_comp_eq_zero q hq hq_sq P η hηq
-  have hψ0 := normalized_gauge_identity P
-    (normalizedPhi P (M.transport θ).φ) η hδ hcomp
-  have hψ : normalizedPhi P (M.transport θ).φ =
-      π₂End P ξ.symm.toLinearMap ∘ₗ π₁End P ξ.toLinearMap := by
-    simpa only [ξ, correctingLinearEquiv_toLinearMap,
-      correctingLinearEquiv_symm_toLinearMap] using hψ0
-  let ξIso := correctingDescentIso P M θ ξ hψ
-  exact ⟨P, ⟨(θIso ≪≫ ξIso).symm⟩⟩
+  exact novikovDescent_squareZero_of_surjective A (A ⧸ I)
+    q hq hq_sq M hM
 
 end Novikov.Descent

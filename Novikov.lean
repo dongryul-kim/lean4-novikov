@@ -13,6 +13,7 @@ import Novikov.Series.Exact
 import Novikov.Series.OneVar
 import Novikov.Series.Frobenius
 import Novikov.Series.Field
+import Novikov.Series.PowerSeries
 import Novikov.Series.Substitute
 import Novikov.Series.Projective
 import Novikov.Series.SquareZero
@@ -24,6 +25,7 @@ import Novikov.Isocrystal.Field.Contraction
 import Novikov.Isocrystal.Field
 import Novikov.Isocrystal.Injective.Submodule
 import Novikov.Isocrystal.Injective
+import Novikov.Isocrystal.Lattice
 import Novikov.Descent.Abstract.Descent
 import Novikov.Descent.Abstract.Constant
 import Novikov.Descent.Abstract.ConstantBaseChange
@@ -34,8 +36,10 @@ import Novikov.Descent.Isocrystal
 import Novikov.Descent.Constant
 import Novikov.Descent.CoefficientMap
 import Novikov.Descent.SquareZeroDeformation
+import Novikov.Descent.Nilpotent
 import Novikov.Descent.RecoverDDFromIsoc
 import Novikov.Descent.FullFaithful
 import Novikov.Descent.AlgClosed
 import Novikov.Descent.ProdAlgClosed
 import Novikov.Descent.Reduced
+import Novikov.Descent.Real
