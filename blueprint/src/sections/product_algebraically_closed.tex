@@ -1,4 +1,5 @@
 \section{The case of a product of algebraically closed fields}
+\label{sec:product_algebraically_closed}
 
 Let $I$ be an arbitrary index set, let $(K_i)_{i\in I}$ be algebraically
 closed fields, and put
@@ -7,9 +8,9 @@ closed fields, and put
 \]
 For $r\geq 1$, write
 \[
-  R_A^{(r)}=A((t_1^{\mathbb R},\ldots,t_r^{\mathbb R})),
+  R_A^{(r)}=A((t_1^{\mathbb{R}},\ldots,t_r^{\mathbb{R}})),
   \qquad
-  R_i^{(r)}=K_i((t_1^{\mathbb R},\ldots,t_r^{\mathbb R})).
+  R_i^{(r)}=K_i((t_1^{\mathbb{R}},\ldots,t_r^{\mathbb{R}})).
 \]
 Applying the projection $A\to K_i$ coefficientwise gives an injective ring
 homomorphism
@@ -51,8 +52,9 @@ section.
 \begin{proof}
   \leanok
   Base change along the coefficient projection $A\to K_i$, at every level of
-  the Novikov cosimplicial ring, gives $M_i$.  Theorem~\ref{thm:novikov_descent_equivalence_algclosed}
-  supplies $P_i$ and $\varepsilon_i$.
+  the Novikov cosimplicial ring, gives $M_i$.
+  Theorem~\ref{thm:novikov_descent_equivalence_algclosed} supplies $P_i$ and
+  $\varepsilon_i$.
 
   Choose a surjection $(R_A^{(1)})^N\twoheadrightarrow M$.  Its base change to
   $R_i^{(1)}$ is still surjective.  Since $R_i^{(1)}$ is a field and
@@ -68,10 +70,10 @@ section.
 For a family $x=(x_i)\in\prod_iR_i^{(r)}$, set
 \[
   \operatorname{Supp}(x)=\bigcup_{i\in I}\operatorname{supp}(x_i)
-  \subseteq\mathbb R^r.
+  \subseteq\mathbb{R}^r.
 \]
 Thus $x$ has \emph{uniformly Novikov-finite support} if for every positive
-weight vector $w\in\mathbb R_{>0}^r$ and every $C\in\mathbb R$, the set
+weight vector $w\in\mathbb{R}_{>0}^r$ and every $C\in\mathbb{R}$, the set
 \[
   \left\{d\in\operatorname{Supp}(x)\ \middle|\;
     \sum_{a=1}^r w_a d_a<C\right\}
@@ -87,50 +89,62 @@ $g_{m,c,i}\in R_i^{(1)}$ be the $c$-th coordinate of the image of $m$ under
   R_i^{(1)}\otimes_{K_i}P_i\longrightarrow (R_i^{(1)})^N.
 \]
 
-\begin{lemma}[Uniform support and coefficientwise lifting]
-  \label{lem:product_coordinate_lifting}
+\begin{lemma}[The coefficientwise image criterion]
+  \label{lem:product_coefficientwise_range}
   \lean{Novikov.coeffwisePiRingHom_injective,
     Novikov.Descent.coeffwiseSupportUnion,
     Novikov.Descent.InCoeffwiseRange,
-    Novikov.Descent.inCoeffwiseRange_iff_hasNovikovFiniteness_supportUnion,
-    Novikov.Descent.generatorForwardCoordinateEquality,
-    Novikov.Descent.generatorInverseCoordinateEquality,
-    Novikov.Descent.TrivializedCoordinatesInCoeffwiseRange,
-    Novikov.Descent.trivializedCoordinatesInCoeffwiseRange}
+    Novikov.Descent.inCoeffwiseRange_iff_hasNovikovFiniteness_supportUnion}
   \leanok
-  \uses{def:novikov_series, def:novikov_multiplication,
-    thm:novikov_ring, def:novikov_substitute, def:novikov_descent_datum,
-    lem:product_fiber_constants}
-  A family $x\in\prod_iR_i^{(r)}$ lies in the image of $\jmath_r$ if and only
-  if $\operatorname{Supp}(x)$ is uniformly Novikov-finite.  In particular, for
-  every $m\in M$ and every coordinate $c$, the family
-  $(g_{m,c,i})_{i\in I}$ has a unique lift in $R_A^{(1)}$.
+  \uses{def:novikov_series}
+  The coefficientwise map
+  $\jmath_r\colon R_A^{(r)}\to\prod_iR_i^{(r)}$ is injective.  A family
+  $x\in\prod_iR_i^{(r)}$ lies in its image if and only if
+  $\operatorname{Supp}(x)$ is uniformly Novikov-finite.
 \end{lemma}
 
 \begin{proof}
   \leanok
-  The coefficientwise map is injective.  A family $(x_i)$ is in its image
-  exactly when the coefficient function
+  Injectivity is coefficientwise, because $A\to\prod_iK_i$ is injective.  A
+  family $(x_i)$ is in the image exactly when the coefficient function
   \[
     d\longmapsto (x_i(d))_{i\in I}\in A
   \]
-  defines a Novikov series; its support is precisely
-  $\operatorname{Supp}(x)$.  This proves the first assertion.
+  defines a Novikov series.  This function has support
+  $\operatorname{Supp}(x)$, so its Novikov finiteness condition is precisely
+  uniform Novikov finiteness of the family.
+\end{proof}
 
-  It remains to verify the uniform condition for the trivialized coordinates.
+\begin{lemma}[Uniform support of trivialized coordinates]
+  \label{lem:product_coordinate_lifting}
+  \lean{Novikov.Descent.generatorForwardCoordinateEquality,
+    Novikov.Descent.generatorInverseCoordinateEquality,
+    Novikov.Descent.TrivializedCoordinatesInCoeffwiseRange,
+    Novikov.Descent.trivializedCoordinatesInCoeffwiseRange}
+  \leanok
+  \uses{def:novikov_multiplication, thm:novikov_ring,
+    def:novikov_substitute, def:novikov_descent_datum,
+    lem:product_fiber_constants, lem:product_coefficientwise_range}
+  For every $m\in M$ and every coordinate $c$, the family
+  $(g_{m,c,i})_{i\in I}$ has uniformly Novikov-finite support.  Equivalently,
+  it has a unique lift in $R_A^{(1)}$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
   Choose generators $m_1,\ldots,m_N$ of $M$.  The descent isomorphism and its
   inverse provide matrices $(a_{jk})$ and $(b_{jk})$ over $R_A^{(2)}$.  After
   passing to the $i$-th fiber and taking the $c$-th trivialized coordinate,
   they give the two relations
   \[
-    \pi_1^*g_{m_j,c,i}
-      =\sum_k a_{jk,i}\,\pi_2^*g_{m_k,c,i},
+    \pi_1^\ast g_{m_j,c,i}
+      =\sum_k a_{jk,i}\,\pi_2^\ast g_{m_k,c,i},
     \qquad
-    \pi_2^*g_{m_j,c,i}
-      =\sum_k b_{jk,i}\,\pi_1^*g_{m_k,c,i}.
+    \pi_2^\ast g_{m_j,c,i}
+      =\sum_k b_{jk,i}\,\pi_1^\ast g_{m_k,c,i}.
   \]
   Since the family $(a_{jk})$ is finite, Novikov finiteness gives a common
-  $C\in\mathbb R$ such that
+  $C\in\mathbb{R}$ such that
   \[
     2p_1+p_2\geq C
   \]
@@ -155,7 +169,8 @@ $g_{m,c,i}\in R_i^{(1)}$ be the $c$-th coordinate of the image of $m$ under
   Hence $p_1+p_2\leq B-C$.  The finite family $(b_{jk})$ has only finitely many
   support points below this weighted cutoff, so only finitely many such values
   $y$ occur across all fibers.  The union of the supports is therefore finite
-  below every $B$, which is the one-variable coefficientwise-range criterion.
+  below every $B$.  Lemma~\ref{lem:product_coefficientwise_range} gives unique
+  lifts for all generator coordinates.
 
   Finally, an arbitrary $m$ is a finite sum $\sum_j r_jm_j$ with
   $r_j\in R_A^{(1)}$.  Finite sums and multiplication by the coefficientwise
@@ -287,7 +302,7 @@ $g_{m,c,i}\in R_i^{(1)}$ be the $c$-th coordinate of the image of $m$ under
   Let $A=\prod_{i\in I}K_i$ be an arbitrary product of algebraically closed
   fields.  Then the constant-descent functor
   \[
-    \mathsf{Vect}(A)\longrightarrow\mathsf{NovDD}(A,\mathbb R)
+    \mathsf{Vect}(A)\longrightarrow\mathsf{NovDD}(A,\mathbb{R})
   \]
   is an equivalence of categories.
 \end{theorem}

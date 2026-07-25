@@ -1,10 +1,11 @@
 
 \section{Novikov series}
+\label{sec:novikov_series}
 
-The goal of this section is to define the multivariant Novikov series and prove
+The goal of this section is to define multivariable Novikov series and prove
 basic facts about them.
 
-\subsection{Multi-variable Novikov series}
+\subsection{Multivariable Novikov series}
 
 \begin{definition}[Definition~2.4: multivariable Novikov series]
   \label{def:novikov_series}
@@ -12,16 +13,23 @@ basic facts about them.
   \leanok
   Let $A$ be an abelian group, and let $\Gamma \subseteq \mathbb{R}$ be an
   additive submonoid. We define the abelian group $A((t_1^\Gamma, \dotsc,
-  t_n^\Gamma))$ to be the set of power series
-  \[ \sum_{i \in I} a_i t_1^{d_{i,1}} \dotsm t_n^{d_{i,n}} \]
-  satisfying the condition that $a_i \in A$, $d_i \in \Gamma$, and for all $s_1,
-  \dotsc, s_n \in \mathbb{R}_{>0}$ the set $\{ i \in I : \sum_{s_j} d_{i,j} < C
-  \}$ is finite.
+  t_n^\Gamma))$ to consist of coefficient functions $a\colon\Gamma^n\to A$,
+  written as formal series
+  \[
+    \sum_{d\in\Gamma^n} a_d t_1^{d_1}\dotsm t_n^{d_n},
+  \]
+  such that, for every $s_1,\dotsc,s_n\in\mathbb{R}_{>0}$ and every
+  $C\in\mathbb{R}$, the set
+  \[
+    \left\{d\in\Gamma^n \mathrel{}\middle|
+      a_d\ne 0 \text{ and } \sum_{j=1}^n s_jd_j<C\right\}
+  \]
+  is finite.
 \end{definition}
 
 \begin{lemma}[Lemma~2.8: exactness of Novikov series]
   \label{lem:novikov_exact}
-  \lean{Novikov.map_exact}
+  \lean{Novikov.map_injective, Novikov.map_surjective, Novikov.map_exact}
   \leanok
   \uses{def:novikov_series}
   The functor $A \mapsto A((t_1^\Gamma, \dotsc, t_n^\Gamma))$ is exact. That is,
@@ -34,14 +42,17 @@ basic facts about them.
 
 \begin{proof}
   \leanok
-  The exactness of the sequence of Novikov series is verified coefficient-wise.
-  Since the addition and mapping of series are defined by applying the map to each coefficient
-  independently, the injectivity and surjectivity of the induced maps follow from the
-  corresponding properties of $f$ and $g$ on the underlying groups.
-  Specifically, for surjectivity, any series in $C((\underline{t}^\Gamma))$ can be lifted to
-  $B((\underline{t}^\Gamma))$ by lifting each coefficient using the surjectivity of $g$.
-  The kernel condition $\text{im}(f) = \text{ker}(g)$ also holds because it holds for each
-  coefficient independently.
+  Injectivity is checked coefficientwise.  For surjectivity, let
+  $c\in C((\underline{t}^\Gamma))$.  For every exponent $d$ with $c_d\ne0$,
+  choose $b_d\in B$ such that $g(b_d)=c_d$, and set $b_d=0$ when $c_d=0$.
+  Then $\operatorname{supp}(b)\subseteq\operatorname{supp}(c)$, so $b$ still
+  satisfies the Novikov finiteness condition and maps to $c$.
+
+  Now suppose $b\in B((\underline{t}^\Gamma))$ maps to zero.  Exactness of the
+  original sequence gives $b_d\in\operatorname{im}(f)$ for every $d$.  Choose
+  $a_d$ with $f(a_d)=b_d$, again choosing $a_d=0$ whenever $b_d=0$.  The
+  inclusion $\operatorname{supp}(a)\subseteq\operatorname{supp}(b)$ makes $a$
+  a Novikov series, and $f(a)=b$.  Thus the image equals the kernel.
 \end{proof}
 
 \begin{definition}[Convolution of Novikov series]
@@ -49,9 +60,11 @@ basic facts about them.
   \lean{Novikov.novikovSeriesMul}
   \leanok
   \uses{def:novikov_series}
-  Let $A$ and $B$ be abelian groups, and let $\alpha \colon A \times B \to C$ be
-  a bilinear map. For $f \in A((t_1^\Gamma, \dotsc, t_n^\Gamma))$ and $g \in
-  B((t_1^\Gamma, \dotsc, t_n^\Gamma))$, we define product $f \ast_\alpha g$ by
+  Let $A$, $B$, and $C$ be abelian groups, and let
+  $\alpha\colon A\times B\to C$ be a bilinear map. For
+  $f\in A((t_1^\Gamma,\dotsc,t_n^\Gamma))$ and
+  $g\in B((t_1^\Gamma,\dotsc,t_n^\Gamma))$, we define the product
+  $f\ast_\alpha g$ by
   bilinearly extending the product
   \[ (a t_1^{d_1} \dotsm t_n^{d_n}) \ast_\alpha (b t_1^{e_1} \dotsm t_n^{e_n})
   = \alpha(a, b) t_1^{d_1+e_1} \dotsm t_n^{d_n+e_n}. \]
@@ -69,13 +82,28 @@ basic facts about them.
 
 \begin{proof}
   \leanok
-  The addition is defined coefficient-wise, and the zero element is the series with all zero coefficients.
-  The multiplication is defined by convolution: $(f \ast g)_d = \sum_{d_1 + d_2 = d} f_{d_1} g_{d_2}$.
-  The finiteness condition on the support of the product follows from the fact that the sum of two
-  well-ordered sets (or sets satisfying the Novikov finiteness condition) also satisfies the condition.
-  The ring axioms (associativity, distributivity, and existence of unity $1 \cdot t^0$) follow from
-  the corresponding properties of the underlying ring $A$ and the properties of formal power series
-  summation.
+  For each exponent $d$, the Novikov condition implies that only finitely many
+  pairs
+  \[
+    (d_1,d_2)\in\operatorname{supp}(f)\times\operatorname{supp}(g),
+    \qquad d_1+d_2=d,
+  \]
+  occur.  Hence the convolution coefficient
+  $(f*g)_d=\sum_{d_1+d_2=d}f_{d_1}g_{d_2}$ is a finite sum.
+
+  Fix positive weights $s$ and a bound $C$.  If $(f*g)_d\ne0$ and
+  $\sum_j s_jd_j<C$, then some contributing pair satisfies
+  \[
+    \sum_j s_j(d_{1,j}+d_{2,j})<C.
+  \]
+  Each support has a lower bound for its $s$-weighted degree: choose one
+  supported exponent and use finiteness below its degree.  A pair as above
+  must therefore place each component in a fixed finite truncation of its
+  respective support.  Hence there are only finitely many such pairs, and
+  consequently only finitely many possible sums $d$.  Thus the product again
+  satisfies the Novikov condition.  The ring laws follow by
+  comparing coefficients and reindexing finite sums over pairs and triples;
+  the unit is the series supported at exponent zero with coefficient $1$.
 \end{proof}
 
 \begin{theorem}[Module structure on Novikov series]
@@ -109,12 +137,22 @@ basic facts about them.
 
 \begin{proof}
   \leanok
-  Since $M$ is finitely presented, it has a presentation $F \to G \to M \to 0$ with $F, G$ finite free.
-  Applying the functor $M \mapsto M((\underline{t}^\Gamma))$ gives a right exact sequence
-  $F((\underline{t}^\Gamma)) \to G((\underline{t}^\Gamma)) \to M((\underline{t}^\Gamma)) \to 0$ by Lemma~\ref{lem:novikov_exact}.
-  Tensor product also preserves right exactness, giving $F \otimes A((\underline{t}^\Gamma)) \to G \otimes A((\underline{t}^\Gamma)) \to M \otimes A((\underline{t}^\Gamma)) \to 0$.
-  The natural map gives a morphism between these two sequences. For finite free modules, the map is an isomorphism.
-  By the five lemma (specifically the four lemma variant for right exactness), the map for $M$ is also an isomorphism.
+  Choose a finite presentation
+  \[
+    A^m\longrightarrow A^n\longrightarrow M\longrightarrow0.
+  \]
+  Applying Novikov series gives a right exact sequence by
+  Lemma~\ref{lem:novikov_exact}; tensoring with
+  $A((\underline{t}^\Gamma))$ gives another right exact sequence.  The natural
+  base-change maps form a commutative diagram between these sequences, and
+  they are isomorphisms on the two finite free modules.  Consequently the two
+  rightmost terms are the cokernels of the same map under these
+  identifications.  The induced map
+  \[
+    M\otimes_A A((\underline{t}^\Gamma))
+      \longrightarrow M((\underline{t}^\Gamma))
+  \]
+  is therefore an isomorphism.
 \end{proof}
 
 \begin{definition}[Substitution of variables]
@@ -124,10 +162,13 @@ basic facts about them.
   \uses{def:novikov_series}
   Given a map $f \colon [n] \to [m]$ between finite sets of variables, we
   define the substitution map
-  \[ f_\ast \colon A((t_1^\Gamma, \dotsc, t_m^\Gamma)) \to
-  A((s_1^\Gamma, \dotsc, s_m^\Gamma)) \]
-  given by substituting the variables. When it is clear from the context, we
-  shall denote this induced map by $f$ instead of $f_\ast$.
+  \[
+    f_\ast \colon A((t_1^\Gamma, \dotsc, t_n^\Gamma)) \longrightarrow
+      A((s_1^\Gamma, \dotsc, s_m^\Gamma))
+  \]
+  by sending $t_i$ to $s_{f(i)}$, or equivalently by pushing exponent vectors
+  forward along $f$. When it is clear from the context, we shall denote this
+  induced map by $f$ instead of $f_\ast$.
 \end{definition}
 
 \begin{theorem}[Functoriality of substitution]
@@ -135,18 +176,33 @@ basic facts about them.
   \lean{Novikov.substitute_id, Novikov.substitute_comp, Novikov.substituteRingHom}
   \leanok
   \uses{def:novikov_substitute, thm:novikov_ring}
-  The substitution map is functorial in $\iota$. That is, $\text{id}_* =
-  \text{id}$ and $(g \circ f)_* = g_* \circ f_*$. Furthermore, if $A$ is a
+  Substitution is functorial with respect to maps of finite variable sets.
+  That is, $\text{id}_*=\text{id}$ and $(g\circ f)_*=g_*\circ f_*$. Furthermore,
+  if $A$ is a
   commutative ring, then $f_*$ is a ring homomorphism.
 \end{theorem}
 
 \begin{proof}
   \leanok
-  Functoriality and the additive property are checked by direct calculation.
-  The preservation of multiplication follows from the properties of convolution.
+  For an exponent vector $d\in\Gamma^n$, let
+  \[
+    (f_{!}d)_j=\sum_{i:\,f(i)=j}d_i.
+  \]
+  The coefficient of $f_*a$ at $d'\in\Gamma^m$ is the finite sum of the
+  coefficients $a_d$ over $f_{!}d=d'$.  Finiteness follows by using unit weights:
+  on this fiber, $\sum_i d_i=\sum_jd'_j$, so the relevant part of the support
+  lies in a fixed Novikov half-space.  More generally, positive target weights
+  $s'_j$ pull back to the positive source weights $s_i=s'_{f(i)}$; this proves
+  the Novikov condition for the substituted series.
+
+  The identities $(\mathrm{id})_{!}=\mathrm{id}$ and
+  $(g\circ f)_{!}=g_{!}\circ f_{!}$ prove functoriality after regrouping the
+  finite coefficient sums.  Finally, $f_{!}(d+e)=f_{!}d+f_{!}e$, so the same finite-sum
+  reindexing shows that substitution preserves convolution and hence defines
+  a ring homomorphism.
 \end{proof}
 
-\subsection{Single-variable Novikov series}
+\subsection{One-variable Novikov series}
 
 When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
 
@@ -162,23 +218,43 @@ When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
 
 \begin{theorem}[Definition~2.15: the Novikov topology]
   \label{thm:novikov_topology}
-  \lean{Novikov.is_topological_add_group, Novikov.is_topological_ring}
+  \lean{Novikov.is_topological_add_group,
+    Novikov.instCompleteSpaceOneVarNovikovSeries,
+    Novikov.is_topological_ring}
   \leanok
   \uses{def:novikov_filtration, thm:novikov_ring}
-  The collection of filtration subgroups $\{F_D A((t^\Gamma))\}_{D \in \mathbb{R}}$
-  forms a filter basis for a topology on $A((t^\Gamma))$. Under this topology,
-  $A((t^\Gamma))$ is a complete topological abelian group. Furthermore, if $A$
-  is a commutative ring, then $A((t^\Gamma))$ is a topological ring.
+  If $A$ is an abelian group, the collection of filtration subgroups
+  $\{F_D A((t^\Gamma))\}_{D \in \mathbb{R}}$ forms a filter basis for a topology
+  on $A((t^\Gamma))$. Under this topology, $A((t^\Gamma))$ is a complete
+  topological abelian group. Furthermore, if $A$ is a commutative ring, then
+  $A((t^\Gamma))$ is a topological ring.
 \end{theorem}
 
 \begin{proof}
   \leanok
-  The filtration subgroups satisfy $F_{D_2} \subseteq F_{D_1}$ for $D_1 \le D_2$,
-  which ensures that the intersection of two filtration subgroups contains
-  another. Each $F_D$ is an additive subgroup, so they form a filter basis for a
-  topological additive group. For the ring structure, continuity of
-  multiplication follows from the inclusion $F_{D_1} \cdot F_{D_2} \subseteq
-  F_{D_1 + D_2}$.
+  The filtration subgroups satisfy $F_{D_2}\subseteq F_{D_1}$ for
+  $D_1\le D_2$, and each $F_D$ is an additive subgroup.  They therefore form a
+  neighborhood basis at zero for a topological additive group.
+
+  To prove completeness, let $\mathcal F$ be a Cauchy filter.  For every
+  exponent $d$, the Cauchy condition modulo $F_D$ for any $D>d$ shows that the
+  $d$-coefficient is eventually constant on $\mathcal F$; define $a_d$ to be
+  this eventual value.  Given a degree bound, one may choose a single member
+  of the filter with which the resulting series agrees below that bound.
+  Its support there is therefore contained in the support of an existing
+  Novikov series and is finite.  Thus $a=(a_d)$ is a Novikov series, and the
+  same coefficient-stability argument shows that $\mathcal F$ converges to
+  $a$.
+
+  Finally, $F_{D_1}F_{D_2}\subseteq F_{D_1+D_2}$.  Every series belongs to
+  some filtration level.  Given $x,y$ and a target neighborhood $F_D$, choose
+  sufficiently high filtration levels for perturbations $u,v$ so that
+  $xv$, $uy$, and $uv$ all lie in $F_D$; then
+  \[
+    (x+u)(y+v)-xy=xv+uy+uv\in F_D.
+  \]
+  This proves continuity of multiplication and makes the Novikov ring a
+  topological ring.
 \end{proof}
 
 \begin{theorem}[One-variable Novikov series form a field]
@@ -186,17 +262,27 @@ When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
   \lean{Novikov.novikovField}
   \leanok
   \uses{thm:novikov_topology}
-  If $A$ is a field, then the ring of single-variable Novikov series $A((t^\Gamma))$
-  is a field.
+  If $A$ is a field and $\Gamma\subseteq\mathbb{R}$ is an additive subgroup,
+  then the ring of one-variable Novikov series $A((t^\Gamma))$ is a field.
 \end{theorem}
 
 \begin{proof}
   \leanok
-  Every nonzero series $f$ has a well-defined minimum degree $d = \min\{d' \mid f(d') \neq 0\}$.
-  We define the inverse $f^{-1}$ by constructing the geometric series for $1 - f \cdot a^{-1} t^{-d}$,
-  where $a = f(d)$ is the leading coefficient. Since $f \cdot a^{-1} t^{-d}$ has minimum degree $0$ and
-  leading coefficient $1$, its complement is positive and topologically nilpotent, ensuring
-  summability of the geometric series.
+  The Novikov condition gives every nonzero series $f$ a minimum degree $d$
+  and a nonzero leading coefficient $a=f_d$.  Because $\Gamma$ is a subgroup,
+  the monomial $t^{-d}$ is available.  Normalize $f$ by setting
+  \[
+    h=a^{-1}t^{-d}f,\qquad g=1-h.
+  \]
+  Then $h$ has constant coefficient $1$, while $g$ is supported in strictly
+  positive degrees.  Its powers tend to zero in the Novikov topology, and
+  completeness makes the geometric series $\sum_{n\ge0}g^n$ summable.  The
+  identity
+  \[
+    (1-g)\sum_{n\ge0}g^n=1
+  \]
+  shows that
+  $a^{-1}t^{-d}\sum_{n\ge0}g^n$ is an inverse of $f$.
 \end{proof}
 
 \subsection{Canonical module topology}
@@ -234,78 +320,172 @@ When there is a single variable $t$, we give $A((t^\Gamma))$ a topology.
 
 \begin{proof}
   \leanok
-  (1) For each $f \colon M \to A$ we need to show that $A \times M \to M
-  \xrightarrow{f} A$ is continuous. This follows from that this is a composition
-  $A \times M \xrightarrow{\mathrm{id} \times f} A \times A \to A$, which is a
-  composition of two continuous functions.
+  (1) By the defining initial property, continuity may be tested after
+  composing with each $f\colon M\to A$.  For addition, use
+  \[
+    f(x+y)=f(x)+f(y),
+  \]
+  together with continuity of $f$ on each factor and continuity of addition
+  on $A$.  Negation is similar.  For scalar multiplication, the composite
+  $A\times M\to M\xrightarrow{f}A$ is
+  $(a,x)\mapsto a f(x)$, which factors through
+  $\mathrm{id}_A\times f\colon A\times M\to A\times A$ followed by
+  multiplication on $A$.
 
-  (2) The identity map $\mathrm{id}_A \colon A \to A$ is $A$-linear, so the
-  canonical topology on $A$ is finer than the original topology. Conversely,
-  every $A$-linear map $f \colon A \to A$ is given by $f(x) = f(1)x$, which is
-  continuous in the original topology because $A$ is a topological ring. Hence
-  the original topology is finer than each induced topology, so the two
-  topologies coincide.
+  (2) The identity map $\mathrm{id}_A\colon A\to A$ is $A$-linear, so the
+  canonical topology on $A$ is finer than the original topology.  Conversely,
+  every $A$-linear map $f\colon A\to A$ is given by $f(x)=f(1)x$, which is
+  continuous in the original topology because $A$ is a topological ring.
+  Hence the two topologies coincide.
 
-  (3) For any $A$-linear $f \colon N \to A$, the composition $f \circ \varphi
-  \colon M \to A$ is $A$-linear and therefore continuous in the canonical
-  topology on $M$. Since the canonical topology on $N$ is initial for all such
-  $f$, $\varphi$ is continuous.
+  (3) For any $A$-linear $f\colon N\to A$, the composition
+  $f\circ\varphi\colon M\to A$ is $A$-linear and therefore continuous in the
+  canonical topology on $M$.  The initial property of the canonical topology
+  on $N$ then makes $\varphi$ continuous.
 
-  (4) Any $A$-linear map $f \colon M \times N \to A$ decomposes as $f(x,y) =
-  f_1(x) + f_2(y)$ where $f_1 = f \circ \iota_M$ and $f_2 = f \circ \iota_N$
-  are $A$-linear. Both $f_1$ and $f_2$ are continuous in the product of
-  canonical topologies, so the product topology is finer than the canonical
-  topology. Conversely, the projections $M \times N \to M$ and $M \times N \to
-  N$ are $A$-linear and thus continuous in the canonical topology, so the
-  canonical topology is finer than the product topology.
+  (4) Any $A$-linear map $f\colon M\times N\to A$ decomposes as
+  $f(x,y)=f_1(x)+f_2(y)$, where $f_1=f\circ\iota_M$ and
+  $f_2=f\circ\iota_N$.  Thus every such $f$ is continuous for the product
+  topology, giving one comparison.  Conversely, the two projections are
+  linear and hence continuous for the canonical topology, giving the reverse
+  comparison.
 \end{proof}
 
 \begin{lemma}[Split descent of finite projectivity]
   \label{lem:split_base_change_descent}
   \lean{Novikov.Miscellany.finite_projective_of_split_baseChange}
   \leanok
-  Let $B$ be an $A$-algebra with an $A$-linear retraction $B \to A$.
-  If $B \otimes_A M$ is a finite projective $B$-module, then $M$ is a
-  finite projective $A$-module.
+  Let $A$ be a commutative ring, let $M$ be an $A$-module, and let $B$ be a
+  commutative $A$-algebra whose structure map admits an $A$-linear retraction
+  $B\to A$.  If $B\otimes_A M$ is a finite projective $B$-module, then $M$ is
+  a finite projective $A$-module.
 \end{lemma}
 
 \begin{proof}
   \leanok
-  Write $\sigma \colon B \to A$ for the $A$-linear retraction. For finiteness,
-  we choose a finite set of $B$-module generators of $B \otimes_A M$, and their
-  image under $\sigma \otimes \mathrm{id}_M$ will generate $M$ as a $A$-module.
-  For projectivity, given a $A$-linear surjection $\varepsilon \colon P
-  \twoheadrightarrow Q$ and $M \to Q$, we wish to lift it to $M \to P$. We lift
-  its $B$-base change along $\varepsilon_B$ using $B$-projectivity and push it
-  down using $\sigma$. The result gives a lift witnessing the $A$-projectivity
-  of $M$.
+  Write $\sigma\colon B\to A$ for the $A$-linear retraction.  Choose finite
+  $B$-module generators $z_1,\ldots,z_r$ of $B\otimes_A M$, and express each
+  one as a finite sum
+  \[
+    z_j=\sum_k b_{jk}\otimes m_{jk}.
+  \]
+  If $m\in M$, write $1\otimes m=\sum_jc_jz_j$.  Applying
+  $\sigma\otimes\mathrm{id}_M$ gives
+  \[
+    m=\sum_{j,k}\sigma(c_jb_{jk})m_{jk},
+  \]
+  so the finite family $(m_{jk})$ generates $M$ over $A$.
+
+  For projectivity, let $\varepsilon\colon P\twoheadrightarrow Q$ be an
+  $A$-linear surjection and let $u\colon M\to Q$.  Projectivity of
+  $B\otimes_A M$ lifts the base change of $u$ through
+  $B\otimes_A\varepsilon$.  Composing this lift with
+  $m\mapsto1\otimes m$ and then with
+  $\sigma\otimes\mathrm{id}_P$ gives an $A$-linear lift of $u$ through
+  $\varepsilon$.  Hence $M$ is projective as well as finite.
+\end{proof}
+
+\begin{lemma}[Finite generation from real Novikov series]
+  \label{lem:finite_generation_real_novikov_series}
+  \lean{Novikov.module_finite_of_realNovikovSeries}
+  \leanok
+  \uses{thm:novikov_topology}
+  Let $A$ be a commutative ring, let $M$ be an $A$-module, and put
+  \[
+    R=A((t^{\mathbb{R}})),\qquad \widetilde M=M((t^{\mathbb{R}})).
+  \]
+  Suppose that $\widetilde M$ is a finite projective $R$-module and that every
+  $R$-linear functional $\widetilde M\to R$ is continuous for the Novikov
+  filtration topologies.  Then $M$ is finitely generated over $A$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Choose a split surjection and a section
+  \[
+    \pi\colon R^n\twoheadrightarrow\widetilde M,
+    \qquad
+    \sigma\colon\widetilde M\longrightarrow R^n,
+    \qquad \pi\sigma=\mathrm{id}.
+  \]
+  Each component of $\sigma$ is an $R$-linear functional and hence is
+  continuous.  Since there are only finitely many components, there is a
+  common $N\in\mathbb{R}$ such that
+  \[
+    \sigma(F_N\widetilde M)\subseteq(F_0R)^n.
+  \]
+  Let $x_i=\pi(e_i)$.  For each $i$, only finitely many coefficients of $x_i$
+  occur in degrees at most $N$; let $G\subseteq M$ be the union of these
+  finite sets of coefficients.
+
+  Given $m\in M$, apply the splitting to the monomial
+  $mt^N\in F_N\widetilde M$ and write
+  \[
+    mt^N=\sum_i\sigma_i(mt^N)x_i.
+  \]
+  Every coefficient series $\sigma_i(mt^N)$ lies in $F_0R$.  Consequently,
+  the coefficient at degree $N$ on the right is an $A$-linear combination of
+  coefficients of the $x_i$ in degrees at most $N$, all belonging to $G$.
+  The coefficient on the left is $m$, so $G$ generates $M$.
+\end{proof}
+
+\begin{lemma}[Finite presentation from real Novikov series]
+  \label{lem:finite_presentation_real_novikov_series}
+  \lean{Novikov.module_finitePresentation_of_realNovikovSeries}
+  \leanok
+  \uses{lem:finite_generation_real_novikov_series, lem:novikov_exact,
+    thm:novikov_module}
+  Under the hypotheses of the preceding lemma, the $A$-module $M$ is finitely
+  presented.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  The preceding lemma makes $M$ finitely generated.  Choose a surjection
+  $p\colon A^m\twoheadrightarrow M$ and set $K=\ker(p)$.  Applying real
+  Novikov series gives a surjection
+  \[
+    \widetilde p\colon R^m\twoheadrightarrow\widetilde M
+  \]
+  whose kernel is canonically $K((t^{\mathbb{R}}))$, by exactness of Novikov
+  series.  Projectivity of $\widetilde M$ splits $\widetilde p$, so
+  $K((t^{\mathbb{R}}))$ is a finite projective direct summand of $R^m$.
+
+  Every $R$-linear functional on this kernel extends along the direct-summand
+  projection to a functional on $R^m$.  Functionals on the finite free module
+  $R^m$ are continuous, and the standard coefficientwise identification
+  $(A^m)((t^{\mathbb{R}}))\cong R^m$ is a homeomorphism.  Thus the continuity
+  hypothesis of
+  Lemma~\ref{lem:finite_generation_real_novikov_series} holds for $K$.
+  Applying that lemma shows that $K$ is finitely generated, so $M$ is finitely
+  presented.
 \end{proof}
 
 \begin{theorem}[Lemma~2.16: finite projectivity descends from Novikov series]
   \label{thm:projective_novikov_series}
   \lean{Novikov.projective_of_realNovikovSeries}
   \leanok
-  \uses{lem:split_base_change_descent, thm:novikov_base_change, thm:canonical_topology_properties}
-  Let $M$ be an $A$-module. If $M ((t^{\mathbb{R}}))$ is a finite projective
-  $A ((t^{\mathbb{R}}))$-module and its canonical topology coincides with the
+  \uses{lem:finite_presentation_real_novikov_series,
+    lem:split_base_change_descent, thm:novikov_base_change}
+  Let $A$ be a commutative ring and let $M$ be an $A$-module. If
+  $M((t^{\mathbb{R}}))$ is a finite projective
+  $A((t^{\mathbb{R}}))$-module and its canonical topology coincides with the
   natural filtration topology, then $M$ is a finite projective $A$-module.
 \end{theorem}
 
 \begin{proof}
   \leanok
-  First, $M ((t^{\mathbb{R}}))$ is finite projective so the natural surjection
-  $R^n \twoheadrightarrow M ((t^{\mathbb{R}}))$ splits. The continuity
-  hypothesis implies each coordinate of the splitting lands in the zero
-  filtration under a common shift. Using the monomial at height $N$, one
-  extracts a finite $A$-spanning set for $M$, proving finite generation.
-
-  For finite presentation, apply the same argument to the kernel of the
-  surjection $A^m \twoheadrightarrow M$, noting that the kernel's Novikov
-  series identifies with a direct summand of $R^m$ and thus inherits finite
-  projectivity and the canonical topology condition.
-
-  Finally, the base change isomorphism
-  $M ((t^{\mathbb{R}})) \cong A ((t^{\mathbb{R}})) \otimes_A M$ together with
-  the $A$-linear splitting $A ((t^{\mathbb{R}})) \to A$ given by evaluation
-  at $0$ reduces to Lemma~\ref{lem:split_base_change_descent}.
+  Equality of the canonical and filtration topologies makes every
+  $A((t^{\mathbb{R}}))$-linear functional continuous.  Hence
+  Lemma~\ref{lem:finite_presentation_real_novikov_series} shows that $M$ is
+  finitely presented.  The base-change isomorphism of
+  Theorem~\ref{thm:novikov_base_change} now identifies
+  \[
+    A((t^{\mathbb{R}}))\otimes_A M\cong M((t^{\mathbb{R}})),
+  \]
+  so this scalar extension is finite projective.  Finally, extraction of the
+  degree-zero coefficient gives an $A$-linear retraction
+  $A((t^{\mathbb{R}}))\to A$ of the constant-series inclusion.  Apply
+  Lemma~\ref{lem:split_base_change_descent} to conclude that $M$ is finite
+  projective over $A$.
 \end{proof}

@@ -249,7 +249,9 @@ private lemma nonpositiveCoefficients_finite
     intro d hd
     exact ⟨hd.1, by linarith [hd.2]⟩)
 
-private lemma exists_nilpotent_ideal_coefficients_positive
+/-- A finite family of real Novikov series vanishing modulo the nilradical
+becomes strictly positive after quotienting by a nilpotent ideal. -/
+lemma exists_nilpotent_ideal_coefficients_positive
     {A : Type u} {ι : Type v} [CommRing A] [Fintype ι]
     (c : ι → ι → RealNovikovSeries A)
     (hc : ∀ i j, c i j ∈ RingHom.ker
@@ -484,7 +486,9 @@ private lemma generatorLattice_error_mem
       rw [heq]
       exact hsum
 
-private lemma exists_lattice_frobenius_error_positive
+/-- Positive Frobenius-error coefficients on a finite generating family
+produce a lattice on which every Frobenius error lies in the positive ideal. -/
+lemma exists_lattice_frobenius_error_positive
     {Λ : ℝ} [Fact (Λ > 1)]
     {A : Type u} {ι : Type v} [CommRing A] [Fintype ι]
     (I : NovikovIsocrystal.{u, u} (Λ := Λ) A)
@@ -632,7 +636,9 @@ private noncomputable def latticeData
     I g hg c herror D.J D.coefficients_positive
   exact ⟨⟨L, hL⟩⟩
 
-private theorem isocrystal_const_of_positive_lattice
+/-- An isocrystal with a lattice whose Frobenius errors lie in the positive
+ideal is constant. -/
+theorem isocrystal_const_of_positive_lattice
     {Λ : ℝ} [Fact (Λ > 1)]
     {A : Type u} [CommRing A]
     (I : NovikovIsocrystal.{u, u} (Λ := Λ) A)

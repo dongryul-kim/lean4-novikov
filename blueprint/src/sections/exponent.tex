@@ -21,19 +21,19 @@ right inverse.
     Novikov.extendExponentsRingHom}
   \leanok
   \uses{def:novikov_series, thm:novikov_ring}
-  Let $I$ be a finite set of variables.  Extension by zero is the map
+  For variables $t_1,\ldots,t_n$, extension by zero is the map
   \[
-    \iota_*\colon A((t_i^\Gamma))_{i\in I}
-      \longrightarrow A((t_i^{\mathbb{R}}))_{i\in I}
+    \iota_*\colon A((t_1^\Gamma,\dotsc,t_n^\Gamma))
+      \longrightarrow A((t_1^{\mathbb{R}},\dotsc,t_n^{\mathbb{R}})).
   \]
-  whose coefficient at $d\in\mathbb{R}^I$ is the coefficient of the original
-  series when every $d_i$ lies in $\Gamma$, and is zero otherwise.  It is an
-  injective ring homomorphism.
+  Its coefficient at $d=(d_1,\ldots,d_n)\in\mathbb{R}^n$ is the coefficient
+  of the original series when every $d_i$ lies in $\Gamma$, and is zero
+  otherwise.  It is an injective ring homomorphism.
 
   A real-exponent series has \emph{$\Gamma$-support} if every coordinate of
   every exponent in its support lies in $\Gamma$.  The image of $\iota_*$ is
   exactly the set of series with $\Gamma$-support.  Restriction of coefficients
-  to $\Gamma^I$ is inverse to extension on this set.
+  to $\Gamma^n$ is inverse to extension on this set.
 \end{definition}
 
 \begin{proposition}[Exponent base change]
@@ -209,7 +209,7 @@ right inverse.
   packages it as the claimed isomorphism.
 \end{proof}
 
-\begin{theorem}[The main Novikov descent theorem]
+\begin{theorem}[Theorem~4.9: the main Novikov descent theorem]
   \label{thm:novikov_descent_equivalence}
   \lean{Novikov.Descent.vectToNovikovDescent_essSurj,
     Novikov.Descent.vectToNovikovDescent_isEquivalence,

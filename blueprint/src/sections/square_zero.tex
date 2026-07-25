@@ -96,9 +96,9 @@ and an additive \v{C}ech calculation for Novikov series.
   Let $q\colon A\twoheadrightarrow B$ be surjective with square-zero kernel.
   For every finite set of variables, the coefficientwise homomorphism
   \[
-    A((t_1^{\mathbb R},\ldots,t_r^{\mathbb R}))
+    A((t_1^{\mathbb{R}},\ldots,t_r^{\mathbb{R}}))
       \longrightarrow
-    B((t_1^{\mathbb R},\ldots,t_r^{\mathbb R}))
+    B((t_1^{\mathbb{R}},\ldots,t_r^{\mathbb{R}}))
   \]
   is surjective and has square-zero kernel.
 \end{lemma}
@@ -121,14 +121,14 @@ and an additive \v{C}ech calculation for Novikov series.
   \leanok
   \uses{def:novikov_substitute, thm:novikov_substitute_functorial}
   Let $H$ be an abelian group and let
-  $x\in H((t^{\mathbb R},u^{\mathbb R}))$ satisfy
+  $x\in H((t^{\mathbb{R}},u^{\mathbb{R}}))$ satisfy
   \[
-    \pi_{13}^*x=\pi_{23}^*x+\pi_{12}^*x.
+    \pi_{13}^\ast x=\pi_{23}^\ast x+\pi_{12}^\ast x.
   \]
-  Define the first-axis restriction $y\in H((t^{\mathbb R}))$ by
+  Define the first-axis restriction $y\in H((t^{\mathbb{R}}))$ by
   $y_d=x_{(d,0)}$.  Then
   \[
-    x=\pi_1^*y-\pi_2^*y.
+    x=\pi_1^\ast y-\pi_2^\ast y.
   \]
 \end{lemma}
 
@@ -153,11 +153,11 @@ and an additive \v{C}ech calculation for Novikov series.
   extension to the $r$-variable real Novikov ring.  If
   \[
     \delta\in\operatorname{End}(C_2(P)),\qquad
-    \pi_{13}^*\delta=\pi_{23}^*\delta+\pi_{12}^*\delta,
+    \pi_{13}^\ast\delta=\pi_{23}^\ast\delta+\pi_{12}^\ast\delta,
   \]
   then there exists $\eta\in\operatorname{End}(C_1(P))$ such that
   \[
-    \delta=\pi_1^*\eta-\pi_2^*\eta.
+    \delta=\pi_1^\ast\eta-\pi_2^\ast\eta.
   \]
   If coefficient extension along $q\colon A\to B$ sends $\delta$ to zero,
   then $\eta$ may be chosen to become zero after the same coefficient
@@ -170,7 +170,7 @@ and an additive \v{C}ech calculation for Novikov series.
   \[
     \operatorname{End}_{R_r}(R_r\otimes_A P)
       \cong R_r\otimes_A\operatorname{End}_A(P)
-      \cong \operatorname{End}_A(P)((t_1^{\mathbb R},\ldots,t_r^{\mathbb R})).
+      \cong \operatorname{End}_A(P)((t_1^{\mathbb{R}},\ldots,t_r^{\mathbb{R}})).
   \]
   Under these identifications, normalized pullback along a face is the
   corresponding substitution.  Apply
@@ -195,13 +195,13 @@ and an additive \v{C}ech calculation for Novikov series.
   underlying module of $\operatorname{Const}(P)$ admit canonical
   identifications with
   \[
-    C_2(P)=A((t^{\mathbb R},u^{\mathbb R}))\otimes_A P.
+    C_2(P)=A((t^{\mathbb{R}},u^{\mathbb{R}}))\otimes_A P.
   \]
   Under these identifications, a descent isomorphism becomes an endomorphism
   $\psi$ of $C_2(P)$; the constant descent isomorphism becomes the identity,
   and the multiplicative cocycle condition becomes
   \[
-    \pi_{23}^*\psi\circ\pi_{12}^*\psi=\pi_{13}^*\psi.
+    \pi_{23}^\ast\psi\circ\pi_{12}^\ast\psi=\pi_{13}^\ast\psi.
   \]
   These identifications are compatible with extension of the coefficient ring.
 \end{lemma}
@@ -261,24 +261,24 @@ and an additive \v{C}ech calculation for Novikov series.
 
   The normalized multiplicative cocycle reads
   \[
-    (1+\pi_{23}^*\delta)(1+\pi_{12}^*\delta)
-      =1+\pi_{13}^*\delta.
+    (1+\pi_{23}^\ast\delta)(1+\pi_{12}^\ast\delta)
+      =1+\pi_{13}^\ast\delta.
   \]
   Both face pullbacks of $\delta$ become zero over $B$.  Their composite is
   therefore zero by Lemma~\ref{lem:square_zero_base_change}, now at level
   three.  Expanding the preceding equation gives the additive cocycle
   \[
-    \pi_{13}^*\delta
-      =\pi_{23}^*\delta+\pi_{12}^*\delta.
+    \pi_{13}^\ast\delta
+      =\pi_{23}^\ast\delta+\pi_{12}^\ast\delta.
   \]
   Lemma~\ref{lem:endomorphism_novikov_cech_coboundary} supplies
   $\eta\in\operatorname{End}(C_1(P))$, still zero after reduction, with
   \[
-    \delta=\pi_1^*\eta-\pi_2^*\eta.
+    \delta=\pi_1^\ast\eta-\pi_2^\ast\eta.
   \]
 
   Again by Lemma~\ref{lem:square_zero_base_change}, $\eta^2=0$ and
-  $\pi_2^*\eta\circ\pi_1^*\eta=0$.  Thus
+  $\pi_2^\ast\eta\circ\pi_1^\ast\eta=0$.  Thus
   \[
     \xi=1+\eta,
     \qquad
@@ -287,9 +287,9 @@ and an additive \v{C}ech calculation for Novikov series.
   and
   \[
     \psi
-      =1+\pi_1^*\eta-\pi_2^*\eta
-      =(1-\pi_2^*\eta)(1+\pi_1^*\eta)
-      =\pi_2^*(\xi^{-1})\circ\pi_1^*(\xi).
+      =1+\pi_1^\ast\eta-\pi_2^\ast\eta
+      =(1-\pi_2^\ast\eta)(1+\pi_1^\ast\eta)
+      =\pi_2^\ast(\xi^{-1})\circ\pi_1^\ast(\xi).
   \]
   Undoing the normalized tensor identifications says precisely that $\xi$ is
   an isomorphism from the transported datum to $\operatorname{Const}(P)$.

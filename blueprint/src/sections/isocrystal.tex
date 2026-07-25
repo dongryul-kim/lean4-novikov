@@ -1,8 +1,9 @@
 
-\section{Novikov isocrytals}
+\section{Novikov isocrystals}
+\label{sec:novikov_isocrystals}
 
-In this section we define the notion of a Novikov isocrystal and prove some
-basic facts about it. Throughout the discussion, we fix a real number $\lambda >
+In this section we define Novikov isocrystals and prove some basic facts about
+them. Throughout the discussion, we fix a real number $\lambda >
 1$.
 
 \subsection{Novikov isocrystals}
@@ -12,8 +13,8 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
   \lean{Novikov.coordinateFrobeniusRingHom}
   \leanok
   \uses{def:novikov_series, thm:novikov_ring}
-  Let $R$ be a commutative ring, $\iota$ an index set, and $j \in \iota$ a
-  coordinate.  The \emph{coordinate Frobenius}
+  Let $R$ be a commutative ring, $\iota$ a finite index set, and
+  $j\in\iota$ a coordinate.  The \emph{coordinate Frobenius}
   $F_j \colon R((t_\iota^{\mathbb{R}})) \to R((t_\iota^{\mathbb{R}}))$ is the
   $R$-algebra endomorphism of the multivariable Novikov ring that scales the
   $j$-th exponent by $\lambda$: it sends $t^d \mapsto t^{d'}$ where
@@ -22,14 +23,14 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
   $1/\lambda$.
 \end{definition}
 
-\begin{definition}[Single-variable Frobenius]
+\begin{definition}[One-variable Frobenius]
   \label{def:frobenius}
   \lean{Novikov.frobenius}
   \leanok
   \uses{def:novikov_series, def:coordinate_frobenius}
   For an abelian group $A$, the Frobenius endomorphism $F \colon
   A((t^{\mathbb{R}})) \to A((t^{\mathbb{R}}))$ is the $A$-linear extension of
-  $t^d \mapsto t^{\lambda d}$.  It is the single-variable case ($\iota = \ast$)
+  $t^d \mapsto t^{\lambda d}$.  It is the one-variable case ($\iota = \ast$)
   of the coordinate Frobenius of Definition~\ref{def:coordinate_frobenius}.
 \end{definition}
 
@@ -43,9 +44,10 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
 
 \begin{proof}
   \leanok
-  Because both sides of the convolution variables are equally scaled, it
-  respects multiplication. It also sends the standard neighborhood bases to
-  neighborhood bases.
+  Scaling exponents commutes with their addition, so Frobenius preserves
+  convolution.  Moreover, it sends the filtration subgroup $F_D$ into
+  $F_{\lambda D}$; this proves continuity with respect to the standard
+  neighborhood basis.
 \end{proof}
 
 \begin{definition}[Definition~3.1: Novikov isocrystals]
@@ -62,6 +64,10 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
 
 \begin{lemma}[The category of Novikov isocrystals]
   \label{lem:novikov_isocrystal_category}
+  \lean{Novikov.NovikovIsocrystal.Hom,
+    Novikov.NovikovIsocrystal.instCategory,
+    Novikov.NovikovIsocrystal.instPreadditive,
+    Novikov.NovikovIsocrystal.internalHom}
   \leanok
   \uses{def:novikov_isocrystal}
   Novikov isocrystals over $A$ form a preadditive category with internal Hom.
@@ -79,29 +85,120 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
   \lean{Novikov.NovikovIsocrystal.vectToNovIsoc_fullyFaithful}
   \leanok
   \uses{def:novikov_isocrystal, lem:novikov_isocrystal_category}
-  The functor $\mathsf{Vect}(A) \to \mathsf{NovIsoc}(A)$ sends a finite
-  projective $A$-module $M$ to its constant isocrystal $M((t^{\mathbb{R}}))
-  = M \otimes_A A((t^{\mathbb{R}}))$ is fully faithful.
+  The functor $\mathsf{Vect}(A)\to\mathsf{NovIsoc}(A)$ sending a finite
+  projective $A$-module $M$ to its constant isocrystal
+  $M((t^{\mathbb{R}}))=M\otimes_A A((t^{\mathbb{R}}))$ is fully faithful.
 \end{theorem}
 
 \begin{proof}
   \leanok
   A morphism $g$ of constant isocrystals corresponds to an
-  $A((t^{\mathbb{R}}))$-linear map $M \otimes_A A((t^{\mathbb{R}})) \to
-  N \otimes_A A((t^{\mathbb{R}}))$ commuting with $\mathrm{id} \otimes F$. Via
-  the internal Hom, this yields an element of $A((t^{\mathbb{R}})) \otimes_A
-  \operatorname{Hom}_A(M, N)$ fixed by $F$. Such elements are exactly of the
-  form $1 \otimes f$ for $f \in \operatorname{Hom}_A(M, N)$.
+  $A((t^{\mathbb{R}}))$-linear map
+  \[
+    M\otimes_A A((t^{\mathbb{R}}))
+      \longrightarrow N\otimes_A A((t^{\mathbb{R}}))
+  \]
+  commuting with $\mathrm{id}\otimes F$.  Via the internal Hom, this yields an
+  element of
+  $A((t^{\mathbb{R}}))\otimes_A\operatorname{Hom}_A(M,N)$ fixed by $F$.
+  Under the base-change identification, write it as an
+  $\operatorname{Hom}_A(M,N)$-valued Novikov series $h$.  Frobenius invariance
+  gives $h_d=h_{d/\lambda}$ for every $d$.  If a coefficient with $d\ne0$ were
+  nonzero, the infinite orbit $d,d/\lambda,d/\lambda^2,\ldots$ would contradict
+  Novikov finiteness.  Thus only the degree-zero coefficient remains, and the
+  fixed elements are exactly $1\otimes f$ for
+  $f\in\operatorname{Hom}_A(M,N)$.
 \end{proof}
 
 \subsection{Some lemmas}
+
+\begin{lemma}[A fixed point for the contraction operator]
+  \label{lem:contraction_fixed_point}
+  \lean{Novikov.contractionOperator,
+    Novikov.contractionOperator_estimate,
+    Novikov.contractionOperator_fixed}
+  \leanok
+  \uses{def:frobenius, def:novikov_filtration, thm:novikov_topology,
+    thm:novikov_field}
+  Let $K$ be a field, let $a_0,\ldots,a_{n-1}\in K((t^{\mathbb{R}}))$ lie in
+  the zero filtration, and let $c\in K^\times$.  Define
+  \[
+    g(x)=\sum_{i=0}^{n-1}
+      c^{-(n-i)}F^{n-i}(x)F^{n-1-i}(a_i).
+  \]
+  If $g(1)$ lies in the zero filtration and has constant coefficient $1$, then
+  there is a series $b$ such that $g(b)=b$ and $b_0=1$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  The key estimate is
+  \[
+    x-y\in F_D,\quad D\geq0
+    \qquad\Longrightarrow\qquad
+    g(x)-g(y)\in F_{\lambda D}.
+  \]
+  Each summand follows from the facts that $F^k(F_D)\subseteq
+  F_{\lambda^kD}$, that $n-i\geq1$, and that every $a_i$ and constant scalar
+  lies in $F_0$.
+
+  If $g(1)=1$, take $b=1$.  Otherwise $g(1)-1$ has no terms of degree at most
+  zero, so it belongs to $F_\varepsilon$ for some $\varepsilon>0$.  Set
+  $b_j=g^j(1)$.  Iterating the estimate gives
+  \[
+    b_{j+1}-b_j\in F_{\lambda^j\varepsilon}.
+  \]
+  Since $\lambda^j\varepsilon\to+\infty$, the sequence $(b_j)$ is Cauchy and
+  converges by completeness of the Novikov ring.  The same estimate shows
+  that $g$ is continuous, so the limit $b$ satisfies $g(b)=b$.  Every $b_j$
+  has constant coefficient $1$; convergence in the filtration eventually
+  identifies the degree-zero coefficients of $b_j$ and $b$, so $b_0=1$.
+\end{proof}
+
+\begin{lemma}[A contraction fixed point gives an eigenvector]
+  \label{lem:fixed_point_gives_frobenius_eigenvector}
+  \lean{Novikov.bSeq,
+    Novikov.bSeq_last_eq_contractionOperator,
+    Novikov.exists_frobenius_eigenvector_of_fixed_point}
+  \leanok
+  \uses{def:novikov_isocrystal, lem:contraction_fixed_point}
+  Let $M$ be a Novikov isocrystal over an algebraically closed field $K$.
+  Suppose that $m\ne0$, that $n\geq1$, and that
+  $m,F_Mm,\ldots,F_M^{n-1}m$ are linearly independent with
+  \[
+    F_M^nm=\sum_{i=0}^{n-1}a_iF_M^im.
+  \]
+  Let $c\in K^\times$, let $g$ be the contraction operator formed from the
+  $a_i$ and $c$, and suppose that a nonzero series $b$ satisfies $g(b)=b$.
+  Then $M$ has a nonzero vector $m'$ satisfying $F_M(m')=c\,m'$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Define a sequence of coefficient series by
+  \[
+    \beta_0=c^{-1}F(b)a_0,
+    \qquad
+    \beta_{k+1}=c^{-1}\bigl(F(\beta_k)+F(b)a_{k+1}\bigr).
+  \]
+  Expanding the recurrence shows that its last term is the contraction:
+  $\beta_{n-1}=g(b)=b$.  Hence
+  \[
+    m'=\sum_{i=0}^{n-1}\beta_iF_M^im
+  \]
+  is nonzero, because the iterates $F_M^im$ are linearly independent and the
+  last coefficient is $b\ne0$.  Apply $F_M$, use semilinearity, substitute the
+  relation for $F_M^nm$, and use the recurrence for the $\beta_i$; all terms
+  telescope to give $F_M(m')=c\,m'$.
+\end{proof}
 
 \begin{theorem}[Existence of a Frobenius eigenvector]
   \label{thm:frobenius_eigenvector}
   \lean{Novikov.exists_frobenius_eigenvector}
   \leanok
-  \uses{def:novikov_isocrystal, def:frobenius, thm:novikov_field, thm:novikov_topology,
-    def:novikov_filtration, def:novikov_series}
+  \uses{def:novikov_isocrystal, thm:novikov_field,
+    lem:contraction_fixed_point,
+    lem:fixed_point_gives_frobenius_eigenvector}
   Let $K$ be an algebraically closed field and $M$ a nonzero Novikov
   isocrystal over $K$. Then there exists a nonzero $m \in M$ and
   $c \in K^\times$ such that $F_M(m) = c \cdot m$.
@@ -109,26 +206,27 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
 
 \begin{proof}
   \leanok
-  Pick a nonzero $m_0 \in M$ and choose the minimal $n \ge 1$ such that
-  $F_M^0 m_0, \dots, F_M^{n-1} m_0$ are linearly independent while
-  $F_M^n m_0 = \sum_{i} a_i \cdot F_M^i m_0$ for some series $a_i$.
-  Scale $m_0$ by a monomial $t^r$ so that the new coefficients $a'_i$
-  lie in $K[\![t]\!]$ and at least one has nonzero constant term
-  $\bar{a}_i$.  By algebraic closedness, find $c \in K^\times$ with
-  $c^n = \sum_i \bar{a}_i c^i$.  Define the contraction
-  $
-    g(x) = \sum_{i=0}^{n-1} c^{-(n-i)} F^{n-i}(x) F^{n-1-i}(a'_i).
-  $
-  If $x - y$ lies in the $D$-filtration, then $g(x) - g(y)$ lies in the
-  $(\lambda \cdot D)$-filtration, and $g(1)$ is in the $0$-filtration
-  with $(g(1))_0 = 1$.  Iterating $g$ from $1$ produces a Cauchy sequence
-  converging to a fixed point $b$ with $b_0 = 1$.  From $b$ define
-  $b_0 = c^{-1}F(b)a'_0$ and
-  $b_{k+1} = c^{-1}(F(b_k) + F(b)a'_{k+1})$; then $b_{n-1} = b$ and
-  $
-    m' = \sum_{i=0}^{n-1} b_i \cdot F_M^i m_0
-  $
-  is a nonzero eigenvector satisfying $F_M(m') = c \cdot m'$.
+  Pick $m_0\ne0$ and choose the minimal $n\geq1$ for which the Frobenius
+  iterates satisfy a relation
+  \[
+    F_M^nm_0=\sum_{i=0}^{n-1}a_iF_M^im_0;
+  \]
+  the preceding iterates are linearly independent.  Scale $m_0$ by a monomial
+  $t^r$ so that the resulting coefficients $a'_i$ lie in the zero filtration
+  and at least one constant coefficient $\bar a_i$ is nonzero.  Algebraic
+  closedness supplies $c\in K^\times$ satisfying
+  \[
+    c^n=\sum_{i=0}^{n-1}\bar a_i c^i.
+  \]
+
+  Form the contraction operator from the $a'_i$ and $c$.  Direct evaluation
+  shows that $g(1)$ lies in the zero filtration; the displayed polynomial
+  identity says exactly that its constant coefficient is $1$.
+  Lemma~\ref{lem:contraction_fixed_point} therefore gives a fixed point $b$
+  with $b_0=1$, in particular $b\ne0$.  The scaled Frobenius iterates remain
+  linearly independent and satisfy the relation with coefficients $a'_i$.
+  Lemma~\ref{lem:fixed_point_gives_frobenius_eigenvector} now produces the
+  required eigenvector.
 \end{proof}
 
 
@@ -146,14 +244,26 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
 
 \begin{proof}
   \leanok
-  Forward inclusion: for $s \in S$, each coefficient $s_d$ (viewed as a
-  constant series) is a limit of iterates $F^k(t^{-d} s)$, hence in $S$.
-  Reverse inclusion: approximate a series in $S_0((t^{\mathbb{R}}))$ by
-  its finite monomial truncations; each truncation lies in $S$ by the
-  shift-stability, and the limit is in $S$ by closedness.
+  First isolate the coefficients of an element $s\in S$.  If $d$ is the least
+  exponent in the support of $s$, then
+  \[
+    F^k(t^{-d}s)\longrightarrow s_d
+  \]
+  in the Novikov filtration topology: the exponent-zero term stays fixed and
+  every other exponent is multiplied by $\lambda^k$.  Stability under shifts
+  and Frobenius, followed by closedness, therefore puts the constant series
+  $s_d$ in $S$.  For a general exponent $d$, there are only finitely many
+  supported exponents below $d$.  Repeatedly isolate and subtract their
+  monomials; induction on this finite set reduces to the least-exponent case
+  and shows that the constant series $s_d$ lies in $S$.  This proves
+  $S\subseteq S_0((t^{\mathbb{R}}))$.
+
+  Conversely, every finite monomial truncation of a series in
+  $S_0((t^{\mathbb{R}}))$ lies in $S$ by shift-stability.  These truncations
+  converge to the original series, so closedness gives the reverse inclusion.
 \end{proof}
 
-\begin{theorem}[Proposition~3.7: constancy descends along injective coefficient maps]
+\begin{theorem}[Proposition~3.7: injective descent of constancy]
   \label{prop:nov_isoc_injective}
   \lean{Novikov.nov_isoc_injective}
   \leanok
@@ -162,23 +272,40 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
     thm:projective_novikov_series, thm:novikov_base_change,
     def:frobenius, thm:frobenius_properties, thm:novikov_ring, thm:novikov_module}
   Let $f \colon A \to B$ be an injective ring homomorphism and $M$ a Novikov
-  isocrystal over $A$.  If the base change $M_B = M \otimes_{A((t^{\mathbb{R}}))} B((t^{\mathbb{R}}))$
-  is isomorphic to a constant isocrystal over $B$, then $M$ is itself
-  isomorphic to a constant isocrystal over $A$.
+  isocrystal over $A$.  If the base change
+  $M_B=M\otimes_{A((t^{\mathbb{R}}))}B((t^{\mathbb{R}}))$ is isomorphic to a
+  constant isocrystal over $B$, then $M$ is itself isomorphic to a constant isocrystal over $A$.
 \end{theorem}
 
 \begin{proof}
   \leanok
-  Embed $M$ into $M_B$ via $m \mapsto 1 \otimes m$; by flatness and
-  injectivity of $f$, this is injective.  Via the isomorphism
-  $M_B \cong N_0 \otimes_B B((t^{\mathbb{R}}))$, realize $M$ as a closed $A$-submodule
-  of $N_0((t^{\mathbb{R}}))$ stable under $F$ and $t^d$-shifts.  Lemma~3.6 identifies
-  this submodule as $M_0((t^{\mathbb{R}}))$ for an $A$-submodule $M_0 \subseteq N_0$.
-  The subspace topology induced from $N_0((t^{\mathbb{R}}))$ coincides with the canonical
-  $A((t^{\mathbb{R}}))$-module topology on $M((t^{\mathbb{R}}))$ (since $M$ is finite projective over
-  $A((t^{\mathbb{R}}))$ and $f$ is a closed embedding), hence also with the $t$-adic
-  topology on $M_0((t^{\mathbb{R}}))$.  By descent of finite projectivity
-  $M_0$ is finite projective over $A$, and $M \cong M_0((t^{\mathbb{R}}))$.
+  Put $R_A=A((t^{\mathbb{R}}))$ and $R_B=B((t^{\mathbb{R}}))$.  The map
+  $R_A\to R_B$ is coefficientwise injective.  Since the underlying
+  $R_A$-module of $M$ is finite projective, it is a direct summand of a finite
+  free module; the one-tensor map
+  \[
+    M\longrightarrow R_B\otimes_{R_A}M,
+    \qquad m\longmapsto1\otimes m,
+  \]
+  is therefore a direct summand of the coordinatewise injection
+  $R_A^n\to R_B^n$ and is injective.  This argument does not require $R_B$ to
+  be flat over $R_A$.
+
+  Through the assumed constant trivialization, this embeds $M$ in
+  $N_0((t^{\mathbb{R}}))$.  The coefficient map $R_A\to R_B$ is also a closed
+  embedding for the filtration topologies.  Finite projectivity promotes the
+  one-tensor map to a closed embedding for the canonical module topologies;
+  the constant trivialization is a homeomorphism for those topologies.  Thus
+  the image of $M$ is a closed $A$-submodule, stable under Frobenius and every
+  monomial shift.  Lemma~\ref{lem:frobenius_limit} identifies it with
+  $M_0((t^{\mathbb{R}}))$ for an $A$-submodule $M_0\subseteq N_0$.
+
+  The resulting isomorphism
+  $M\cong M_0((t^{\mathbb{R}}))$ makes the latter finite projective over
+  $R_A$ and identifies its canonical topology with its Novikov filtration
+  topology.  Theorem~\ref{thm:projective_novikov_series} now shows that $M_0$
+  is finite projective over $A$.  Frobenius acts coefficientwise under the
+  isomorphism, so it identifies $M$ with the constant isocrystal on $M_0$.
 \end{proof}
 
 \begin{theorem}[Proposition~3.8: a contracting lattice makes an isocrystal constant]
@@ -193,7 +320,7 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
     thm:novikov_module}
   Let $P \subseteq A((t^{\mathbb{R}}))$ be the filtration-zero subring and let
   $M$ be a Novikov isocrystal over a commutative ring $A$. Suppose that
-  $L \subseteq M$ is a finite $P$-submodule whose
+  $L \subseteq M$ is a finitely generated $P$-submodule whose
   $A((t^{\mathbb{R}}))$-span is $M$. If for every $m \in L$ there is some
   $\varepsilon>0$ such that
   \[
@@ -209,7 +336,7 @@ basic facts about it. Throughout the discussion, we fix a real number $\lambda >
   canonical topology. Frobenius sends differences in $t^dL$ into
   $t^{\lambda d}L$. Consequently, the Frobenius orbit of every lattice
   element converges to a fixed element congruent to it modulo the ideal of
-  positive-degree power series. This ideal lies in the Jacobson radical of
+  positive-degree power series.  This ideal lies in the Jacobson radical of
   $P$, so Nakayama's lemma corrects a finite generating family of $L$ to a
   finite Frobenius-fixed generating family.
 

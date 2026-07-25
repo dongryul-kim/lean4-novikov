@@ -1,0 +1,67 @@
+\section*{Overview}
+\label{sec:overview}
+\addoverviewtotoc
+
+This blueprint follows the order of the paper.  It first develops Novikov
+series and Novikov isocrystals, then introduces Novikov descent data and the
+comparison between descent data and isocrystals.  The remaining sections prove
+essential surjectivity by passing successively through algebraically closed
+fields, products of such fields, reduced rings, arbitrary coefficient rings,
+and finally arbitrary exponent monoids.
+
+\paragraph{Numbering convention.}
+Statements are numbered locally within each blueprint section.  A
+parenthetical label such as ``Proposition~4.8'' records the corresponding
+number in the paper; headings without such a label name supporting results
+introduced for the formalization.
+
+\paragraph{Main theorem.}
+The main result is Theorem~1.1 of the paper, restated and proved there as
+Theorem~4.9.  Let $A$ be a commutative ring and let
+$\Gamma\subseteq\mathbb{R}$ be an additive submonoid.  The goal is the equivalence
+\[
+  \operatorname{Const}_\Gamma\colon
+  \mathsf{Vect}(A)\xrightarrow{\ \sim\ }\mathsf{NovDD}(A,\Gamma),
+\]
+where the source is the category of finite projective $A$-modules and the
+target is the category of Novikov descent data.  This is proved in
+Theorem~\ref{thm:novikov_descent_equivalence}.
+
+\paragraph{Proof architecture.}
+The argument has three stages.
+\begin{enumerate}
+  \item The sections on Novikov series, isocrystals, and descent establish the
+    algebraic foundations, full faithfulness of constant objects, and the
+    fully faithful comparison from real-exponent descent data to isocrystals.
+  \item For real exponents, essential surjectivity is proved first over an
+    algebraically closed field, then over products of algebraically closed
+    fields and reduced rings.  Square-zero deformation and a finitely
+    generated nilpotent quotient reduce the general coefficient ring to the
+    reduced case.
+  \item For a general $\Gamma$, exponents are extended to $\mathbb{R}$.  The
+    real-exponent theorem supplies a trivialization, support arguments restrict
+    it back to $\Gamma$, and finite-projective duality upgrades the resulting
+    injection to an isomorphism.
+\end{enumerate}
+
+\paragraph{Notation.}
+Throughout the blueprint:
+\begin{description}
+  \item[$A((t_1^\Gamma,\dotsc,t_n^\Gamma))$] denotes the $n$-variable Novikov
+    ring with coefficients in $A$ and exponents in $\Gamma$; in one variable
+    we write $A((t^\Gamma))$.
+  \item[$\mathsf{Vect}(A)$] denotes the category of finite projective
+    $A$-modules.
+  \item[$\mathsf{NovIsoc}(A)$] denotes the category of real-exponent Novikov
+    isocrystals for the fixed dilation factor $\lambda>1$.
+  \item[$\mathsf{NovDD}(A,\Gamma)$] denotes the category of Novikov descent
+    data with exponent monoid $\Gamma$.  When $\Gamma=\mathbb{R}$, the exponent
+    is sometimes omitted.
+  \item[$\operatorname{Const}_\Gamma(P)$] denotes the constant descent datum
+    associated to $P$; the subscript is omitted in the real-exponent sections.
+  \item[$M_B$] denotes coefficient base change along a specified map
+    $A\to B$, while $M_{\mathbb{R}}$ denotes extension of exponents from
+    $\Gamma$ to $\mathbb{R}$.
+  \item[$\pi_i^\ast$] denotes a face map and, by the same notation, the induced
+    scalar extension of modules along that map.
+\end{description}

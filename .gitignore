@@ -1,2 +1,7 @@
 /.lake
+/blueprint/__pycache__/
+/blueprint/lean_decls
+/blueprint/print/
+/blueprint/src/*.paux
+/blueprint/web/
 

@@ -1,16 +1,17 @@
 \section{The case of an algebraically closed field}
+\label{sec:algebraically_closed}
 
 Throughout this section, let $K$ be an algebraically closed field and let
 $\lambda>1$.  Put
 \[
-  R=K((t^{\mathbb R})), \qquad
-  R_2=K((t^{\mathbb R},u^{\mathbb R})).
+  R=K((t^{\mathbb{R}})), \qquad
+  R_2=K((t^{\mathbb{R}},u^{\mathbb{R}})).
 \]
 Write $F$ for the Frobenius on $R$, $F_2$ for the Frobenius on $R_2$ fixing
-$t$ and sending $u$ to $u^\lambda$, and $\pi_2^*\colon R\to R_2$ for the face
+$t$ and sending $u$ to $u^\lambda$, and $\pi_2^\ast\colon R\to R_2$ for the face
 map sending $t$ to $u$.  Frobenius is applied coordinatewise to vectors, and
 for a matrix $T$ over $R$ we write $T^{(2)}$ for the matrix obtained by applying
-$\pi_2^*$ entrywise.
+$\pi_2^\ast$ entrywise.
 
 \subsection{Triangularization of isocrystals}
 
@@ -19,7 +20,7 @@ $\pi_2^*$ entrywise.
   \lean{Novikov.nov_isoc_geom_pt_triangular}
   \leanok
   \uses{def:novikov_isocrystal, thm:frobenius_eigenvector, thm:novikov_field}
-  Let $I$ be a Novikov isocrystal over $K$.  There are an integer $n$, an
+  Let $I$ be a Novikov isocrystal over $K$.  There are a natural number $n$, an
   $R$-linear isomorphism $e\colon I\xrightarrow{\sim}R^n$, units
   $c_1,\ldots,c_n\in K^\times$, and an upper-triangular matrix
   $T\in\operatorname{Mat}_n(R)$ with diagonal entries $T_{ii}=c_i$ such that
@@ -70,7 +71,7 @@ $\pi_2^*$ entrywise.
   now reads $x_{a,0}=c\,x_{a,0}$, hence $c=1$.
 
   If $F_2(x)=x$, the ring-level equalizer used in
-  Lemma~\ref{lem:recover_dd_from_isoc} writes $x=\pi_1^*(y)$ for some
+  Lemma~\ref{lem:recover_dd_from_isoc} writes $x=\pi_1^\ast(y)$ for some
   $0\ne y\in R$.  The ring $R$ is a field, so $y$, and therefore $x$, is a
   unit.
 \end{proof}
@@ -99,8 +100,8 @@ $\pi_2^*$ entrywise.
 \begin{proof}
   \leanok
   By Lemma~\ref{lem:recover_dd_from_isoc}, the recovered elements
-  $\varphi(\pi_1^*m)\in\pi_2^*M$ are fixed by $F_{M,2}$, and they generate
-  $\pi_2^*M$ after extension of scalars.  In the coordinates defining $T$, the
+  $\varphi(\pi_1^\ast m)\in\pi_2^\ast M$ are fixed by $F_{M,2}$, and they generate
+  $\pi_2^\ast M$ after extension of scalars.  In the coordinates defining $T$, the
   equation $F_{M,2}(y)=y$ becomes $y=T^{(2)}F_2(y)$.  Hence a functional
   vanishing on all such fixed solutions vanishes on a generating set and is
   zero.  For the last assertion, otherwise the $k$-th coordinate projection
@@ -119,8 +120,8 @@ $\pi_2^*$ entrywise.
   Let $A\in\operatorname{Mat}_n(R)$ and $C\in R^n$.  Suppose
   $0\ne\xi\in R_2$ is $F_2$-fixed and $x\in R_2^n$ satisfies
   \[
-    x_i=\sum_j\pi_2^*(A_{ij})F_2(x_j)
-      +\pi_2^*(C_i)F_2(\xi).
+    x_i=\sum_j\pi_2^\ast(A_{ij})F_2(x_j)
+      +\pi_2^\ast(C_i)F_2(\xi).
   \]
   Then there is a $Z\in R^n$ satisfying
   \[
@@ -140,7 +141,7 @@ $\pi_2^*$ entrywise.
   Lemma~\ref{lem:f2_eigen_rigidity} makes $\xi$ a unit.  Dividing $x$ by
   $\xi$ therefore gives $z\in R_2^n$ with
   \[
-    z=A^{(2)}F_2(z)+\pi_2^*(C).
+    z=A^{(2)}F_2(z)+\pi_2^\ast(C).
   \]
   Let $E\colon R_2\to R$ extract first-variable degree zero:
   \[
@@ -149,8 +150,8 @@ $\pi_2^*$ entrywise.
   \]
   Novikov finiteness makes this a well-defined series, and coefficient
   calculation gives
-  $E(\pi_2^*(a)y)=aE(y)$, $E\circ F_2=F\circ E$, and
-  $E\circ\pi_2^*=\mathrm{id}$.  Applying $E$ coordinatewise and setting
+  $E(\pi_2^\ast(a)y)=aE(y)$, $E\circ F_2=F\circ E$, and
+  $E\circ\pi_2^\ast=\mathrm{id}$.  Applying $E$ coordinatewise and setting
   $Z=E(z)$ yields $Z=AF(Z)+C$.  Substitution in the definitions of $S_Z$ and
   $\Phi_{A,C}$ gives the conjugacy formula; its upper coordinate is precisely
   the equation just obtained.
@@ -189,7 +190,7 @@ $\pi_2^*$ entrywise.
   It remains to apply induction to $A$.  If a functional $\ell$ vanishes on
   $\operatorname{Fix}_2(A)$, compose it with the top unshearing map
   \[
-    y\longmapsto y_{\mathrm{top}}-\pi_2^*(Z)y_n.
+    y\longmapsto y_{\mathrm{top}}-\pi_2^\ast(Z)y_n.
   \]
   The shear calculation shows that this composite vanishes on
   $\operatorname{Fix}_2(T)$, hence it is zero by spanning.  Evaluating it on

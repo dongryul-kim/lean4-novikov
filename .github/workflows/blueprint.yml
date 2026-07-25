@@ -22,6 +22,9 @@ jobs:
         with:
           fetch-depth: 0 # Fetch all history for all branches and tags
 
+      - name: Lint blueprint
+        run: python3 blueprint/lint.py
+
       - name: Build project
         uses: leanprover/lean-action@v1
         with:
@@ -31,6 +34,6 @@ jobs:
       - name: Compile blueprint and homepage
         uses: leanprover-community/docgen-action@main
         with:
-          api-docs: false
+          api-docs: true
           blueprint: true
           homepage: home_page
