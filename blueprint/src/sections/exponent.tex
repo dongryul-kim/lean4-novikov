@@ -1,0 +1,243 @@
+\section{Restricting the exponents}
+\label{sec:exponent_restriction}
+
+We now pass from real exponents to an arbitrary additive submonoid
+$\Gamma\subseteq\mathbb{R}$.  Although extension of exponents gives an
+injective map
+\[
+  A((t^\Gamma))\longrightarrow A((t^{\mathbb{R}})),
+\]
+we do not assume that this map is faithfully flat.  Instead, we first
+construct an injective map from a descent datum to a constant object and then
+apply the same construction to its dual.  Finite-projective duality supplies a
+right inverse.
+
+\begin{definition}[Extension and restriction of exponents]
+  \label{def:exponent_extension}
+  \lean{Novikov.HasExponentSupport,
+    Novikov.extendExponents,
+    Novikov.restrictExponents,
+    Novikov.mem_range_extendExponents_iff,
+    Novikov.extendExponentsRingHom}
+  \leanok
+  \uses{def:novikov_series, thm:novikov_ring}
+  Let $I$ be a finite set of variables.  Extension by zero is the map
+  \[
+    \iota_*\colon A((t_i^\Gamma))_{i\in I}
+      \longrightarrow A((t_i^{\mathbb{R}}))_{i\in I}
+  \]
+  whose coefficient at $d\in\mathbb{R}^I$ is the coefficient of the original
+  series when every $d_i$ lies in $\Gamma$, and is zero otherwise.  It is an
+  injective ring homomorphism.
+
+  A real-exponent series has \emph{$\Gamma$-support} if every coordinate of
+  every exponent in its support lies in $\Gamma$.  The image of $\iota_*$ is
+  exactly the set of series with $\Gamma$-support.  Restriction of coefficients
+  to $\Gamma^I$ is inverse to extension on this set.
+\end{definition}
+
+\begin{proposition}[Exponent base change]
+  \label{prop:exponent_base_change}
+  \lean{Novikov.Descent.extendExponents_substitute_of_injective,
+    Novikov.Descent.exponentInclusionCHom,
+    Novikov.Descent.exponentInclusionExtendedCHom,
+    Novikov.Descent.exponentBaseChangeFunctor,
+    Novikov.Descent.exponentConstantBaseChangeIso}
+  \leanok
+  \uses{def:exponent_extension, def:novikov_descent_datum,
+    def:constant_descent_datum}
+  Extension by zero commutes with substitution along each face map in the
+  Novikov cosimplicial ring.  It therefore defines a base-change functor
+  \[
+    (-)_{\mathbb{R}}\colon
+      \mathsf{NovDD}(A,\Gamma)\longrightarrow
+      \mathsf{NovDD}(A,\mathbb{R}).
+  \]
+  For every finite projective $A$-module $P$, there is a canonical
+  isomorphism
+  \[
+    \bigl(\operatorname{Const}_\Gamma(P)\bigr)_{\mathbb{R}}
+      \cong \operatorname{Const}_{\mathbb{R}}(P).
+  \]
+\end{proposition}
+
+\begin{proof}
+  \leanok
+  Every face map is substitution along an injective map of finite variable
+  sets.  A coefficient calculation shows that extending before or after such
+  a substitution gives the same series.  The level-one, level-two, and
+  level-three extension homomorphisms thus form a morphism of cosimplicial
+  rings.  At level zero the map is the identity on $A$, so abstract constant
+  base change, followed by cancellation of $A\otimes_A P$, gives the displayed
+  comparison for constant objects.
+\end{proof}
+
+\begin{lemma}[Support of a real trivialization]
+  \label{lem:real_trivialization_exponent_support}
+  \lean{Novikov.Descent.realTrivializedSeries,
+    Novikov.Descent.realTrivializedSeries_has_exponent_support}
+  \leanok
+  \uses{prop:exponent_base_change, def:constant_descent_datum}
+  Let $M\in\mathsf{NovDD}(A,\Gamma)$, let $P$ be finite projective over $A$,
+  and suppose that
+  \[
+    e\colon M_{\mathbb{R}}\xrightarrow{\sim}
+      \operatorname{Const}_{\mathbb{R}}(P)
+  \]
+  is an isomorphism.  Identify the underlying module of the constant object
+  with the module of $P$-valued real Novikov series.  For $m\in M$, let
+  $y_m$ be the series corresponding to $e(1\otimes m)$.  Then
+  \[
+    \operatorname{supp}(y_m)\subseteq\Gamma.
+  \]
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  Realize the two pullbacks of $M$ as two-variable, $P$-valued real Novikov
+  series.  On a pure tensor, the first realization has the form
+  \[
+    a\otimes m\longmapsto
+      \iota_*(a)\,\operatorname{sub}_1(y_m).
+  \]
+  Here $\iota_*(a)$ has support in $\Gamma\times\Gamma$, while
+  $\operatorname{sub}_1(y_m)$ has support in $\mathbb{R}\times\{0\}$.
+  Consequently every element in the image of the first realization is
+  supported in $\mathbb{R}\times\Gamma$.
+
+  The descent isomorphism identifies the second realization of $1\otimes m$
+  with an element in this first image.  The second realization substitutes
+  $y_m$ into the second coordinate.  Evaluating its coefficient at $(0,d)$
+  therefore shows that every nonzero coefficient of $y_m$ has
+  $d\in\Gamma$.
+\end{proof}
+
+\begin{proposition}[Restricting a real trivialization]
+  \label{prop:restricted_real_trivialization}
+  \lean{Novikov.Descent.restrictedTrivializedSeries,
+    Novikov.Descent.restrictRealTrivialization,
+    Novikov.Descent.restrictRealTrivialization_injective,
+    Novikov.Descent.restrictRealTrivialization_baseChange}
+  \leanok
+  \uses{lem:real_trivialization_exponent_support,
+    prop:exponent_base_change}
+  Under the hypotheses of
+  Lemma~\ref{lem:real_trivialization_exponent_support}, coefficient restriction
+  defines a morphism of descent data
+  \[
+    g\colon M\longrightarrow\operatorname{Const}_\Gamma(P).
+  \]
+  This morphism is injective.  After extension to real exponents and the
+  canonical comparison for constant objects, it recovers $e$.
+\end{proposition}
+
+\begin{proof}
+  \leanok
+  Define $g(m)$ by restricting the coefficients of $y_m$ to $\Gamma$ and then
+  using the standard identification of $P$-valued Novikov series with the
+  underlying module of $\operatorname{Const}_\Gamma(P)$.  The preceding lemma
+  says that extending this restricted series recovers $y_m$.
+
+  Restriction of an arbitrary real series need not be
+  $A((t^\Gamma))$-linear when $\Gamma$ is only a submonoid.  Linearity of $g$
+  is instead proved after applying the injective extension map, where it
+  reduces to linearity of $e$.  The same strategy proves compatibility with
+  the descent isomorphisms: after real exponent base change the desired square
+  is the square for $e$, and equality is reflected back through the
+  level-two extension map using finite projectivity.  Finally, if
+  $g(m)=g(n)$, extension gives $e(1\otimes m)=e(1\otimes n)$.  Injectivity of
+  $m\mapsto1\otimes m$ for a finite projective module over an injective ring
+  map gives $m=n$.
+\end{proof}
+
+\begin{proposition}[Duality makes the restricted map invertible]
+  \label{prop:restricted_real_trivialization_iso}
+  \lean{Novikov.Descent.novikovConstantDualIso,
+    Novikov.Descent.realDualTrivialization,
+    Novikov.Descent.restrictRealDualTrivialization,
+    Novikov.Descent.fromRestrictedDual,
+    Novikov.Descent.restrictRealTrivialization_comp_fromRestrictedDual,
+    Novikov.Descent.restrictRealTrivialization_bijective,
+    Novikov.Descent.restrictRealTrivializationIso}
+  \leanok
+  \uses{prop:restricted_real_trivialization,
+    def:constant_descent_datum}
+  The morphism $g$ of
+  Proposition~\ref{prop:restricted_real_trivialization} is an isomorphism:
+  \[
+    M\xrightarrow{\sim}\operatorname{Const}_\Gamma(P).
+  \]
+\end{proposition}
+
+\begin{proof}
+  \leanok
+  Finite projectivity identifies a module with its double dual and gives a
+  canonical comparison
+  \[
+    c\colon\operatorname{Const}_\Gamma(P^\vee)
+      \xrightarrow{\sim}\operatorname{Const}_\Gamma(P)^\vee.
+  \]
+  Base change of duals is canonically the dual of base change.  Applying these
+  comparisons to the dual of $e$, and then applying
+  Proposition~\ref{prop:restricted_real_trivialization}, produces an injective
+  morphism
+  \[
+    h\colon M^\vee\longrightarrow
+      \operatorname{Const}_\Gamma(P^\vee).
+  \]
+
+  The primal and dual constructions are compatible.  After extending
+  exponents this follows from the naturality of the base-change/dual
+  comparison and the fact that $g_{\mathbb{R}}$ is $e$.  Reflecting the equality
+  back to $\Gamma$ gives
+  \[
+    h\circ g^\vee=c^{-1}.
+  \]
+  Dualize $h$, compose with $c$ and the double-dual evaluations, and obtain
+  \[
+    q\colon\operatorname{Const}_\Gamma(P)\longrightarrow M.
+  \]
+  Pairing $g(q(p))$ with an arbitrary element of
+  $\operatorname{Const}_\Gamma(P)^\vee$ and using the displayed identity shows
+  that
+  \[
+    g\circ q=\operatorname{id}.
+  \]
+  Thus $g$ is surjective; it was already injective by
+  Proposition~\ref{prop:restricted_real_trivialization}.  Its underlying
+  linear map is therefore a linear equivalence, and the descent compatibility
+  packages it as the claimed isomorphism.
+\end{proof}
+
+\begin{theorem}[The main Novikov descent theorem]
+  \label{thm:novikov_descent_equivalence}
+  \lean{Novikov.Descent.vectToNovikovDescent_essSurj,
+    Novikov.Descent.vectToNovikovDescent_isEquivalence,
+    Novikov.Descent.vectToNovikovDescent_equivalence}
+  \leanok
+  \uses{thm:novikov_descent_equivalence_real,
+    prop:restricted_real_trivialization_iso,
+    prop:vect_to_novikov_descent_fully_faithful}
+  Let $A$ be a commutative ring and let
+  $\Gamma\subseteq\mathbb{R}$ be an additive submonoid.  The constant-descent
+  functor
+  \[
+    \mathsf{Vect}(A)\longrightarrow\mathsf{NovDD}(A,\Gamma)
+  \]
+  is an equivalence of categories.
+\end{theorem}
+
+\begin{proof}
+  \leanok
+  Let $M\in\mathsf{NovDD}(A,\Gamma)$.  Extend its exponents to obtain
+  $M_{\mathbb{R}}$.  The real-exponent theorem gives a finite projective
+  $A$-module $P$ and an isomorphism
+  \[
+    M_{\mathbb{R}}\cong\operatorname{Const}_{\mathbb{R}}(P).
+  \]
+  Proposition~\ref{prop:restricted_real_trivialization_iso} restricts this to
+  an isomorphism
+  $M\cong\operatorname{Const}_\Gamma(P)$, proving essential surjectivity.
+  Full faithfulness is
+  Proposition~\ref{prop:vect_to_novikov_descent_fully_faithful}.
+\end{proof}

@@ -8,11 +8,14 @@ import Mathlib.LinearAlgebra.TensorProduct.Basic
 import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.RingTheory.TensorProduct.Finite
 import Mathlib.RingTheory.TensorProduct.IsBaseChangeHom
+import Mathlib.RingTheory.Flat.Basic
 import Mathlib.CategoryTheory.Category.Basic
+import Mathlib.CategoryTheory.Iso
+import Mathlib.LinearAlgebra.Dual.Lemmas
 
 namespace Novikov.Miscellany
 
-open LinearMap TensorProduct
+open CategoryTheory LinearMap TensorProduct
 
 /-- A bundled type for finite projective modules. -/
 structure FiniteProjectiveModule (A : Type*) [CommRing A] where
@@ -95,6 +98,49 @@ noncomputable def FiniteProjectiveModule.homModule (M₀ N₀ : FiniteProjective
   M := M₀.M →ₗ[R] N₀.M
   instFinite := linearMap_finite_projective (M := M₀.M) (N := N₀.M)
   instProjective := linearMap_projective_projective (M := M₀.M) (N := N₀.M)
+
+namespace FiniteProjectiveModule
+
+private noncomputable def isoOfLinearEquiv (A : Type*) [CommRing A]
+    {P Q : FiniteProjectiveModule A} (e : P.M ≃ₗ[A] Q.M) : P ≅ Q where
+  hom := e.toLinearMap
+  inv := e.symm.toLinearMap
+  hom_inv_id := by
+    apply LinearMap.ext
+    exact e.symm_apply_apply
+  inv_hom_id := by
+    apply LinearMap.ext
+    exact e.apply_symm_apply
+
+private noncomputable def linearEquivOfIso (A : Type*) [CommRing A]
+    {P Q : FiniteProjectiveModule A} (e : P ≅ Q) : P.M ≃ₗ[A] Q.M :=
+  LinearEquiv.ofLinear e.hom e.inv e.inv_hom_id e.hom_inv_id
+
+/-- The ground ring as a finite projective module over itself. -/
+noncomputable def self (A : Type*) [CommRing A] : FiniteProjectiveModule A where
+  M := A
+  instAddCommGroup := inferInstance
+  instModule := inferInstance
+  instFinite := inferInstance
+  instProjective := inferInstance
+
+/-- The ordinary linear dual of a finite projective module. -/
+noncomputable def dual (A : Type*) [CommRing A] (P : FiniteProjectiveModule A) :
+    FiniteProjectiveModule A :=
+  FiniteProjectiveModule.homModule P (FiniteProjectiveModule.self A)
+
+/-- A finite projective module is canonically isomorphic to its double dual. -/
+noncomputable def doubleDualIso (A : Type*) [CommRing A]
+    (P : FiniteProjectiveModule A) : P ≅ dual A (dual A P) :=
+  isoOfLinearEquiv A (Module.evalEquiv A P.M)
+
+/-- Taking ordinary duals sends an isomorphism of finite projective modules to
+an isomorphism in the opposite direction. -/
+noncomputable def dualIso (A : Type*) [CommRing A]
+    {P Q : FiniteProjectiveModule A} (e : P ≅ Q) : dual A Q ≅ dual A P :=
+  isoOfLinearEquiv A (linearEquivOfIso A e).dualMap
+
+end FiniteProjectiveModule
 
 /-- The natural map S ⊗[R] (M →ₗ[R] N) →ₗ[S] (S ⊗[R] M →ₗ[S] S ⊗[R] N) -/
 def homBaseChangeMap {M N : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
@@ -311,6 +357,41 @@ lemma baseChange_projective {S : Type*} [CommRing S] [Algebra R S]
   infer_instance
 
 end
+
+section FaithfulBaseChange
+
+/-- If `R → S` is injective and `M` is flat over `R`, then `m ↦ 1 ⊗ m` is
+injective after base change to `S`. -/
+lemma one_tmul_injective_of_injective
+    {R S M : Type*} [CommRing R] [CommRing S] [Algebra R S]
+    [AddCommGroup M] [Module R M] [Module.Flat R M]
+    (hAlg : Function.Injective (algebraMap R S)) :
+    Function.Injective (fun m : M => ((1 : S) ⊗ₜ[R] m : S ⊗[R] M)) := by
+  let φ : R →ₗ[R] S := Algebra.linearMap R S
+  have hφ : Function.Injective φ := hAlg
+  have hTensor := Module.Flat.rTensor_preserves_injective_linearMap (M := M) φ hφ
+  intro m₁ m₂ h
+  apply (TensorProduct.lid R M).symm.injective
+  apply hTensor
+  simpa [φ, TensorProduct.lid_symm_apply, LinearMap.rTensor_tmul] using h
+
+/-- Base change along an injective ring map reflects equality of linear maps
+whose codomain is flat. -/
+lemma linearMap_eq_of_baseChange_eq_of_injective
+    {R S X Y : Type*} [CommRing R] [CommRing S] [Algebra R S]
+    [AddCommGroup X] [Module R X] [AddCommGroup Y] [Module R Y]
+    [Module.Flat R Y]
+    (hAlg : Function.Injective (algebraMap R S))
+    {f g : X →ₗ[R] Y}
+    (h : LinearMap.baseChange S f = LinearMap.baseChange S g) :
+    f = g := by
+  apply LinearMap.ext
+  intro x
+  apply one_tmul_injective_of_injective hAlg
+  have hx := LinearMap.congr_fun h ((1 : S) ⊗ₜ[R] x)
+  simpa only [LinearMap.baseChange_tmul, one_smul] using hx
+
+end FaithfulBaseChange
 
 /-- Base change of a finite projective module along a ring homomorphism. -/
 noncomputable def FiniteProjectiveModule.baseChange {A B : Type*} [CommRing A] [CommRing B]

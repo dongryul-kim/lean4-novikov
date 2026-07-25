@@ -37,34 +37,6 @@ private noncomputable def isoOfLinearEquiv {P Q : FiniteProjectiveModule A}
     apply LinearMap.ext
     exact e.apply_symm_apply
 
-/-- Regard an isomorphism of finite projective modules as a linear equivalence. -/
-private noncomputable def linearEquivOfIso {P Q : FiniteProjectiveModule A}
-    (e : P ≅ Q) : P.M ≃ₗ[A] Q.M :=
-  LinearEquiv.ofLinear e.hom e.inv e.inv_hom_id e.hom_inv_id
-
-/-- The ground ring as a finite projective module over itself. -/
-noncomputable def self : FiniteProjectiveModule A where
-  M := A
-  instAddCommGroup := inferInstance
-  instModule := inferInstance
-  instFinite := inferInstance
-  instProjective := inferInstance
-
-/-- The ordinary linear dual of a finite projective module. -/
-noncomputable def dual (P : FiniteProjectiveModule A) : FiniteProjectiveModule A :=
-  FiniteProjectiveModule.homModule P (FiniteProjectiveModule.self A)
-
-/-- A finite projective module is canonically isomorphic to its double dual. -/
-noncomputable def doubleDualIso (P : FiniteProjectiveModule A) :
-    P ≅ dual A (dual A P) :=
-  isoOfLinearEquiv A (Module.evalEquiv A P.M)
-
-/-- Taking ordinary duals sends an isomorphism of finite projective modules to
-an isomorphism in the opposite direction. -/
-noncomputable def dualIso {P Q : FiniteProjectiveModule A} (e : P ≅ Q) :
-    dual A Q ≅ dual A P :=
-  isoOfLinearEquiv A (linearEquivOfIso A e).dualMap
-
 end FiniteProjectiveModule
 
 section PiDual

@@ -12,21 +12,6 @@ open scoped BigOperators
 
 namespace Novikov.Miscellany
 
-/-- If `R → S` is injective and `M` is flat over `R`, then `m ↦ 1 ⊗ m` is
-injective after base change to `S`. -/
-lemma one_tmul_injective_of_injective
-    {R S M : Type*} [CommRing R] [CommRing S] [Algebra R S]
-    [AddCommGroup M] [Module R M] [Module.Flat R M]
-    (hAlg : Function.Injective (algebraMap R S)) :
-    Function.Injective (fun m : M => ((1 : S) ⊗ₜ[R] m : S ⊗[R] M)) := by
-  let φ : R →ₗ[R] S := Algebra.linearMap R S
-  have hφ : Function.Injective φ := hAlg
-  have hTensor := Module.Flat.rTensor_preserves_injective_linearMap (M := M) φ hφ
-  intro m₁ m₂ h
-  apply (TensorProduct.lid R M).symm.injective
-  apply hTensor
-  simpa [φ, TensorProduct.lid_symm_apply, LinearMap.rTensor_tmul] using h
-
 /-- In a reflexive module, elements are determined by all linear functionals. -/
 private lemma eq_of_dual_apply_eq {R M : Type*} [CommSemiring R]
     [AddCommMonoid M] [Module R M] [Module.IsReflexive R M]

@@ -145,6 +145,25 @@ lemma normalizedPhi_constant
         simpa only [map_one, one_mul] using h
       rw [hφ, realConstantPullbackπ₂Equiv_tmul]
 
+/-- The two canonical level-two tensor coordinates identify elements related by
+the descent isomorphism of a constant real Novikov module. -/
+lemma realConstantPullbackEquiv_commute_φ
+    {A : Type*} [CommRing A] (P : FiniteProjectiveModule A)
+    (z : π₁s (realC A)
+      ((vectToNovikovDescent (⊤ : AddSubgroup ℝ) A).obj P).M) :
+    realConstantPullbackπ₂Equiv P
+        (((vectToNovikovDescent (⊤ : AddSubgroup ℝ) A).obj P).φ z) =
+      realConstantPullbackπ₁Equiv P z := by
+  have h := LinearMap.congr_fun (normalizedPhi_constant P)
+    (realConstantPullbackπ₁Equiv P z)
+  change realConstantPullbackπ₂Equiv P
+      (((vectToNovikovDescent (⊤ : AddSubgroup ℝ) A).obj P).φ
+        ((realConstantPullbackπ₁Equiv P).symm
+          (realConstantPullbackπ₁Equiv P z))) =
+    realConstantPullbackπ₁Equiv P z at h
+  rw [(realConstantPullbackπ₁Equiv P).symm_apply_apply] at h
+  exact h
+
 /-! ## The square-zero deformation argument -/
 
 private theorem exists_lifted_constant_reduction

@@ -160,7 +160,7 @@ noncomputable def π₂₃End {C : Type*} [CommRing C]
         (NovikovSeries (⊤ : AddSubgroup ℝ) (Fin 3) C ⊗[C] P.M) :=
   normalizedEndBaseChange (substituteAlgHom Fin.succ) P
 
-private noncomputable def normalizedCancelHom
+noncomputable def normalizedCancelHom
     {A ι κ : Type*} [CommRing A] [Fintype ι] [Fintype κ]
     (f : NovikovSeries (⊤ : AddSubgroup ℝ) ι A →+*
       NovikovSeries (⊤ : AddSubgroup ℝ) κ A)
@@ -177,6 +177,50 @@ private noncomputable def normalizedCancelHom
     IsScalarTower.of_algebraMap_eq (fun a =>
       (RingHom.congr_fun hf a).symm)
   exact TensorProduct.AlgebraTensorModule.cancelBaseChange A R S S P.M
+
+/-- Regard a real Novikov ring homomorphism preserving constant coefficients as
+an algebra homomorphism over the coefficient ring. -/
+def constantPreservingAlgHom
+    {A ι κ : Type*} [CommRing A] [Fintype ι] [Fintype κ]
+    (f : NovikovSeries (⊤ : AddSubgroup ℝ) ι A →+*
+      NovikovSeries (⊤ : AddSubgroup ℝ) κ A)
+    (hf : f.comp algebraMapNovikov = algebraMapNovikov) :
+    NovikovSeries (⊤ : AddSubgroup ℝ) ι A →ₐ[A]
+      NovikovSeries (⊤ : AddSubgroup ℝ) κ A where
+  toRingHom := f
+  commutes' a := RingHom.congr_fun hf a
+
+/-- Cancelling an iterated constant base change on an outer pure tensor amounts
+ to extending the ring factor of the inner tensor. -/
+theorem normalizedCancelHom_tmul_right
+    {A ι κ : Type*} [CommRing A] [Fintype ι] [Fintype κ]
+    (f : NovikovSeries (⊤ : AddSubgroup ℝ) ι A →+*
+      NovikovSeries (⊤ : AddSubgroup ℝ) κ A)
+    (hf : f.comp algebraMapNovikov = algebraMapNovikov)
+    (P : FiniteProjectiveModule A)
+    (s : NovikovSeries (⊤ : AddSubgroup ℝ) κ A)
+    (x : NovikovSeries (⊤ : AddSubgroup ℝ) ι A ⊗[A] P.M) :
+    let R := NovikovSeries (⊤ : AddSubgroup ℝ) ι A
+    let S := NovikovSeries (⊤ : AddSubgroup ℝ) κ A
+    letI : Algebra R S := f.toAlgebra
+    normalizedCancelHom f hf P (s ⊗ₜ[R] x) =
+      s • TensorProduct.map (constantPreservingAlgHom f hf).toLinearMap
+        LinearMap.id x := by
+  let R := NovikovSeries (⊤ : AddSubgroup ℝ) ι A
+  let S := NovikovSeries (⊤ : AddSubgroup ℝ) κ A
+  letI : Algebra R S := f.toAlgebra
+  dsimp only
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | add x y hx hy =>
+      rw [TensorProduct.tmul_add, map_add, hx, hy, map_add, smul_add]
+  | tmul r p =>
+      rw [normalizedCancelHom,
+        TensorProduct.AlgebraTensorModule.cancelBaseChange_tmul]
+      simp only [TensorProduct.map_tmul, LinearMap.id_apply]
+      rw [TensorProduct.smul_tmul']
+      change (f r * s) ⊗ₜ[A] p = (s * f r) ⊗ₜ[A] p
+      rw [mul_comm]
 
 /-- Identify the underlying module of constant real Novikov descent with its
 canonical coefficient-normalized tensor presentation. -/
@@ -414,21 +458,21 @@ private lemma substituteRingHom_preserves_constants
   intro a
   exact substitute_algebraMap (Γ := (⊤ : AddSubgroup ℝ)) f a
 
-private lemma realC_π₁_preserves_constants
+lemma realC_π₁_preserves_constants
     {A : Type*} [CommRing A] :
     (realC A).π₁.comp algebraMapNovikov = algebraMapNovikov := by
   change (substituteRingHom (fun _ : Unit => (0 : Fin 2))).comp
     algebraMapNovikov = algebraMapNovikov
   exact substituteRingHom_preserves_constants _
 
-private lemma realC_π₂_preserves_constants
+lemma realC_π₂_preserves_constants
     {A : Type*} [CommRing A] :
     (realC A).π₂.comp algebraMapNovikov = algebraMapNovikov := by
   change (substituteRingHom (fun _ : Unit => (1 : Fin 2))).comp
     algebraMapNovikov = algebraMapNovikov
   exact substituteRingHom_preserves_constants _
 
-private theorem realConstantModuleEquiv_pullbackπ₁
+theorem realConstantModuleEquiv_pullbackπ₁
     {A : Type*} [CommRing A] (P : FiniteProjectiveModule A) :
     let R := NovikovSeries (⊤ : AddSubgroup ℝ) Unit A
     let K := (vectToNovikovDescent (⊤ : AddSubgroup ℝ) A).obj P
@@ -526,7 +570,78 @@ private theorem realConstantModuleEquiv_pullbackπ₁
           change z ⊗ₜ[A] p = z ⊗ₜ[A] p
           rfl
 
-private theorem realConstantModuleEquiv_pullbackπ₂
+/-- Pulling back the canonical constant-module coordinates along the first face
+extends their Novikov ring factor by first-variable substitution. -/
+theorem realConstantPullbackπ₁Equiv_tmul_right
+    {A : Type*} [CommRing A] (P : FiniteProjectiveModule A)
+    (s : NovikovSeries (⊤ : AddSubgroup ℝ) (Fin 2) A)
+    (x : ((vectToNovikovDescent (⊤ : AddSubgroup ℝ) A).obj P).M) :
+    let D := novikovCosimplicialRing (⊤ : AddSubgroup ℝ) A
+    let K := (vectToNovikovDescent (⊤ : AddSubgroup ℝ) A).obj P
+    letI : Algebra D.R₁
+      (NovikovSeries (⊤ : AddSubgroup ℝ) (Fin 2) A) := D.π₁.toAlgebra
+    letI : Module D.R₁
+      (NovikovSeries (⊤ : AddSubgroup ℝ) (Fin 2) A) := Algebra.toModule
+    letI : Module D.R₁
+      (baseChange_along (algebraMapNovikov : A →+* D.R₁) P.M) := K.instModule
+    realConstantPullbackπ₁Equiv P
+        ((show D.R₂ from s) ⊗ₜ[D.R₁] x) =
+      s • TensorProduct.map
+        (substituteAlgHom (Γ := (⊤ : AddSubgroup ℝ))
+          (A := A) (fun _ : Unit => (0 : Fin 2))).toLinearMap
+        LinearMap.id (realConstantModuleEquiv P x) := by
+  let D := novikovCosimplicialRing (⊤ : AddSubgroup ℝ) A
+  let K := (vectToNovikovDescent (⊤ : AddSubgroup ℝ) A).obj P
+  let R₁ := NovikovSeries (⊤ : AddSubgroup ℝ) Unit A
+  let R₂ := NovikovSeries (⊤ : AddSubgroup ℝ) (Fin 2) A
+  let Y := R₁ ⊗[A] P.M
+  let yAdd : AddCommGroup Y := inferInstance
+  let yMod : Module R₁ Y := inferInstance
+  let yModC : Module D.R₁ Y := yMod
+  letI : AddCommGroup Y := yAdd
+  letI : Module R₁ Y := yMod
+  letI : Module D.R₁ Y := yModC
+  let Z := π₁s D Y
+  let zAdd : AddCommGroup Z := inferInstance
+  let zMod : Module D.R₂ Z := by
+    letI : Algebra D.R₁ D.R₂ := D.π₁.toAlgebra
+    exact inferInstance
+  letI : AddCommGroup Z := zAdd
+  letI : Module D.R₂ Z := zMod
+  letI : Module D.R₂ (π₁s D Y) := zMod
+  let zModR : Module R₂ (π₁s D Y) := zMod
+  letI : Module R₂ (π₁s D Y) := zModR
+  letI : Module R₁ K.M := K.instModule
+  letI : Algebra R₁ R₂ := D.π₁.toAlgebra
+  letI : Algebra D.R₁ D.R₂ := D.π₁.toAlgebra
+  letI : Module D.R₁ D.R₂ := Algebra.toModule
+  let b := realConstantModuleEquiv P
+  let B := K.transportπ₁Equiv b
+  let a := realConstantPullbackπ₁Equiv P
+  let c := normalizedCancelHom D.π₁ realC_π₁_preserves_constants P
+  have hc := realConstantModuleEquiv_pullbackπ₁ P
+  dsimp only at hc
+  let z : π₁s D K.M := (show D.R₂ from s) ⊗ₜ[D.R₁] x
+  have hz : B z = (show D.R₂ from s) ⊗ₜ[D.R₁] (b x) := by
+    exact LinearEquiv.baseChange_tmul D.R₁ D.R₂ K.M Y (e := b) s x
+  have happ := LinearMap.congr_fun hc (B z)
+  simp only [LinearMap.comp_apply] at happ
+  change a (B.symm (B z)) = c (B z) at happ
+  rw [B.symm_apply_apply] at happ
+  rw [hz] at happ
+  dsimp only [c] at happ
+  change a z = normalizedCancelHom D.π₁ realC_π₁_preserves_constants P
+    ((show R₂ from s) ⊗ₜ[R₁] (b x)) at happ
+  rw [normalizedCancelHom_tmul_right] at happ
+  have halg : constantPreservingAlgHom D.π₁ realC_π₁_preserves_constants =
+      substituteAlgHom (Γ := (⊤ : AddSubgroup ℝ))
+        (A := A) (fun _ : Unit => (0 : Fin 2)) := by
+    ext q
+    rfl
+  rw [halg] at happ
+  exact happ
+
+theorem realConstantModuleEquiv_pullbackπ₂
     {A : Type*} [CommRing A] (P : FiniteProjectiveModule A) :
     let R := NovikovSeries (⊤ : AddSubgroup ℝ) Unit A
     let K := (vectToNovikovDescent (⊤ : AddSubgroup ℝ) A).obj P
@@ -623,6 +738,77 @@ private theorem realConstantModuleEquiv_pullbackπ₂
             (realC A).π₂ s * r
           change z ⊗ₜ[A] p = z ⊗ₜ[A] p
           rfl
+
+/-- Pulling back the canonical constant-module coordinates along the second
+face extends their Novikov ring factor by second-variable substitution. -/
+theorem realConstantPullbackπ₂Equiv_tmul_right
+    {A : Type*} [CommRing A] (P : FiniteProjectiveModule A)
+    (s : NovikovSeries (⊤ : AddSubgroup ℝ) (Fin 2) A)
+    (x : ((vectToNovikovDescent (⊤ : AddSubgroup ℝ) A).obj P).M) :
+    let D := novikovCosimplicialRing (⊤ : AddSubgroup ℝ) A
+    let K := (vectToNovikovDescent (⊤ : AddSubgroup ℝ) A).obj P
+    letI : Algebra D.R₁
+      (NovikovSeries (⊤ : AddSubgroup ℝ) (Fin 2) A) := D.π₂.toAlgebra
+    letI : Module D.R₁
+      (NovikovSeries (⊤ : AddSubgroup ℝ) (Fin 2) A) := Algebra.toModule
+    letI : Module D.R₁
+      (baseChange_along (algebraMapNovikov : A →+* D.R₁) P.M) := K.instModule
+    realConstantPullbackπ₂Equiv P
+        ((show D.R₂ from s) ⊗ₜ[D.R₁] x) =
+      s • TensorProduct.map
+        (substituteAlgHom (Γ := (⊤ : AddSubgroup ℝ))
+          (A := A) (fun _ : Unit => (1 : Fin 2))).toLinearMap
+        LinearMap.id (realConstantModuleEquiv P x) := by
+  let D := novikovCosimplicialRing (⊤ : AddSubgroup ℝ) A
+  let K := (vectToNovikovDescent (⊤ : AddSubgroup ℝ) A).obj P
+  let R₁ := NovikovSeries (⊤ : AddSubgroup ℝ) Unit A
+  let R₂ := NovikovSeries (⊤ : AddSubgroup ℝ) (Fin 2) A
+  let Y := R₁ ⊗[A] P.M
+  let yAdd : AddCommGroup Y := inferInstance
+  let yMod : Module R₁ Y := inferInstance
+  let yModC : Module D.R₁ Y := yMod
+  letI : AddCommGroup Y := yAdd
+  letI : Module R₁ Y := yMod
+  letI : Module D.R₁ Y := yModC
+  let Z := π₂s D Y
+  let zAdd : AddCommGroup Z := inferInstance
+  let zMod : Module D.R₂ Z := by
+    letI : Algebra D.R₁ D.R₂ := D.π₂.toAlgebra
+    exact inferInstance
+  letI : AddCommGroup Z := zAdd
+  letI : Module D.R₂ Z := zMod
+  letI : Module D.R₂ (π₂s D Y) := zMod
+  let zModR : Module R₂ (π₂s D Y) := zMod
+  letI : Module R₂ (π₂s D Y) := zModR
+  letI : Module R₁ K.M := K.instModule
+  letI : Algebra R₁ R₂ := D.π₂.toAlgebra
+  letI : Algebra D.R₁ D.R₂ := D.π₂.toAlgebra
+  letI : Module D.R₁ D.R₂ := Algebra.toModule
+  let b := realConstantModuleEquiv P
+  let B := K.transportπ₂Equiv b
+  let a := realConstantPullbackπ₂Equiv P
+  let c := normalizedCancelHom D.π₂ realC_π₂_preserves_constants P
+  have hc := realConstantModuleEquiv_pullbackπ₂ P
+  dsimp only at hc
+  let z : π₂s D K.M := (show D.R₂ from s) ⊗ₜ[D.R₁] x
+  have hz : B z = (show D.R₂ from s) ⊗ₜ[D.R₁] (b x) := by
+    exact LinearEquiv.baseChange_tmul D.R₁ D.R₂ K.M Y (e := b) s x
+  have happ := LinearMap.congr_fun hc (B z)
+  simp only [LinearMap.comp_apply] at happ
+  change a (B.symm (B z)) = c (B z) at happ
+  rw [B.symm_apply_apply] at happ
+  rw [hz] at happ
+  dsimp only [c] at happ
+  change a z = normalizedCancelHom D.π₂ realC_π₂_preserves_constants P
+    ((show R₂ from s) ⊗ₜ[R₁] (b x)) at happ
+  rw [normalizedCancelHom_tmul_right] at happ
+  have halg : constantPreservingAlgHom D.π₂ realC_π₂_preserves_constants =
+      substituteAlgHom (Γ := (⊤ : AddSubgroup ℝ))
+        (A := A) (fun _ : Unit => (1 : Fin 2)) := by
+    ext q
+    rfl
+  rw [halg] at happ
+  exact happ
 
 /-- Normalized pullback along the first face is conjugate to pullback on the
 constant descent module through `realConstantModuleEquiv`. -/

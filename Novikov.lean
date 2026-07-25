@@ -9,6 +9,7 @@ import Novikov.Series.Finite
 import Novikov.Series.Multiplication
 import Novikov.Series.Ring
 import Novikov.Series.Module
+import Novikov.Series.Exponent
 import Novikov.Series.Exact
 import Novikov.Series.OneVar
 import Novikov.Series.Frobenius
@@ -43,3 +44,4 @@ import Novikov.Descent.AlgClosed
 import Novikov.Descent.ProdAlgClosed
 import Novikov.Descent.Reduced
 import Novikov.Descent.Real
+import Novikov.Descent.Exponent
